@@ -21,8 +21,8 @@
     <div class="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <?php foreach ($listings as $listing): ?>
             <article class="flex h-full flex-col rounded-3xl border border-white/5 bg-night-900/70 p-6 shadow-lg shadow-black/30 transition hover:border-brand-400/60 hover:shadow-glow">
-                <?php if (!empty($listing['image_path'])): ?>
-                    <img src="<?= BASE_URL . '/' . htmlspecialchars($listing['image_path']) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="mb-4 h-48 w-full rounded-2xl object-cover" loading="lazy">
+                <?php if ($src = media_url($listing['image_path'] ?? null)): ?>
+                    <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="mb-4 h-48 w-full rounded-2xl object-cover" loading="lazy">
                 <?php endif; ?>
                 <h3 class="text-xl font-semibold text-white"><?= htmlspecialchars($listing['title']) ?></h3>
                 <?php if (!empty($listing['species'])): ?>

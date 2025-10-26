@@ -36,9 +36,28 @@
                     <input type="text" name="tags" value="<?= htmlspecialchars($editingItem['tags'] ?? '') ?>" placeholder="z.B. Bartagame, Terrarium, UVB">
                 </label>
                 <label class="form-label">
-                    <span>Bilddatei <?= $editingItem ? '(optional für Austausch)' : '(erforderlich)' ?></span>
-                    <input type="file" name="image" accept="image/*" <?= $editingItem ? '' : 'required' ?>>
+                    <span>Bild aus Medienbibliothek</span>
+                    <select name="media_asset_id" data-media-select>
+                        <option value="">— auswählen —</option>
+                        <?php foreach ($mediaAssets as $asset): ?>
+                            <option value="<?= (int)$asset['id'] ?>" <?= (($editingItem['media_asset_id'] ?? null) == $asset['id']) ? 'selected' : '' ?> data-media-preview="<?= htmlspecialchars(media_url($asset['file_path'] ?? null) ?? '') ?>">
+                                <?= htmlspecialchars($asset['title'] ?: ($asset['original_name'] ?: ('#' . $asset['id']))) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </label>
+                <div class="media-picker-preview" data-media-preview>
+                    <?php if ($src = media_url($editingItem['image_path'] ?? null)): ?>
+                        <img src="<?= htmlspecialchars($src) ?>" alt="Aktuelle Vorschau" class="h-40 w-full rounded-xl object-cover">
+                    <?php else: ?>
+                        <p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>
+                    <?php endif; ?>
+                </div>
+                <label class="form-label">
+                    <span>Neues Bild hochladen <?= $editingItem ? '(optional)' : '(erforderlich, falls kein Medienobjekt)' ?></span>
+                    <input type="file" name="image" accept="image/*">
+                </label>
+                <input type="hidden" name="image_path" value="<?= htmlspecialchars(normalize_media_path($editingItem['image_path'] ?? '')) ?>">
                 <label class="inline-flex items-center gap-2 text-sm">
                     <input type="checkbox" name="is_featured" value="1" <?= !empty($editingItem['is_featured']) ? 'checked' : '' ?>>
                     <span>Als Highlight auf der Startseite hervorheben</span>
@@ -46,7 +65,11 @@
                 <?php if ($editingItem && !empty($editingItem['image_path'])): ?>
                     <div class="rounded-2xl border border-white/10 bg-night-900/60 p-3 text-xs text-slate-400">
                         <p class="mb-2 font-semibold text-slate-200">Aktuelles Bild</p>
-                        <img src="<?= BASE_URL . '/' . htmlspecialchars($editingItem['image_path']) ?>" alt="<?= htmlspecialchars($editingItem['title']) ?>" class="h-40 w-full rounded-xl object-cover">
+                        <?php if ($current = media_url($editingItem['image_path'])): ?>
+                            <img src="<?= htmlspecialchars($current) ?>" alt="<?= htmlspecialchars($editingItem['title']) ?>" class="h-40 w-full rounded-xl object-cover">
+                        <?php else: ?>
+                            <p class="text-sm text-slate-500">Bild nicht auffindbar.</p>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
                 <div class="flex items-center gap-2">
@@ -105,4 +128,24 @@
         </article>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.querySelector('[data-media-select]');
+        const preview = document.querySelector('[data-media-preview]');
+        if (!select || !preview) {
+            return;
+        }
+        const renderPreview = () => {
+            const option = select.selectedOptions[0];
+            const src = option ? option.getAttribute('data-media-preview') : '';
+            if (src) {
+                preview.innerHTML = '<img src="' + src + '" alt="Ausgewählte Vorschau" class="h-40 w-full rounded-xl object-cover">';
+            } else {
+                preview.innerHTML = '<p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>';
+            }
+        };
+        select.addEventListener('change', renderPreview);
+        renderPreview();
+    });
+</script>
 <?php include __DIR__ . '/../partials/footer.php'; ?>

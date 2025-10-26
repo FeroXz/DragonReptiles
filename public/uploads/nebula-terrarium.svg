@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">Nebula Terrarium</title>
+  <desc id="desc">Ein stylisiertes Terrarium mit holografischen Pflanzen und weichem Neonlicht.</desc>
+  <defs>
+    <linearGradient id="midnight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#040511" />
+      <stop offset="100%" stop-color="#10122e" />
+    </linearGradient>
+    <linearGradient id="glass" x1="0" x2="1">
+      <stop offset="0%" stop-color="#1f2a6d" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#2b3b87" stop-opacity="0.6" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#7f5af0" stop-opacity="0.8" />
+      <stop offset="70%" stop-color="#7f5af0" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="flora" x1="0" x2="1">
+      <stop offset="0%" stop-color="#2ce8c5" />
+      <stop offset="50%" stop-color="#70e4ff" />
+      <stop offset="100%" stop-color="#b8f7ff" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#midnight)" />
+  <ellipse cx="320" cy="420" rx="260" ry="60" fill="#05060e" opacity="0.7" />
+  <path d="M120 120 H520 L560 360 H80 Z" fill="url(#glass)" stroke="#93a3ff" stroke-width="6" stroke-linejoin="round" opacity="0.9" />
+  <rect x="140" y="150" width="360" height="180" fill="#050914" opacity="0.8" />
+  <circle cx="320" cy="220" r="160" fill="url(#glow)" />
+  <path d="M180 320 C210 250 250 200 290 210 C320 220 340 260 360 300 C380 340 420 360 440 320 C420 360 370 360 330 340 C290 320 260 330 230 350" fill="none" stroke="url(#flora)" stroke-width="18" stroke-linecap="round" opacity="0.8" />
+  <path d="M210 320 C230 280 260 250 290 260 C310 270 320 300 330 320" fill="none" stroke="#22d7a5" stroke-width="12" stroke-linecap="round" opacity="0.8" />
+  <path d="M350 300 C370 260 410 240 440 260 C460 280 450 320 430 340" fill="none" stroke="#63e0ff" stroke-width="14" stroke-linecap="round" opacity="0.7" />
+  <path d="M160 340 C190 300 200 260 180 230 C150 260 140 310 160 340 Z" fill="#1b9a7f" opacity="0.6" />
+  <path d="M460 320 C480 290 490 250 470 220 C450 250 440 300 450 330 Z" fill="#2aa7ff" opacity="0.5" />
+  <rect x="120" y="120" width="400" height="240" fill="none" stroke="#5e6cf5" stroke-width="6" stroke-linejoin="round" opacity="0.7" />
+  <rect x="200" y="90" width="240" height="20" rx="8" fill="#7f5af0" opacity="0.8" />
+  <circle cx="230" cy="100" r="6" fill="#2ce8c5" />
+  <circle cx="260" cy="100" r="6" fill="#2ce8c5" />
+  <circle cx="290" cy="100" r="6" fill="#2ce8c5" />
+</svg>

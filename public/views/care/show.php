@@ -1,14 +1,55 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
-<section class="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
-    <article class="rounded-3xl border border-white/5 bg-night-900/70 p-8 shadow-lg shadow-black/30">
-        <h1 class="text-3xl font-semibold text-white sm:text-4xl"><?= htmlspecialchars($article['title']) ?></h1>
-        <?php if (!empty($article['summary'])): ?>
-            <p class="mt-3 text-sm text-slate-300"><?= nl2br(htmlspecialchars($article['summary'])) ?></p>
-        <?php endif; ?>
-        <div class="rich-text-content prose prose-invert mt-6 max-w-none text-slate-100">
-            <?= render_rich_text($article['content']) ?>
-        </div>
-    </article>
+<section class="nui-container nui-section">
+    <div class="wiki-article">
+        <aside class="wiki-article__sidebar" aria-label="Artikelnavigation">
+            <?php if (!empty($articleHeadings)): ?>
+                <nav class="nui-panel nui-panel--muted wiki-toc">
+                    <h2>Inhaltsverzeichnis</h2>
+                    <ol>
+                        <?php foreach ($articleHeadings as $heading): ?>
+                            <li class="level-<?= (int)$heading['level'] ?>">
+                                <a href="#<?= htmlspecialchars($heading['id']) ?>"><?= htmlspecialchars($heading['text']) ?></a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                </nav>
+            <?php endif; ?>
+            <?php if (!empty($article['topics'])): ?>
+                <div class="nui-panel nui-panel--muted wiki-topics-card">
+                    <h2>Themen</h2>
+                    <ul>
+                        <?php foreach ($article['topics'] as $topic): ?>
+                            <li><a href="<?= BASE_URL ?>/index.php?route=care-guide&amp;topic=<?= urlencode($topic['slug']) ?>"><?= htmlspecialchars($topic['title']) ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+        </aside>
+        <article class="nui-panel nui-panel--muted wiki-article__content">
+            <header class="wiki-article__header">
+                <h1><?= htmlspecialchars($article['title']) ?></h1>
+                <?php if (!empty($article['summary'])): ?>
+                    <p class="wiki-article__summary"><?= nl2br(htmlspecialchars($article['summary'])) ?></p>
+                <?php endif; ?>
+                <p class="wiki-article__meta">Aktualisiert am <?= date('d.m.Y', strtotime($article['updated_at'] ?? $article['created_at'])) ?></p>
+            </header>
+            <div class="rich-text-content wiki-article__body">
+                <?= $articleContent ?>
+            </div>
+            <?php if (!empty($relatedArticles)): ?>
+                <section class="wiki-related" aria-label="Verwandte Artikel">
+                    <h2>Verwandte Artikel</h2>
+                    <ul>
+                        <?php foreach ($relatedArticles as $related): ?>
+                            <li>
+                                <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($related['slug']) ?>"><?= htmlspecialchars($related['title']) ?></a>
+                                <span><?= date('d.m.Y', strtotime($related['updated_at'] ?? $related['created_at'])) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+            <?php endif; ?>
+        </article>
+    </div>
 </section>
 <?php include __DIR__ . '/../partials/footer.php'; ?>
-
