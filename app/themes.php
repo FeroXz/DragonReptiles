@@ -3,8 +3,13 @@
 function get_available_themes(): array
 {
     return [
+        'horizon' => [
+            'label' => 'Horizon Nightfall',
+            'stylesheet' => 'theme-horizon.css',
+            'body_class' => 'theme-horizon',
+        ],
         'aurora' => [
-            'label' => 'Aurora Nacht',
+            'label' => 'Aurora Nacht (Legacy)',
             'stylesheet' => null,
             'body_class' => 'theme-aurora',
         ],
@@ -24,6 +29,10 @@ function get_available_themes(): array
 function get_theme_config(string $key): array
 {
     $themes = get_available_themes();
-    return $themes[$key] ?? $themes['aurora'];
+    if ($key === 'aurora') {
+        return $themes['aurora'];
+    }
+
+    return $themes[$key] ?? $themes['horizon'];
 }
 
