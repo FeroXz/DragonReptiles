@@ -12,9 +12,13 @@
             <div class="rich-text-content prose prose-invert max-w-none text-base leading-relaxed text-slate-300">
                 <?= render_rich_text(content_value($settings, 'home_hero_secondary_intro')) ?>
             </div>
-            <div class="grid gap-3 sm:grid-cols-2">
-                <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="flex items-center justify-between rounded-2xl border border-brand-400/50 bg-brand-500/10 px-4 py-3 text-sm font-semibold text-brand-100 shadow-glow transition hover:border-brand-300 hover:bg-brand-500/20"><?= htmlspecialchars(content_value($settings, 'home_care_primary_cta')) ?> <span aria-hidden="true">→</span></a>
-                <a href="<?= BASE_URL ?>/index.php?route=genetics" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-brand-300 hover:text-brand-100"><?= htmlspecialchars(content_value($settings, 'home_care_secondary_cta')) ?> <span aria-hidden="true">→</span></a>
+            <div class="hero-cta">
+                <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="flex items-center justify-between text-sm font-semibold text-brand-100">
+                    <?= htmlspecialchars(content_value($settings, 'home_care_primary_cta')) ?> <span aria-hidden="true">→</span>
+                </a>
+                <a href="<?= BASE_URL ?>/index.php?route=genetics" class="flex items-center justify-between text-sm font-semibold text-slate-100">
+                    <?= htmlspecialchars(content_value($settings, 'home_care_secondary_cta')) ?> <span aria-hidden="true">→</span>
+                </a>
             </div>
         </div>
     </div>
@@ -32,11 +36,11 @@
             </div>
             <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 <?php foreach ($animals as $animal): ?>
-                    <article class="group flex h-full flex-col rounded-3xl border border-white/5 bg-night-900/70 shadow-xl shadow-black/40 transition hover:border-brand-400/60 hover:shadow-glow">
+                    <article class="home-highlight-card group">
                         <?php if (!empty($animal['image_path'])): ?>
-                            <img src="<?= BASE_URL . '/' . htmlspecialchars($animal['image_path']) ?>" alt="<?= htmlspecialchars($animal['name']) ?>" class="h-52 w-full rounded-t-3xl object-cover" loading="lazy">
+                            <img src="<?= BASE_URL . '/' . htmlspecialchars($animal['image_path']) ?>" alt="<?= htmlspecialchars($animal['name']) ?>" class="object-cover" loading="lazy">
                         <?php endif; ?>
-                        <div class="flex flex-1 flex-col gap-3 p-6">
+                        <div class="home-highlight-card__body">
                             <h3 class="text-xl font-semibold text-white">
                                 <?= htmlspecialchars($animal['name']) ?>
                                 <?php if (!empty($animal['is_piebald'])): ?>
@@ -79,9 +83,9 @@
             <div class="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 <?php if ($listings): ?>
                     <?php foreach ($listings as $listing): ?>
-                        <article class="flex h-full flex-col rounded-3xl border border-white/5 bg-night-900/70 p-6 shadow-lg shadow-black/40 transition hover:border-brand-400/60 hover:shadow-glow">
+                        <article class="adoption-card">
                             <?php if (!empty($listing['image_path'])): ?>
-                                <img src="<?= BASE_URL . '/' . htmlspecialchars($listing['image_path']) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="mb-4 h-48 w-full rounded-2xl object-cover" loading="lazy">
+                                <img src="<?= BASE_URL . '/' . htmlspecialchars($listing['image_path']) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="rounded-2xl object-cover" loading="lazy">
                             <?php endif; ?>
                             <h3 class="text-xl font-semibold text-white"><?= htmlspecialchars($listing['title']) ?></h3>
                             <?php if (!empty($listing['species'])): ?>
