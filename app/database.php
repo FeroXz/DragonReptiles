@@ -178,6 +178,25 @@ function initialize_database(PDO $pdo): void
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )');
 
+    $pdo->exec('CREATE TABLE IF NOT EXISTS care_topics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        description TEXT,
+        parent_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(parent_id) REFERENCES care_topics(id) ON DELETE SET NULL
+    )');
+
+    $pdo->exec('CREATE TABLE IF NOT EXISTS care_article_topic (
+        article_id INTEGER NOT NULL,
+        topic_id INTEGER NOT NULL,
+        PRIMARY KEY(article_id, topic_id),
+        FOREIGN KEY(article_id) REFERENCES care_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY(topic_id) REFERENCES care_topics(id) ON DELETE CASCADE
+    )');
+
     $pdo->exec('CREATE TABLE IF NOT EXISTS genetic_species (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -220,6 +239,21 @@ function initialize_database(PDO $pdo): void
         image_path TEXT NOT NULL,
         tags TEXT,
         is_featured INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )');
+
+    $pdo->exec('CREATE TABLE IF NOT EXISTS media_assets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        file_path TEXT NOT NULL,
+        original_name TEXT,
+        mime_type TEXT,
+        file_size INTEGER,
+        width INTEGER,
+        height INTEGER,
+        alt_text TEXT,
+        tags TEXT,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )');

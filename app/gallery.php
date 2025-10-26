@@ -28,7 +28,7 @@ function create_gallery_item(PDO $pdo, array $data): int
     $stmt->execute([
         'title' => $data['title'],
         'description' => $data['description'] ?? null,
-        'image_path' => $data['image_path'],
+        'image_path' => normalize_media_path($data['image_path'] ?? null),
         'tags' => $data['tags'] ?? null,
         'is_featured' => !empty($data['is_featured']) ? 1 : 0,
     ]);
@@ -49,7 +49,7 @@ function update_gallery_item(PDO $pdo, int $id, array $data): void
     }
     if (!empty($data['image_path'])) {
         $setParts[] = 'image_path = :image_path';
-        $fields['image_path'] = $data['image_path'];
+        $fields['image_path'] = normalize_media_path($data['image_path']);
     }
     $fields['id'] = $id;
 
