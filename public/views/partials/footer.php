@@ -1,11 +1,11 @@
     </div>
 </main>
-<footer class="border-t border-white/5 bg-night-900/80 py-10">
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <div class="prose prose-invert max-w-none text-slate-300">
+<footer class="app-footer">
+    <div class="app-footer__inner">
+        <div class="prose prose-invert max-w-none">
             <?= nl2br(htmlspecialchars($settings['footer_text'] ?? '')) ?>
         </div>
-        <div class="flex items-center gap-3 text-xs text-slate-500">
+        <div class="app-footer__meta">
             <span>© <?= date('Y') ?> <?= htmlspecialchars($settings['site_title'] ?? APP_NAME) ?></span>
             <span aria-hidden="true">•</span>
             <span><?= htmlspecialchars(content_value($settings, 'footer_rights')) ?></span>
@@ -51,7 +51,7 @@
 
         document.querySelectorAll('[data-nav-group]').forEach((group) => {
             const trigger = group.querySelector('[data-nav-trigger]');
-            const dropdown = group.querySelector('.nav-dropdown');
+            const dropdown = group.querySelector('.app-nav__dropdown');
             if (!trigger || !dropdown) {
                 return;
             }
