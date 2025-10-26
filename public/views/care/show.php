@@ -1,9 +1,9 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
-<section class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+<section class="nui-container nui-section">
     <div class="wiki-article">
         <aside class="wiki-article__sidebar" aria-label="Artikelnavigation">
             <?php if (!empty($articleHeadings)): ?>
-                <nav class="wiki-toc">
+                <nav class="nui-panel nui-panel--muted wiki-toc">
                     <h2>Inhaltsverzeichnis</h2>
                     <ol>
                         <?php foreach ($articleHeadings as $heading): ?>
@@ -15,7 +15,7 @@
                 </nav>
             <?php endif; ?>
             <?php if (!empty($article['topics'])): ?>
-                <div class="wiki-topics-card">
+                <div class="nui-panel nui-panel--muted wiki-topics-card">
                     <h2>Themen</h2>
                     <ul>
                         <?php foreach ($article['topics'] as $topic): ?>
@@ -25,7 +25,7 @@
                 </div>
             <?php endif; ?>
         </aside>
-        <article class="wiki-article__content">
+        <article class="nui-panel nui-panel--muted wiki-article__content">
             <header class="wiki-article__header">
                 <h1><?= htmlspecialchars($article['title']) ?></h1>
                 <?php if (!empty($article['summary'])): ?>

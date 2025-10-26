@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `uploads/`.
 
-**Aktuelle Version:** 3.4.0
+**Aktuelle Version:** 3.5.0
 
 ## Kernfunktionen
 
@@ -121,3 +121,4 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] Dragon-Reptiles-Edition mit Galerieverwaltung, Drag-&-Drop-Startseitenlayout und ZIP-Update-Manager für inhaltsneutrale Releases.
 - [x] Wissenssammlung mit Wiki-Funktionen wie Themenbaum, internen Verlinkungen und Inhaltsverzeichnis ausgebaut (Version 3.4.0).
 - [x] Medienverwaltung für Bild-Uploads samt Metadaten, Suche und Austausch im Admin-Bereich bereitgestellt (Version 3.4.0).
+- [x] Öffentliche Seiten und Wiki auf Nuxt UI Komponentenlayout mit Horizon-Oberflächen umgestellt (Version 3.5.0).

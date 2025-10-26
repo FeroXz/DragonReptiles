@@ -1,12 +1,14 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
-<section class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-    <header class="max-w-4xl">
-        <h1 class="text-3xl font-semibold text-white sm:text-4xl"><?= htmlspecialchars(content_value($settings, 'care_title')) ?></h1>
-        <p class="mt-2 text-sm text-slate-300"><?= htmlspecialchars(content_value($settings, 'care_intro')) ?></p>
+<section class="nui-container nui-section">
+    <header class="nui-section__header">
+        <div>
+            <h1 class="nui-heading text-white sm:text-4xl"><?= htmlspecialchars(content_value($settings, 'care_title')) ?></h1>
+            <p class="nui-muted mt-2 text-sm"><?= htmlspecialchars(content_value($settings, 'care_intro')) ?></p>
+        </div>
     </header>
-    <div class="wiki-layout">
+    <div class="wiki-shell">
         <aside class="wiki-sidebar" aria-label="Wissensnavigation">
-            <form method="get" class="wiki-search" role="search">
+            <form method="get" class="nui-panel nui-panel--muted wiki-search" role="search">
                 <input type="hidden" name="route" value="care-guide">
                 <label class="sr-only" for="wiki-search-input">Wissensartikel durchsuchen</label>
                 <input id="wiki-search-input" type="search" name="q" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Stichwort oder Thema suchen">
@@ -16,8 +18,8 @@
                 <button type="submit">Suchen</button>
             </form>
             <?php if (!empty($topicsTree)): ?>
-                <nav class="wiki-topics" aria-label="Themenübersicht">
-                    <h2>Themen</h2>
+                <nav class="nui-panel nui-panel--muted wiki-topics" aria-label="Themenübersicht">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-200">Themen</h2>
                     <ul>
                         <?php
                         $renderTopic = function (array $topic) use (&$renderTopic, $activeTopic) {
@@ -42,8 +44,8 @@
                 </nav>
             <?php endif; ?>
             <?php if (!empty($allArticles)): ?>
-                <div class="wiki-alphabet">
-                    <h2>Alle Artikel</h2>
+                <div class="nui-panel nui-panel--muted wiki-alphabet">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-200">Alle Artikel</h2>
                     <ul>
                         <?php foreach ($allArticles as $article): ?>
                             <li>
@@ -56,7 +58,7 @@
         </aside>
         <div class="wiki-content">
             <?php if ($activeTopic): ?>
-                <div class="wiki-context">
+                <div class="nui-panel nui-panel--muted wiki-context">
                     <h2><?= htmlspecialchars($activeTopic['title']) ?></h2>
                     <?php if (!empty($activeTopic['description'])): ?>
                         <p><?= nl2br(htmlspecialchars($activeTopic['description'])) ?></p>
@@ -65,7 +67,7 @@
                     <?php endif; ?>
                 </div>
             <?php elseif ($searchQuery !== ''): ?>
-                <div class="wiki-context">
+                <div class="nui-panel nui-panel--muted wiki-context">
                     <h2>Suchergebnisse</h2>
                     <p><?= count($careArticles) ?> Artikel zu „<?= htmlspecialchars($searchQuery) ?>“.</p>
                 </div>
@@ -76,7 +78,7 @@
             <?php else: ?>
                 <div class="wiki-grid">
                     <?php foreach ($careArticles as $article): ?>
-                        <article class="wiki-card">
+                        <article class="nui-card wiki-card">
                             <header>
                                 <h2><a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($article['slug']) ?>"><?= htmlspecialchars($article['title']) ?></a></h2>
                                 <?php if (!empty($article['summary'])): ?>
@@ -90,9 +92,12 @@
                                     <?php endforeach; ?>
                                 </ul>
                             <?php endif; ?>
-                            <footer>
+                            <footer class="mt-auto flex items-center justify-between gap-3 text-sm text-slate-400">
                                 <span class="wiki-card__meta">Aktualisiert am <?= date('d.m.Y', strtotime($article['updated_at'] ?? $article['created_at'])) ?></span>
-                                <a class="wiki-card__cta" href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($article['slug']) ?>"><?= htmlspecialchars(content_value($settings, 'care_read_more')) ?></a>
+                                <a class="nui-pill wiki-card__cta justify-between text-xs font-semibold text-slate-100" href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($article['slug']) ?>">
+                                    <?= htmlspecialchars(content_value($settings, 'care_read_more')) ?>
+                                    <span aria-hidden="true">→</span>
+                                </a>
                             </footer>
                         </article>
                     <?php endforeach; ?>
