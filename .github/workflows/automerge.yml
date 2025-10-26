@@ -1,0 +1,36 @@
+# .github/workflows/automerge.yml
+name: automerge-all
+on:
+  workflow_dispatch: {}   
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  status: {}
+  schedule:
+    - cron: "*/30 * * * *"   # Fallback: alle 30 Min prüfen
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pascalgn/automerge-action@v0.16.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_LABELS: ""             # "" = ALLE PRs mergen (kein Label nötig)
+          UPDATE_LABELS: ""            # PRs auch ohne Label aktuell halten
+          UPDATE_METHOD: rebase        # hält PRs per Rebase aktuell (s. Hinweis unten)
+          MERGE_METHOD: squash         # sauberer Verlauf in main
+          MERGE_DELETE_BRANCH: "true"  # PR-Branch nach Merge löschen
+          MERGE_FORKS: "true"          # bei Bedarf auf "false" setzen
+          BASE_BRANCHES: "main"        # nur in main mergen
+          MERGE_RETRIES: "12"
+          MERGE_RETRY_SLEEP: "10000"
