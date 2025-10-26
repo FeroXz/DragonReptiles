@@ -1,8 +1,8 @@
 # Dragon Reptiles CMS – PHP Plattform für Terraristik
 
-Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `uploads/`.
+Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `public/uploads/`.
 
-**Aktuelle Version:** 3.5.0
+**Aktuelle Version:** 3.7.0
 
 ## Kernfunktionen
 
@@ -32,7 +32,7 @@ Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes C
 1. **Dateien hochladen** – den Inhalt dieses Repositories auf den Webspace kopieren (z. B. via FTP oder Git-Deploy).
 2. **Verzeichnisse beschreibbar machen**:
    ```bash
-   chmod -R 775 storage uploads
+   chmod -R 775 storage public/uploads
    ```
 3. **Aufruf im Browser** – `index.php` unter `public/` dient als Front-Controller. Richte den Dokumentenstamm deines Webservers auf `public/` aus.
 4. **Erstanmeldung** – Standard-Zugangsdaten: Benutzername `admin`, Passwort `12345678`. Nach dem Login können weitere Benutzer erstellt und Passwörter geändert werden.
@@ -122,3 +122,5 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] Wissenssammlung mit Wiki-Funktionen wie Themenbaum, internen Verlinkungen und Inhaltsverzeichnis ausgebaut (Version 3.4.0).
 - [x] Medienverwaltung für Bild-Uploads samt Metadaten, Suche und Austausch im Admin-Bereich bereitgestellt (Version 3.4.0).
 - [x] Öffentliche Seiten und Wiki auf Nuxt UI Komponentenlayout mit Horizon-Oberflächen umgestellt (Version 3.5.0).
+- [x] Medienbibliothek in Tiere-, Adoption- und Galerie-Formularen integriert, Upload-Pfad nach `public/uploads/` verschoben und Beispielcontent mit funktionsfähigen Bildern ausgeliefert (Version 3.6.0).
+- [x] Medienpfade normalisiert, bestehende Assets automatisch in die Bibliothek übernommen und Release-News um den 3.6.0-Changelog ergänzt (Version 3.7.0).

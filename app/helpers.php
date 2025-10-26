@@ -24,6 +24,47 @@ function asset(string $path): string
     return BASE_URL . '/assets/' . ltrim($path, '/');
 }
 
+function normalize_media_path(?string $path): ?string
+{
+    if ($path === null) {
+        return null;
+    }
+
+    $path = trim($path);
+    if ($path === '') {
+        return null;
+    }
+
+    $path = str_replace('\\', '/', $path);
+
+    if (preg_match('#^https?://#i', $path)) {
+        $parsed = parse_url($path, PHP_URL_PATH);
+        if (is_string($parsed) && $parsed !== '') {
+            $path = $parsed;
+        }
+    }
+
+    if (BASE_URL !== '' && str_starts_with($path, BASE_URL)) {
+        $path = substr($path, strlen(BASE_URL));
+    }
+
+    $path = preg_replace('#^public/#', '', $path);
+    $path = ltrim($path, '/');
+
+    return $path !== '' ? $path : null;
+}
+
+function media_url(?string $path): ?string
+{
+    $normalized = normalize_media_path($path);
+    if ($normalized === null) {
+        return null;
+    }
+
+    $base = rtrim(BASE_URL, '/');
+    return ($base !== '' ? $base : '') . '/' . $normalized;
+}
+
 function redirect(string $route, array $params = []): void
 {
     $query = http_build_query(array_merge(['route' => $route], $params));

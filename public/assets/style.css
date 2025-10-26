@@ -1923,3 +1923,20 @@ input[type="radio"] {
   flex: 1;
   min-width: 0;
 }
+
+.media-picker-preview {
+    border: 1px dashed rgba(148, 163, 184, 0.35);
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.45);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: block;
+    min-height: 5rem;
+}
+
+.media-picker-preview img {
+    border-radius: 0.75rem;
+    width: 100%;
+    height: auto;
+    display: block;
+}

@@ -43,8 +43,8 @@
             <div class="nui-grid mt-8 sm:grid-cols-2 xl:grid-cols-3">
                 <?php foreach ($animals as $animal): ?>
                     <article class="nui-card home-highlight-card group">
-                        <?php if (!empty($animal['image_path'])): ?>
-                            <img src="<?= BASE_URL . '/' . htmlspecialchars($animal['image_path']) ?>" alt="<?= htmlspecialchars($animal['name']) ?>" class="object-cover" loading="lazy">
+                        <?php if ($src = media_url($animal['image_path'] ?? null)): ?>
+                            <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($animal['name']) ?>" class="object-cover" loading="lazy">
                         <?php endif; ?>
                         <div class="home-highlight-card__body">
                             <h3 class="text-xl font-semibold text-white">
@@ -91,8 +91,8 @@
                 <?php if ($listings): ?>
                     <?php foreach ($listings as $listing): ?>
                         <article class="nui-card adoption-card">
-                            <?php if (!empty($listing['image_path'])): ?>
-                                <img src="<?= BASE_URL . '/' . htmlspecialchars($listing['image_path']) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="rounded-2xl object-cover" loading="lazy">
+                            <?php if ($src = media_url($listing['image_path'] ?? null)): ?>
+                                <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($listing['title']) ?>" class="rounded-2xl object-cover" loading="lazy">
                             <?php endif; ?>
                             <h3 class="text-xl font-semibold text-white"><?= htmlspecialchars($listing['title']) ?></h3>
                             <?php if (!empty($listing['species'])): ?>
@@ -198,8 +198,8 @@
             <div class="nui-grid mt-8 sm:grid-cols-2 xl:grid-cols-3">
                 <?php foreach ($galleryItems as $item): ?>
                     <article class="nui-card group flex h-full flex-col overflow-hidden p-0">
-                        <?php if (!empty($item['image_path'])): ?>
-                            <img src="<?= BASE_URL . '/' . htmlspecialchars($item['image_path']) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="h-52 w-full object-cover" loading="lazy">
+                        <?php if ($src = media_url($item['image_path'] ?? null)): ?>
+                            <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="h-52 w-full object-cover" loading="lazy">
                         <?php endif; ?>
                         <div class="flex flex-1 flex-col gap-3 p-6">
                             <h3 class="text-xl font-semibold text-white"><?= htmlspecialchars($item['title']) ?></h3>

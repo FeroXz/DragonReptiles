@@ -27,7 +27,11 @@
                         <article class="media-card">
                             <div class="media-card__thumb">
                                 <?php if (!empty($asset['file_path'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($asset['file_path']) ?>" alt="<?= htmlspecialchars($asset['alt_text'] ?: ($asset['title'] ?: 'Medienvorschau')) ?>">
+                                    <?php if ($src = media_url($asset['file_path'])): ?>
+                                        <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($asset['alt_text'] ?: ($asset['title'] ?: 'Medienvorschau')) ?>">
+                                    <?php else: ?>
+                                        <div class="media-card__placeholder">Keine Vorschau</div>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <div class="media-card__placeholder">Keine Vorschau</div>
                                 <?php endif; ?>
@@ -37,7 +41,11 @@
                                 <dl>
                                     <div>
                                         <dt>Datei</dt>
-                                        <dd><a href="<?= BASE_URL ?>/<?= htmlspecialchars($asset['file_path']) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($asset['file_path']) ?></a></dd>
+                                        <?php if ($src = media_url($asset['file_path'] ?? null)): ?>
+                                            <dd><a href="<?= htmlspecialchars($src) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($asset['file_path']) ?></a></dd>
+                                        <?php else: ?>
+                                            <dd><?= htmlspecialchars($asset['file_path'] ?? '–') ?></dd>
+                                        <?php endif; ?>
                                     </div>
                                     <?php if (!empty($asset['file_size'])): ?>
                                         <div>
