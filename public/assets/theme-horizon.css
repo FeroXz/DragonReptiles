@@ -1,0 +1,89 @@
+body.theme-horizon {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.28), transparent 55%),
+    radial-gradient(circle at 85% 0%, rgba(45, 212, 191, 0.22), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.16), transparent 65%),
+    linear-gradient(160deg, #030712, #061226 55%, #0b1430);
+  background-attachment: fixed;
+}
+
+body.theme-horizon::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url('data:image/svg+xml,%3Csvg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" stroke="%235ce4ff" stroke-opacity="0.08" stroke-width="1"%3E%3Cpath d="M0 120h240M120 0v240"/%3E%3C/g%3E%3C/svg%3E');
+  mix-blend-mode: screen;
+  opacity: 0.65;
+  z-index: 0;
+}
+
+body.theme-horizon header,
+body.theme-horizon footer {
+  background: rgba(3, 6, 16, 0.75);
+  border-color: rgba(45, 212, 191, 0.18);
+  box-shadow: 0 28px 65px rgba(3, 7, 18, 0.45);
+}
+
+body.theme-horizon [data-desktop-nav] a,
+body.theme-horizon [data-mobile-nav-panel] a {
+  border-color: rgba(45, 212, 191, 0.2);
+  background: rgba(12, 20, 37, 0.65);
+}
+
+body.theme-horizon [data-desktop-nav] a:hover,
+body.theme-horizon [data-mobile-nav-panel] a:hover,
+body.theme-horizon [data-desktop-nav] a.inline-flex.border-brand-400,
+body.theme-horizon [data-mobile-nav-panel] .block.border-brand-400 {
+  border-color: rgba(34, 211, 238, 0.55);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(45, 212, 191, 0.2));
+  color: #f8fafc;
+}
+
+body.theme-horizon .card {
+  background: linear-gradient(145deg, rgba(12, 19, 33, 0.92), rgba(18, 33, 62, 0.72));
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+body.theme-horizon .horizon-nav {
+  background: rgba(3, 7, 18, 0.75);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+body.theme-horizon .horizon-nav__link {
+  background: rgba(12, 20, 37, 0.85);
+  border-color: rgba(56, 189, 248, 0.12);
+}
+
+body.theme-horizon .horizon-nav__link.is-active {
+  border-color: rgba(34, 211, 238, 0.55);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.35), rgba(45, 212, 191, 0.25));
+}
+
+body.theme-horizon .horizon-panel {
+  background: rgba(3, 7, 18, 0.72);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+body.theme-horizon .horizon-stat-card {
+  background: linear-gradient(140deg, rgba(12, 19, 33, 0.9), rgba(30, 41, 59, 0.75));
+  border-color: rgba(45, 212, 191, 0.28);
+}
+
+body.theme-horizon .table {
+  background: rgba(12, 20, 37, 0.75);
+}
+
+body.theme-horizon .table thead {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.25), rgba(14, 165, 233, 0.22));
+}
+
+body.theme-horizon .alert-success {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+body.theme-horizon .alert-error {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: rgba(248, 113, 113, 0.4);
+}

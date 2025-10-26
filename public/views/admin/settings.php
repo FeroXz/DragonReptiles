@@ -30,7 +30,7 @@
         <label>Design
             <select name="active_theme">
                 <?php foreach ($themes as $key => $theme): ?>
-                    <option value="<?= htmlspecialchars($key) ?>" <?= (($settings['active_theme'] ?? 'aurora') === $key) ? 'selected' : '' ?>><?= htmlspecialchars($theme['label']) ?></option>
+                    <option value="<?= htmlspecialchars($key) ?>" <?= (($settings['active_theme'] ?? 'horizon') === $key) ? 'selected' : '' ?>><?= htmlspecialchars($theme['label']) ?></option>
                 <?php endforeach; ?>
             </select>
         </label>

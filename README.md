@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `uploads/`.
 
-**Aktuelle Version:** 3.1.0
+**Aktuelle Version:** 3.2.0
 
 ## Kernfunktionen
 
@@ -113,5 +113,6 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] Umfangreiche Hakennasennatter-Genetik inklusive sämtlicher bestätigter Kombinationsmorphe als Referenzkarten.
 - [x] Neues „Nebula Prism“-Theme mit gläsernem Neon-Look, das im Admin-Bereich auswählbar ist.
 - [x] Dropdown-Navigation öffnet auf Touch-Geräten ohne ungewollte Seitenwechsel.
-- [x] Seed-Check steht als ausführbares Node-Skript (`node scripts/seed_check.mjs`) bereit und der Standard-Footer verweist nun auf Version 3.1.0.
+- [x] Seed-Check steht als ausführbares Node-Skript (`node scripts/seed_check.mjs`) bereit und der Standard-Footer verweist nun auf Version 3.2.0.
+- [x] HorizonUI-3.0-Dashboard im Nuxt-UI-4.1-Look mit komplett neuem Darkmode-Design für das Armin-Backend ausgeliefert.
 - [x] Dragon-Reptiles-Edition mit Galerieverwaltung, Drag-&-Drop-Startseitenlayout und ZIP-Update-Manager für inhaltsneutrale Releases.

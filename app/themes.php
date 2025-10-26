@@ -3,10 +3,10 @@
 function get_available_themes(): array
 {
     return [
-        'aurora' => [
-            'label' => 'Aurora Nacht',
-            'stylesheet' => null,
-            'body_class' => 'theme-aurora',
+        'horizon' => [
+            'label' => 'Horizon Nightfall',
+            'stylesheet' => 'theme-horizon.css',
+            'body_class' => 'theme-horizon',
         ],
         'serpent' => [
             'label' => 'Serpent Flux',
@@ -24,6 +24,10 @@ function get_available_themes(): array
 function get_theme_config(string $key): array
 {
     $themes = get_available_themes();
-    return $themes[$key] ?? $themes['aurora'];
+    if (isset($themes[$key])) {
+        return $themes[$key];
+    }
+
+    return $themes['horizon'];
 }
 

@@ -32,7 +32,7 @@
         };
     </script>
     <?php
-        $activeThemeKey = $settings['active_theme'] ?? 'aurora';
+        $activeThemeKey = $settings['active_theme'] ?? 'horizon';
         $themeConfig = get_theme_config($activeThemeKey);
     ?>
     <link rel="stylesheet" href="<?= asset('style.css') ?>">

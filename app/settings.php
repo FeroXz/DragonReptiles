@@ -8,7 +8,7 @@ function ensure_default_settings(PDO $pdo): void
         'adoption_intro' => 'Diese Tiere suchen ein liebevolles Zuhause. Kontaktiere uns für mehr Informationen.',
         'footer_text' => '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION,
         'contact_email' => 'info@example.com',
-        'active_theme' => 'aurora',
+        'active_theme' => 'horizon',
         'home_sections_layout' => json_encode(default_home_sections_layout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
         'app_version' => APP_VERSION,
     ];

@@ -355,7 +355,7 @@ switch ($route) {
                 'adoption_intro' => $_POST['adoption_intro'] ?? '',
                 'footer_text' => $_POST['footer_text'] ?? '',
                 'contact_email' => $_POST['contact_email'] ?? '',
-                'active_theme' => $_POST['active_theme'] ?? 'aurora',
+                'active_theme' => $_POST['active_theme'] ?? 'horizon',
             ]);
             flash('success', 'Einstellungen gespeichert.');
             redirect('admin/settings');
