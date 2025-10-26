@@ -168,13 +168,27 @@
             <label>Beschreibung
                 <textarea name="description" class="rich-text"><?= htmlspecialchars($editAnimal['description'] ?? '') ?></textarea>
             </label>
-            <label>Bild
-                <input type="file" name="image" accept="image/*">
-                <?php if (!empty($editAnimal['image_path'])): ?>
-                    <input type="hidden" name="image_path" value="<?= htmlspecialchars($editAnimal['image_path']) ?>">
-                    <p><a href="<?= BASE_URL . '/' . htmlspecialchars($editAnimal['image_path']) ?>" target="_blank">Aktuelles Bild anzeigen</a></p>
-                <?php endif; ?>
+            <label>Bild aus Medienbibliothek
+                <select name="media_asset_id" data-media-select>
+                    <option value="">— auswählen —</option>
+                    <?php foreach ($mediaAssets as $asset): ?>
+                        <option value="<?= (int)$asset['id'] ?>" <?= (($editAnimal['media_asset_id'] ?? null) == $asset['id']) ? 'selected' : '' ?> data-media-preview="<?= htmlspecialchars(media_url($asset['file_path'] ?? null) ?? '') ?>">
+                            <?= htmlspecialchars($asset['title'] ?: ($asset['original_name'] ?: ('#' . $asset['id']))) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </label>
+            <div class="media-picker-preview" data-media-preview>
+                <?php if ($src = media_url($editAnimal['image_path'] ?? null)): ?>
+                    <img src="<?= htmlspecialchars($src) ?>" alt="Aktuelles Tierbild" class="mb-2 h-40 w-full rounded-2xl object-cover">
+                <?php else: ?>
+                    <p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>
+                <?php endif; ?>
+            </div>
+            <label>Neues Bild hochladen
+                <input type="file" name="image" accept="image/*">
+            </label>
+            <input type="hidden" name="image_path" value="<?= htmlspecialchars(normalize_media_path($editAnimal['image_path'] ?? '')) ?>">
             <label>Besitzer
                 <select name="owner_id">
                     <option value="">— keiner —</option>
@@ -200,22 +214,37 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const speciesSelect = document.querySelector('[data-species-select]');
-        if (!speciesSelect) {
-            return;
-        }
-        const groups = document.querySelectorAll('[data-species-genes]');
-        const toggleGroups = () => {
-            const activeSlug = speciesSelect.value;
-            groups.forEach(group => {
-                const isActive = group.dataset.speciesGenes === activeSlug && activeSlug !== '';
-                group.hidden = !isActive;
-                group.querySelectorAll('select').forEach(select => {
-                    select.disabled = !isActive;
+        if (speciesSelect) {
+            const groups = document.querySelectorAll('[data-species-genes]');
+            const toggleGroups = () => {
+                const activeSlug = speciesSelect.value;
+                groups.forEach(group => {
+                    const isActive = group.dataset.speciesGenes === activeSlug && activeSlug !== '';
+                    group.hidden = !isActive;
+                    group.querySelectorAll('select').forEach(select => {
+                        select.disabled = !isActive;
+                    });
                 });
-            });
-        };
-        speciesSelect.addEventListener('change', toggleGroups);
-        toggleGroups();
+            };
+            speciesSelect.addEventListener('change', toggleGroups);
+            toggleGroups();
+        }
+
+        const mediaSelect = document.querySelector('[data-media-select]');
+        const mediaPreview = document.querySelector('[data-media-preview]');
+        if (mediaSelect && mediaPreview) {
+            const renderPreview = () => {
+                const option = mediaSelect.selectedOptions[0];
+                const src = option ? option.getAttribute('data-media-preview') : '';
+                if (src) {
+                    mediaPreview.innerHTML = '<img src="' + src + '" alt="Ausgewählte Vorschau" class="mb-2 h-40 w-full rounded-2xl object-cover">';
+                } else {
+                    mediaPreview.innerHTML = '<p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>';
+                }
+            };
+            mediaSelect.addEventListener('change', renderPreview);
+            renderPreview();
+        }
     });
 </script>
 <?php include __DIR__ . '/../partials/footer.php'; ?>

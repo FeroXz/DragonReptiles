@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">Smaragdschlüpfling</title>
+  <desc id="desc">Ein abstrahiertes Reptil in türkis-grünen Neonfarben ruht auf einer Wurzel.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#051622" />
+      <stop offset="100%" stop-color="#0f2f3a" />
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2de2e6" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#2de2e6" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#051622" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="body" x1="0" x2="1">
+      <stop offset="0%" stop-color="#37f499" />
+      <stop offset="50%" stop-color="#28d7d7" />
+      <stop offset="100%" stop-color="#5ffbf1" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#bg)" />
+  <ellipse cx="320" cy="290" rx="260" ry="150" fill="#021116" opacity="0.6" />
+  <ellipse cx="320" cy="260" rx="240" ry="140" fill="url(#halo)" />
+  <path d="M120 320 C180 280 220 210 310 210 C370 210 420 230 470 220 C520 210 560 240 560 280 C560 320 520 350 460 360 C410 368 360 352 310 340 C260 328 200 348 150 360 C120 366 80 348 80 330 C80 312 100 304 120 320 Z" fill="#12322f" opacity="0.85" />
+  <path d="M240 320 C220 250 260 180 330 160 C400 140 470 190 470 250 C470 310 410 360 350 360 C300 360 260 350 240 320 Z" fill="url(#body)" />
+  <path d="M330 168 C370 140 430 132 470 168 C490 186 498 210 494 232 C480 202 450 186 420 192 C390 198 360 212 330 196 C320 190 320 178 330 168 Z" fill="#0f2c2e" opacity="0.7" />
+  <circle cx="410" cy="250" r="16" fill="#031013" />
+  <circle cx="406" cy="246" r="8" fill="#5ffbf1" />
+  <path d="M250 330 C280 360 330 380 370 370 C410 360 430 330 430 310 C410 330 370 340 340 334 C310 328 280 320 250 330 Z" fill="#1ca982" opacity="0.85" />
+  <path d="M150 350 C200 310 230 300 280 300 C250 320 240 340 210 360 C190 372 160 372 150 350 Z" fill="#1b4d45" opacity="0.7" />
+</svg>

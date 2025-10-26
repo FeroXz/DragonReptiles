@@ -1,125 +1,125 @@
 body.theme-serpent {
-  --surface: rgba(10, 24, 18, 0.8);
-  --surface-soft: rgba(12, 50, 32, 0.65);
-  --surface-strong: rgba(18, 46, 32, 0.92);
-  --border: rgba(116, 198, 157, 0.35);
-  --border-strong: rgba(102, 255, 204, 0.65);
-  --accent: #34f5c5;
-  --accent-strong: #1dd1a1;
-  --text: #e7fdf4;
-  --text-muted: rgba(201, 241, 226, 0.7);
-  --success: #7bf58b;
-  --danger: #ff8a7a;
-  --danger-border: rgba(255, 138, 122, 0.4);
-  background: radial-gradient(circle at 20% 20%, rgba(12, 50, 32, 0.95), rgba(6, 15, 11, 0.95) 55%), radial-gradient(circle at 80% 0%, rgba(22, 94, 66, 0.6), rgba(10, 24, 18, 0.95) 60%);
-  color: var(--text);
+  --ui-body: #06140f;
+  --ui-surface: rgba(10, 24, 18, 0.82);
+  --ui-surface-soft: rgba(12, 39, 28, 0.65);
+  --ui-surface-strong: rgba(20, 52, 36, 0.92);
+  --ui-border: rgba(84, 186, 137, 0.35);
+  --ui-border-strong: rgba(122, 255, 210, 0.6);
+  --ui-primary: #34f5c5;
+  --ui-primary-strong: #1dd1a1;
+  --ui-primary-soft: rgba(52, 245, 197, 0.2);
+  --ui-accent: #7bf58b;
+  --ui-text: #e7fdf4;
+  --ui-text-muted: rgba(201, 241, 226, 0.78);
+  --ui-text-subtle: rgba(185, 233, 213, 0.65);
+  background: radial-gradient(circle at 18% 18%, rgba(46, 213, 166, 0.48), transparent 55%),
+    radial-gradient(circle at 82% 10%, rgba(17, 94, 66, 0.45), transparent 52%),
+    linear-gradient(165deg, #04100b, #0a1c14 48%, #08231a 92%);
+  color: var(--ui-text);
 }
 
-body.theme-serpent .shadow-glow {
-  box-shadow: 0 28px 65px rgba(27, 197, 135, 0.3);
+body.theme-serpent .app-header,
+body.theme-serpent .app-footer {
+  background: rgba(6, 20, 15, 0.85);
+  border-color: rgba(94, 208, 160, 0.32);
+  box-shadow: 0 24px 60px rgba(22, 102, 70, 0.28);
 }
 
-body.theme-serpent header,
-body.theme-serpent footer {
-  background: rgba(9, 26, 20, 0.78);
-  border-color: rgba(80, 185, 139, 0.3);
+body.theme-serpent .app-brand__logo {
+  background: linear-gradient(145deg, rgba(52, 245, 197, 0.92), rgba(123, 245, 139, 0.75));
+  color: #03140d;
+}
+
+body.theme-serpent .app-nav__link {
+  border-color: rgba(84, 186, 137, 0.35);
+  background: rgba(12, 34, 24, 0.6);
+  color: rgba(217, 255, 238, 0.9);
+}
+
+body.theme-serpent .app-nav__link:hover,
+body.theme-serpent .app-nav__link:focus-visible {
+  border-color: rgba(122, 255, 210, 0.55);
+  color: #ffffff;
+}
+
+body.theme-serpent .app-nav__link.is-active {
+  background: linear-gradient(135deg, rgba(46, 213, 166, 0.92), rgba(19, 163, 116, 0.75));
+  color: #02130d;
+}
+
+body.theme-serpent .app-nav__dropdown {
+  border-color: rgba(94, 208, 160, 0.32);
+  background: rgba(6, 20, 15, 0.96);
+}
+
+body.theme-serpent .app-nav__dropdown a.is-active {
+  background: rgba(46, 213, 166, 0.22);
+}
+
+body.theme-serpent .app-nav-mobile a,
+body.theme-serpent .app-nav-mobile summary {
+  border-color: rgba(84, 186, 137, 0.35);
+  background: rgba(10, 28, 20, 0.65);
 }
 
 body.theme-serpent .card {
-  background: linear-gradient(145deg, rgba(9, 28, 21, 0.9), rgba(15, 49, 34, 0.85));
-  border: 1px solid rgba(122, 255, 210, 0.25);
-  box-shadow: 0 22px 55px rgba(16, 62, 45, 0.45);
+  background: linear-gradient(150deg, rgba(9, 28, 21, 0.88), rgba(15, 49, 34, 0.78));
+  border-color: rgba(122, 255, 210, 0.28);
+  box-shadow: 0 28px 60px rgba(16, 62, 45, 0.45);
+}
+
+body.theme-serpent .stat-card {
+  background: linear-gradient(165deg, rgba(12, 40, 27, 0.95), rgba(18, 84, 58, 0.75));
+  border-color: rgba(94, 208, 160, 0.32);
+}
+
+body.theme-serpent .admin-nav__link {
+  border-color: rgba(84, 186, 137, 0.35);
+  background: rgba(9, 26, 20, 0.75);
+  color: rgba(217, 255, 236, 0.9);
+}
+
+body.theme-serpent .admin-nav__link.is-active {
+  background: linear-gradient(140deg, rgba(46, 213, 166, 0.92), rgba(19, 163, 116, 0.78));
+  color: #02130d;
+}
+
+body.theme-serpent .hero-cta a,
+body.theme-serpent .home-highlight-card,
+body.theme-serpent .adoption-card {
+  border-color: rgba(84, 186, 137, 0.35);
+  background: rgba(6, 20, 15, 0.68);
 }
 
 body.theme-serpent .btn,
-body.theme-serpent .btn-secondary,
-body.theme-serpent .card a.btn,
-body.theme-serpent .card a.btn-secondary {
-  border-color: rgba(116, 247, 201, 0.7);
-  background: linear-gradient(135deg, rgba(46, 213, 166, 0.18), rgba(16, 76, 55, 0.9));
+body.theme-serpent .card a.btn {
+  border-color: rgba(122, 255, 210, 0.6);
+  background: linear-gradient(135deg, rgba(46, 213, 166, 0.22), rgba(16, 76, 55, 0.9));
   color: #d7ffee;
 }
 
 body.theme-serpent .btn:hover,
-body.theme-serpent .btn-secondary:hover,
-body.theme-serpent .card a.btn:hover,
-body.theme-serpent .card a.btn-secondary:hover {
-  border-color: rgba(140, 255, 214, 0.9);
-  background: linear-gradient(135deg, rgba(58, 247, 194, 0.28), rgba(22, 102, 70, 0.95));
+body.theme-serpent .card a.btn:hover {
+  border-color: rgba(140, 255, 214, 0.8);
+  box-shadow: 0 24px 55px rgba(32, 186, 132, 0.32);
   color: #ffffff;
-  box-shadow: 0 24px 55px rgba(32, 186, 132, 0.38);
-}
-
-body.theme-serpent .badge {
-  background: rgba(46, 213, 166, 0.22);
-  color: #6fffd1;
-}
-
-body.theme-serpent .badge-pattern {
-  background: linear-gradient(135deg, rgba(252, 255, 247, 0.85), rgba(168, 255, 218, 0.45));
-  color: #092318;
-  border-color: rgba(145, 255, 215, 0.4);
-}
-
-body.theme-serpent .alert-error {
-  border-color: rgba(255, 138, 122, 0.5);
-  background: rgba(255, 138, 122, 0.16);
-  color: #ffd7d1;
 }
 
 body.theme-serpent .alert-success {
-  border-color: rgba(121, 255, 196, 0.45);
-  background: rgba(80, 225, 158, 0.18);
+  background: rgba(80, 225, 158, 0.2);
+  border-color: rgba(121, 255, 196, 0.35);
   color: #e1ffef;
 }
 
-body.theme-serpent [data-desktop-nav] a,
-body.theme-serpent [data-mobile-nav-panel] a {
-  border-color: rgba(84, 186, 137, 0.35);
-  color: rgba(209, 255, 236, 0.92);
-}
-
-body.theme-serpent [data-desktop-nav] a:hover,
-body.theme-serpent [data-mobile-nav-panel] a:hover {
-  border-color: rgba(145, 255, 214, 0.75);
-  background-color: rgba(44, 186, 129, 0.18);
-  color: #ffffff;
-}
-
-body.theme-serpent [data-desktop-nav] a.inline-flex.border-brand-400,
-body.theme-serpent [data-mobile-nav-panel] .block.border-brand-400,
-body.theme-serpent nav a[class*='border-brand-400'] {
-  border-color: rgba(116, 247, 201, 0.8) !important;
-  background-color: rgba(24, 122, 86, 0.42) !important;
-  color: #eafff7 !important;
+body.theme-serpent .alert-error {
+  background: rgba(255, 138, 122, 0.18);
+  border-color: rgba(255, 138, 122, 0.4);
+  color: #ffd7d1;
 }
 
 body.theme-serpent .table thead {
   background: rgba(16, 54, 38, 0.9);
-}
-
-body.theme-serpent .table tbody tr:nth-child(even) {
-  background: rgba(12, 37, 26, 0.45);
-}
-
-body.theme-serpent details[open] > summary {
-  border-color: rgba(120, 255, 203, 0.6);
-  background-color: rgba(18, 84, 58, 0.6);
-}
-
-body.theme-serpent .rich-text-content a {
-  color: rgba(122, 255, 203, 0.95);
-  text-decoration-color: rgba(122, 255, 203, 0.6);
-}
-
-body.theme-serpent .rich-text-content a:hover {
-  color: #ffffff;
-  text-decoration-color: rgba(140, 255, 214, 0.85);
-}
-
-body.theme-serpent [data-mobile-nav-panel] {
-  background: rgba(6, 28, 20, 0.95);
-  border-color: rgba(94, 208, 160, 0.35);
+  color: rgba(209, 255, 236, 0.88);
 }
 
 body.theme-serpent .gene-reference__card {
@@ -127,20 +127,31 @@ body.theme-serpent .gene-reference__card {
   border: 1px solid rgba(122, 255, 203, 0.25);
 }
 
-body.theme-serpent .gene-selector__intro,
 body.theme-serpent .gene-parent__input input,
-body.theme-serpent .gene-parent__suggestions,
-body.theme-serpent .gene-parent__tags {
-  background-color: rgba(12, 39, 28, 0.85);
-  border-color: rgba(122, 255, 203, 0.25);
-}
-
-body.theme-serpent .gene-parent__input input {
+body.theme-serpent select,
+body.theme-serpent textarea,
+body.theme-serpent input[type="text"],
+body.theme-serpent input[type="email"],
+body.theme-serpent input[type="number"],
+body.theme-serpent input[type="password"] {
+  background: rgba(6, 20, 15, 0.78);
+  border: 1px solid rgba(122, 255, 203, 0.25);
   color: #d4ffe9;
 }
 
+body.theme-serpent .gene-parent__input input:focus,
+body.theme-serpent select:focus,
+body.theme-serpent textarea:focus,
+body.theme-serpent input[type="text"]:focus,
+body.theme-serpent input[type="email"]:focus,
+body.theme-serpent input[type="number"]:focus,
+body.theme-serpent input[type="password"]:focus {
+  border-color: rgba(122, 255, 203, 0.5);
+  box-shadow: 0 0 0 3px rgba(122, 255, 203, 0.2);
+}
+
 body.theme-serpent .gene-parent__tags button {
-  background: rgba(46, 213, 166, 0.2);
+  background: rgba(46, 213, 166, 0.22);
   color: #8affd6;
 }
 
@@ -148,4 +159,3 @@ body.theme-serpent .gene-parent__tags button:hover {
   background: rgba(58, 247, 194, 0.35);
   color: #ffffff;
 }
-

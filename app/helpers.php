@@ -24,6 +24,47 @@ function asset(string $path): string
     return BASE_URL . '/assets/' . ltrim($path, '/');
 }
 
+function normalize_media_path(?string $path): ?string
+{
+    if ($path === null) {
+        return null;
+    }
+
+    $path = trim($path);
+    if ($path === '') {
+        return null;
+    }
+
+    $path = str_replace('\\', '/', $path);
+
+    if (preg_match('#^https?://#i', $path)) {
+        $parsed = parse_url($path, PHP_URL_PATH);
+        if (is_string($parsed) && $parsed !== '') {
+            $path = $parsed;
+        }
+    }
+
+    if (BASE_URL !== '' && str_starts_with($path, BASE_URL)) {
+        $path = substr($path, strlen(BASE_URL));
+    }
+
+    $path = preg_replace('#^public/#', '', $path);
+    $path = ltrim($path, '/');
+
+    return $path !== '' ? $path : null;
+}
+
+function media_url(?string $path): ?string
+{
+    $normalized = normalize_media_path($path);
+    if ($normalized === null) {
+        return null;
+    }
+
+    $base = rtrim(BASE_URL, '/');
+    return ($base !== '' ? $base : '') . '/' . $normalized;
+}
+
 function redirect(string $route, array $params = []): void
 {
     $query = http_build_query(array_merge(['route' => $route], $params));
@@ -133,7 +174,7 @@ function ensure_directory(string $dir): void
     }
 }
 
-function handle_upload(array $file): ?string
+function handle_upload(array $file, bool $withDetails = false)
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
         return null;
@@ -162,7 +203,26 @@ function handle_upload(array $file): ?string
         return null;
     }
 
-    return 'uploads/' . $filename;
+    $relativePath = 'uploads/' . $filename;
+
+    if (!$withDetails) {
+        return $relativePath;
+    }
+
+    $size = @filesize($destination);
+    $dimensions = null;
+    if ($mimeType && strpos($mimeType, 'image/') === 0) {
+        $dimensions = @getimagesize($destination) ?: null;
+    }
+
+    return [
+        'path' => $relativePath,
+        'original_name' => $originalName,
+        'mime_type' => $mimeType,
+        'file_size' => $size !== false ? (int)$size : null,
+        'width' => $dimensions ? (int)$dimensions[0] : null,
+        'height' => $dimensions ? (int)$dimensions[1] : null,
+    ];
 }
 
 function normalize_nullable_id($value): ?int
@@ -371,4 +431,21 @@ function render_rich_text(?string $value): string
     }
 
     return $value;
+}
+
+function format_bytes(int $bytes, int $precision = 1): string
+{
+    if ($bytes < 1024) {
+        return $bytes . ' B';
+    }
+
+    $units = ['KB', 'MB', 'GB', 'TB'];
+    $value = $bytes;
+    $unitIndex = -1;
+    while ($value >= 1024 && $unitIndex < count($units) - 1) {
+        $value /= 1024;
+        $unitIndex++;
+    }
+
+    return round($value, $precision) . ' ' . $units[$unitIndex];
 }

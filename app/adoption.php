@@ -19,7 +19,7 @@ function create_listing(PDO $pdo, array $data): void
         'genetics_profile' => $data['genetics_profile'] ?? null,
         'price' => ($price = trim((string)($data['price'] ?? ''))) === '' ? null : $price,
         'description' => $data['description'] ?? null,
-        'image_path' => $data['image_path'] ?? null,
+        'image_path' => normalize_media_path($data['image_path'] ?? null),
         'status' => normalize_listing_status($data['status'] ?? 'available'),
         'contact_email' => ($email = trim($data['contact_email'] ?? '')) === '' ? null : $email,
     ]);
@@ -37,7 +37,7 @@ function update_listing(PDO $pdo, int $id, array $data): void
         'genetics_profile' => $data['genetics_profile'] ?? null,
         'price' => ($price = trim((string)($data['price'] ?? ''))) === '' ? null : $price,
         'description' => $data['description'] ?? null,
-        'image_path' => $data['image_path'] ?? null,
+        'image_path' => normalize_media_path($data['image_path'] ?? null),
         'status' => normalize_listing_status($data['status'] ?? 'available'),
         'contact_email' => ($email = trim($data['contact_email'] ?? '')) === '' ? null : $email,
         'id' => $id,
