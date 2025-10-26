@@ -76,6 +76,16 @@
             </span>
             <span class="admin-nav__label">Pflegeleitfaden</span>
         </a>
+        <a href="<?= BASE_URL ?>/index.php?route=admin/media" class="admin-nav__link nui-pill <?= $currentRoute === 'admin/media' ? 'is-active' : '' ?>">
+            <span class="admin-nav__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <circle cx="8.5" cy="10.5" r="1.5" />
+                    <path d="M21 15l-4-4-3 3-2-2-5 5" />
+                </svg>
+            </span>
+            <span class="admin-nav__label">Medien</span>
+        </a>
         <a href="<?= BASE_URL ?>/index.php?route=admin/genetics" class="admin-nav__link nui-pill <?= $currentRoute === 'admin/genetics' ? 'is-active' : '' ?>">
             <span class="admin-nav__icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">

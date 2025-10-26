@@ -133,7 +133,7 @@ function ensure_directory(string $dir): void
     }
 }
 
-function handle_upload(array $file): ?string
+function handle_upload(array $file, bool $withDetails = false)
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
         return null;
@@ -162,7 +162,26 @@ function handle_upload(array $file): ?string
         return null;
     }
 
-    return 'uploads/' . $filename;
+    $relativePath = 'uploads/' . $filename;
+
+    if (!$withDetails) {
+        return $relativePath;
+    }
+
+    $size = @filesize($destination);
+    $dimensions = null;
+    if ($mimeType && strpos($mimeType, 'image/') === 0) {
+        $dimensions = @getimagesize($destination) ?: null;
+    }
+
+    return [
+        'path' => $relativePath,
+        'original_name' => $originalName,
+        'mime_type' => $mimeType,
+        'file_size' => $size !== false ? (int)$size : null,
+        'width' => $dimensions ? (int)$dimensions[0] : null,
+        'height' => $dimensions ? (int)$dimensions[1] : null,
+    ];
 }
 
 function normalize_nullable_id($value): ?int
@@ -371,4 +390,21 @@ function render_rich_text(?string $value): string
     }
 
     return $value;
+}
+
+function format_bytes(int $bytes, int $precision = 1): string
+{
+    if ($bytes < 1024) {
+        return $bytes . ' B';
+    }
+
+    $units = ['KB', 'MB', 'GB', 'TB'];
+    $value = $bytes;
+    $unitIndex = -1;
+    while ($value >= 1024 && $unitIndex < count($units) - 1) {
+        $value /= 1024;
+        $unitIndex++;
+    }
+
+    return round($value, $precision) . ' ' . $units[$unitIndex];
 }

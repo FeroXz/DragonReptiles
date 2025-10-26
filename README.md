@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `uploads/`.
 
-**Aktuelle Version:** 3.3.0
+**Aktuelle Version:** 3.4.0
 
 ## Kernfunktionen
 
@@ -14,6 +14,8 @@ Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes C
 - 📈 **Dashboard** mit Kennzahlen zu Bestand, Abgabeinträgen und neuen Anfragen.
 - 💾 **Persistente Speicherung** per SQLite – keine zusätzliche Server-Software notwendig.
 - 🖼️ **Galerie-Verwaltung** inklusive Uploads, Tags und Startseiten-Highlights.
+- 📚 **Wissenssammlung** mit Themenbaum, Inhaltsverzeichnissen und internen Verlinkungen im Wiki-Stil.
+- 🗂️ **Medienverwaltung** zur Organisation wiederverwendbarer Bilder und Alt-Texte.
 - 🧩 **Drag-&-Drop-Startseitenlayout** für News-, Adoption-, Pflege- und Galerie-Sektionen.
 - 🔄 **ZIP-Update-Manager** im Adminbereich – Updates ohne Verlust eigener Inhalte einspielen.
 
@@ -117,3 +119,5 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] HorizonUI-3.0-inspiriertes Darkmode-Redesign „Horizon Nightfall“ mit Nuxt UI 4.1 Styling für Frontend und ArminDashboard (Version 3.2.0).
 - [x] Nuxt UI 4.1 Runtime eingebunden und HorizonUI-Token für Navigation, Hero-CTA und Admin-Panels neu abgestimmt (Version 3.3.0).
 - [x] Dragon-Reptiles-Edition mit Galerieverwaltung, Drag-&-Drop-Startseitenlayout und ZIP-Update-Manager für inhaltsneutrale Releases.
+- [x] Wissenssammlung mit Wiki-Funktionen wie Themenbaum, internen Verlinkungen und Inhaltsverzeichnis ausgebaut (Version 3.4.0).
+- [x] Medienverwaltung für Bild-Uploads samt Metadaten, Suche und Austausch im Admin-Bereich bereitgestellt (Version 3.4.0).

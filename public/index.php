@@ -131,8 +131,25 @@ switch ($route) {
 
     case 'care-guide':
         $settings = get_all_settings($pdo);
-        $careArticles = get_published_care_articles($pdo);
-        view('care/index', compact('settings', 'careArticles'));
+        $allArticles = get_published_care_articles($pdo);
+        $topicsTree = get_care_topics_hierarchy($pdo, true);
+        $searchQuery = trim($_GET['q'] ?? '');
+        $topicSlug = $_GET['topic'] ?? null;
+        $activeTopic = $topicSlug ? get_care_topic_by_slug($pdo, $topicSlug) : null;
+        $topicId = $activeTopic ? (int)$activeTopic['id'] : null;
+        if ($searchQuery !== '' || $topicId) {
+            $careArticles = search_care_articles($pdo, $searchQuery, $topicId, true);
+        } else {
+            $careArticles = $allArticles;
+        }
+        view('care/index', [
+            'settings' => $settings,
+            'careArticles' => $careArticles,
+            'topicsTree' => $topicsTree,
+            'searchQuery' => $searchQuery,
+            'activeTopic' => $activeTopic,
+            'allArticles' => $allArticles,
+        ]);
         break;
 
     case 'care-article':
@@ -144,10 +161,17 @@ switch ($route) {
             break;
         }
         $settings = get_all_settings($pdo);
+        $publishedArticles = get_published_care_articles($pdo);
+        $articleIndex = build_care_article_index($publishedArticles);
+        $rendered = render_care_article_markup($article['content'], $articleIndex);
+        $relatedArticles = get_related_care_articles($pdo, (int)$article['id']);
         view('care/show', [
             'settings' => $settings,
             'article' => $article,
             'activeCareSlug' => $article['slug'],
+            'articleContent' => $rendered['html'],
+            'articleHeadings' => $rendered['headings'],
+            'relatedArticles' => $relatedArticles,
         ]);
         break;
 
@@ -280,6 +304,95 @@ switch ($route) {
             }
         }
         redirect('admin/gallery');
+        break;
+
+    case 'admin/media':
+        require_login();
+        if (!is_authorized('can_manage_settings')) {
+            flash('error', 'Keine Berechtigung.');
+            redirect('admin/dashboard');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? 'upload_asset';
+            if ($action === 'upload_asset') {
+                require_csrf_token('admin/media');
+                $title = trim($_POST['title'] ?? '');
+                $altText = trim($_POST['alt_text'] ?? '');
+                $tags = trim($_POST['tags'] ?? '');
+                $file = $_FILES['media_file'] ?? [];
+                if (empty($file['name'])) {
+                    flash('error', 'Bitte eine Bilddatei auswählen.');
+                    redirect('admin/media');
+                }
+                $mediaId = create_media_asset_from_upload($pdo, $file, [
+                    'title' => $title !== '' ? $title : null,
+                    'alt_text' => $altText !== '' ? $altText : null,
+                    'tags' => $tags !== '' ? $tags : null,
+                ]);
+                if ($mediaId) {
+                    flash('success', 'Medienobjekt gespeichert.');
+                } else {
+                    flash('error', 'Upload fehlgeschlagen. Bitte gültiges Bild prüfen.');
+                }
+                redirect('admin/media');
+            } elseif ($action === 'update_asset') {
+                $assetId = (int)($_POST['id'] ?? 0);
+                $redirectParams = $assetId ? ['edit' => $assetId] : [];
+                require_csrf_token('admin/media', $redirectParams);
+                if (!$assetId) {
+                    flash('error', 'Medienobjekt nicht gefunden.');
+                    redirect('admin/media');
+                }
+                $asset = get_media_asset($pdo, $assetId);
+                if (!$asset) {
+                    flash('error', 'Medienobjekt nicht gefunden.');
+                    redirect('admin/media');
+                }
+                $updateData = [
+                    'title' => ($t = trim($_POST['title'] ?? '')) !== '' ? $t : null,
+                    'alt_text' => ($a = trim($_POST['alt_text'] ?? '')) !== '' ? $a : null,
+                    'tags' => ($tg = trim($_POST['tags'] ?? '')) !== '' ? $tg : null,
+                ];
+                $replacement = $_FILES['replacement_file'] ?? [];
+                if (!empty($replacement['name'])) {
+                    $upload = handle_upload($replacement, true);
+                    if (!$upload || empty($upload['path'])) {
+                        flash('error', 'Upload fehlgeschlagen. Bitte gültiges Bild prüfen.');
+                        redirect('admin/media', ['edit' => $assetId]);
+                    }
+                    remove_media_file($asset['file_path'] ?? null);
+                    $updateData['file_path'] = $upload['path'];
+                    $updateData['original_name'] = $upload['original_name'] ?? null;
+                    $updateData['mime_type'] = $upload['mime_type'] ?? null;
+                    $updateData['file_size'] = $upload['file_size'] ?? null;
+                    $updateData['width'] = $upload['width'] ?? null;
+                    $updateData['height'] = $upload['height'] ?? null;
+                }
+                update_media_asset($pdo, $assetId, $updateData);
+                flash('success', 'Medienobjekt aktualisiert.');
+                redirect('admin/media', ['edit' => $assetId]);
+            } elseif ($action === 'delete_asset') {
+                require_csrf_token('admin/media');
+                $assetId = (int)($_POST['id'] ?? 0);
+                if ($assetId) {
+                    delete_media_asset($pdo, $assetId);
+                    flash('success', 'Medienobjekt gelöscht.');
+                }
+                redirect('admin/media');
+            }
+        }
+
+        $settings = get_all_settings($pdo);
+        $searchQuery = trim($_GET['q'] ?? '');
+        $assets = $searchQuery !== '' ? search_media_assets($pdo, $searchQuery) : get_media_assets($pdo);
+        $editingAsset = null;
+        if (isset($_GET['edit'])) {
+            $editingAsset = get_media_asset($pdo, (int)$_GET['edit']);
+        }
+        $flashSuccess = flash('success');
+        $flashError = flash('error');
+        view('admin/media', compact('settings', 'assets', 'editingAsset', 'flashSuccess', 'flashError', 'searchQuery'));
         break;
 
     case 'admin/home-layout':
@@ -915,7 +1028,8 @@ switch ($route) {
             redirect('admin/dashboard');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (($_POST['action'] ?? '') === 'delete_care_article') {
+            $action = $_POST['action'] ?? 'save_care_article';
+            if ($action === 'delete_care_article') {
                 require_csrf_token('admin/care');
                 $articleId = (int)($_POST['article_id'] ?? 0);
                 if ($articleId) {
@@ -923,28 +1037,58 @@ switch ($route) {
                     flash('success', 'Artikel gelöscht.');
                 }
                 redirect('admin/care');
-            }
-
-            $redirectParams = !empty($_POST['id']) ? ['edit' => (int)$_POST['id']] : [];
-            require_csrf_token('admin/care', $redirectParams);
-            $data = [
-                'title' => trim($_POST['title'] ?? ''),
-                'slug' => trim($_POST['slug'] ?? ''),
-                'summary' => $_POST['summary'] ?? null,
-                'content' => $_POST['content'] ?? '',
-                'is_published' => isset($_POST['is_published']),
-            ];
-            if ($data['title'] && $data['content']) {
-                if (!empty($_POST['id'])) {
-                    update_care_article($pdo, (int)$_POST['id'], $data);
-                    flash('success', 'Artikel aktualisiert.');
+            } elseif ($action === 'save_care_article') {
+                $redirectParams = !empty($_POST['id']) ? ['edit' => (int)$_POST['id']] : [];
+                require_csrf_token('admin/care', $redirectParams);
+                $topicIds = isset($_POST['topic_ids']) && is_array($_POST['topic_ids']) ? $_POST['topic_ids'] : [];
+                $data = [
+                    'title' => trim($_POST['title'] ?? ''),
+                    'slug' => trim($_POST['slug'] ?? ''),
+                    'summary' => $_POST['summary'] ?? null,
+                    'content' => $_POST['content'] ?? '',
+                    'is_published' => isset($_POST['is_published']),
+                ];
+                if ($data['title'] && $data['content']) {
+                    if (!empty($_POST['id'])) {
+                        update_care_article($pdo, (int)$_POST['id'], $data, $topicIds);
+                        flash('success', 'Artikel aktualisiert.');
+                    } else {
+                        create_care_article($pdo, $data, $topicIds);
+                        flash('success', 'Artikel erstellt.');
+                    }
+                    redirect('admin/care');
+                }
+                flash('error', 'Bitte formulieren Sie einen Titel und den vollständigen Artikelinhalt.');
+            } elseif ($action === 'save_care_topic') {
+                $redirectParams = !empty($_POST['id']) ? ['edit_topic' => (int)$_POST['id']] : [];
+                require_csrf_token('admin/care', $redirectParams);
+                $topicData = [
+                    'title' => trim($_POST['topic_title'] ?? ''),
+                    'slug' => trim($_POST['topic_slug'] ?? ''),
+                    'description' => $_POST['topic_description'] ?? null,
+                    'parent_id' => $_POST['topic_parent_id'] ?? null,
+                ];
+                if ($topicData['title'] === '') {
+                    flash('error', 'Bitte vergeben Sie einen Themen-Titel.');
                 } else {
-                    create_care_article($pdo, $data);
-                    flash('success', 'Artikel erstellt.');
+                    if (!empty($_POST['id'])) {
+                        update_care_topic($pdo, (int)$_POST['id'], $topicData);
+                        flash('success', 'Thema aktualisiert.');
+                        redirect('admin/care', ['edit_topic' => (int)$_POST['id']]);
+                    } else {
+                        create_care_topic($pdo, $topicData);
+                        flash('success', 'Thema angelegt.');
+                        redirect('admin/care');
+                    }
+                }
+            } elseif ($action === 'delete_care_topic') {
+                require_csrf_token('admin/care');
+                $topicId = (int)($_POST['topic_id'] ?? 0);
+                if ($topicId) {
+                    delete_care_topic($pdo, $topicId);
+                    flash('success', 'Thema gelöscht.');
                 }
                 redirect('admin/care');
-            } else {
-                flash('error', 'Bitte formulieren Sie einen Titel und den vollständigen Artikelinhalt.');
             }
         }
         $settings = get_all_settings($pdo);
@@ -953,9 +1097,15 @@ switch ($route) {
         if (isset($_GET['edit'])) {
             $editArticle = get_care_article($pdo, (int)$_GET['edit']);
         }
+        $topicsTree = get_care_topics_hierarchy($pdo);
+        $flatTopics = get_flat_care_topics($pdo);
+        $topicToEdit = null;
+        if (isset($_GET['edit_topic'])) {
+            $topicToEdit = get_care_topic($pdo, (int)$_GET['edit_topic']);
+        }
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/care', compact('settings', 'careArticles', 'editArticle', 'flashSuccess', 'flashError'));
+        view('admin/care', compact('settings', 'careArticles', 'editArticle', 'topicsTree', 'flatTopics', 'topicToEdit', 'flashSuccess', 'flashError'));
         break;
 
     case 'admin/genetics':
