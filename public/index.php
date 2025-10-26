@@ -131,8 +131,25 @@ switch ($route) {
 
     case 'care-guide':
         $settings = get_all_settings($pdo);
-        $careArticles = get_published_care_articles($pdo);
-        view('care/index', compact('settings', 'careArticles'));
+        $allArticles = get_published_care_articles($pdo);
+        $topicsTree = get_care_topics_hierarchy($pdo, true);
+        $searchQuery = trim($_GET['q'] ?? '');
+        $topicSlug = $_GET['topic'] ?? null;
+        $activeTopic = $topicSlug ? get_care_topic_by_slug($pdo, $topicSlug) : null;
+        $topicId = $activeTopic ? (int)$activeTopic['id'] : null;
+        if ($searchQuery !== '' || $topicId) {
+            $careArticles = search_care_articles($pdo, $searchQuery, $topicId, true);
+        } else {
+            $careArticles = $allArticles;
+        }
+        view('care/index', [
+            'settings' => $settings,
+            'careArticles' => $careArticles,
+            'topicsTree' => $topicsTree,
+            'searchQuery' => $searchQuery,
+            'activeTopic' => $activeTopic,
+            'allArticles' => $allArticles,
+        ]);
         break;
 
     case 'care-article':
@@ -144,10 +161,17 @@ switch ($route) {
             break;
         }
         $settings = get_all_settings($pdo);
+        $publishedArticles = get_published_care_articles($pdo);
+        $articleIndex = build_care_article_index($publishedArticles);
+        $rendered = render_care_article_markup($article['content'], $articleIndex);
+        $relatedArticles = get_related_care_articles($pdo, (int)$article['id']);
         view('care/show', [
             'settings' => $settings,
             'article' => $article,
             'activeCareSlug' => $article['slug'],
+            'articleContent' => $rendered['html'],
+            'articleHeadings' => $rendered['headings'],
+            'relatedArticles' => $relatedArticles,
         ]);
         break;
 
@@ -212,12 +236,46 @@ switch ($route) {
             $description = $_POST['description'] ?? '';
             $tags = $_POST['tags'] ?? '';
             $isFeatured = !empty($_POST['is_featured']);
-            $upload = $_FILES['image'] ?? [];
-            $uploadedPath = handle_upload($upload);
+            $selectedAssetId = normalize_nullable_id($_POST['media_asset_id'] ?? null);
+            $persistedPath = normalize_media_path($_POST['image_path'] ?? null);
+            $newImagePath = $persistedPath;
+            $redirectParams = $id ? ['edit' => $id] : [];
+
+            if (!empty($_FILES['image']['name'])) {
+                $assetId = create_media_asset_from_upload($pdo, $_FILES['image'], [
+                    'title' => $title !== '' ? $title : 'Galeriebild',
+                    'tags' => 'gallery,upload',
+                ]);
+                if ($assetId) {
+                    $asset = get_media_asset($pdo, $assetId);
+                    if ($asset) {
+                        $newImagePath = $asset['file_path'] ?? $newImagePath;
+                        $selectedAssetId = $assetId;
+                    }
+                } else {
+                    flash('error', 'Upload fehlgeschlagen. Bitte Bildformat prüfen.');
+                    redirect('admin/gallery', $redirectParams);
+                }
+            } elseif ($selectedAssetId) {
+                $asset = get_media_asset($pdo, $selectedAssetId);
+                if ($asset) {
+                    $newImagePath = $asset['file_path'];
+                }
+            }
+
+            if (!$selectedAssetId && $newImagePath) {
+                $asset = ensure_media_asset_for_path($pdo, $newImagePath, [
+                    'title' => $title !== '' ? $title : null,
+                    'tags' => $tags !== '' ? $tags : 'gallery,backfill',
+                ]);
+                if ($asset) {
+                    $newImagePath = $asset['file_path'];
+                }
+            }
 
             if ($title === '') {
                 flash('error', 'Bitte einen Titel angeben.');
-                redirect('admin/gallery');
+                redirect('admin/gallery', $redirectParams);
             }
 
             if ($id) {
@@ -232,12 +290,12 @@ switch ($route) {
                     'description' => $description,
                     'tags' => $tags,
                     'is_featured' => $isFeatured,
-                    'image_path' => $uploadedPath,
+                    'image_path' => $newImagePath,
                 ]);
                 flash('success', 'Galerie-Eintrag aktualisiert.');
             } else {
-                if (!$uploadedPath) {
-                    flash('error', 'Bitte ein Bild für den neuen Eintrag hochladen.');
+                if (!$newImagePath) {
+                    flash('error', 'Bitte ein Bild für den neuen Eintrag wählen oder hochladen.');
                     redirect('admin/gallery');
                 }
 
@@ -246,7 +304,7 @@ switch ($route) {
                     'description' => $description,
                     'tags' => $tags,
                     'is_featured' => $isFeatured,
-                    'image_path' => $uploadedPath,
+                    'image_path' => $newImagePath,
                 ]);
                 flash('success', 'Galerie-Eintrag angelegt.');
             }
@@ -259,10 +317,17 @@ switch ($route) {
         $editingItem = null;
         if (isset($_GET['edit'])) {
             $editingItem = find_gallery_item($pdo, (int)$_GET['edit']);
+            if ($editingItem && !empty($editingItem['image_path'])) {
+                $media = find_media_asset_by_path($pdo, $editingItem['image_path']);
+                if ($media) {
+                    $editingItem['media_asset_id'] = (int)$media['id'];
+                }
+            }
         }
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/gallery', compact('settings', 'galleryItems', 'editingItem', 'flashSuccess', 'flashError'));
+        $mediaAssets = get_media_assets($pdo);
+        view('admin/gallery', compact('settings', 'galleryItems', 'editingItem', 'flashSuccess', 'flashError', 'mediaAssets'));
         break;
 
     case 'admin/gallery/delete':
@@ -280,6 +345,95 @@ switch ($route) {
             }
         }
         redirect('admin/gallery');
+        break;
+
+    case 'admin/media':
+        require_login();
+        if (!is_authorized('can_manage_settings')) {
+            flash('error', 'Keine Berechtigung.');
+            redirect('admin/dashboard');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? 'upload_asset';
+            if ($action === 'upload_asset') {
+                require_csrf_token('admin/media');
+                $title = trim($_POST['title'] ?? '');
+                $altText = trim($_POST['alt_text'] ?? '');
+                $tags = trim($_POST['tags'] ?? '');
+                $file = $_FILES['media_file'] ?? [];
+                if (empty($file['name'])) {
+                    flash('error', 'Bitte eine Bilddatei auswählen.');
+                    redirect('admin/media');
+                }
+                $mediaId = create_media_asset_from_upload($pdo, $file, [
+                    'title' => $title !== '' ? $title : null,
+                    'alt_text' => $altText !== '' ? $altText : null,
+                    'tags' => $tags !== '' ? $tags : null,
+                ]);
+                if ($mediaId) {
+                    flash('success', 'Medienobjekt gespeichert.');
+                } else {
+                    flash('error', 'Upload fehlgeschlagen. Bitte gültiges Bild prüfen.');
+                }
+                redirect('admin/media');
+            } elseif ($action === 'update_asset') {
+                $assetId = (int)($_POST['id'] ?? 0);
+                $redirectParams = $assetId ? ['edit' => $assetId] : [];
+                require_csrf_token('admin/media', $redirectParams);
+                if (!$assetId) {
+                    flash('error', 'Medienobjekt nicht gefunden.');
+                    redirect('admin/media');
+                }
+                $asset = get_media_asset($pdo, $assetId);
+                if (!$asset) {
+                    flash('error', 'Medienobjekt nicht gefunden.');
+                    redirect('admin/media');
+                }
+                $updateData = [
+                    'title' => ($t = trim($_POST['title'] ?? '')) !== '' ? $t : null,
+                    'alt_text' => ($a = trim($_POST['alt_text'] ?? '')) !== '' ? $a : null,
+                    'tags' => ($tg = trim($_POST['tags'] ?? '')) !== '' ? $tg : null,
+                ];
+                $replacement = $_FILES['replacement_file'] ?? [];
+                if (!empty($replacement['name'])) {
+                    $upload = handle_upload($replacement, true);
+                    if (!$upload || empty($upload['path'])) {
+                        flash('error', 'Upload fehlgeschlagen. Bitte gültiges Bild prüfen.');
+                        redirect('admin/media', ['edit' => $assetId]);
+                    }
+                    remove_media_file($asset['file_path'] ?? null);
+                    $updateData['file_path'] = $upload['path'];
+                    $updateData['original_name'] = $upload['original_name'] ?? null;
+                    $updateData['mime_type'] = $upload['mime_type'] ?? null;
+                    $updateData['file_size'] = $upload['file_size'] ?? null;
+                    $updateData['width'] = $upload['width'] ?? null;
+                    $updateData['height'] = $upload['height'] ?? null;
+                }
+                update_media_asset($pdo, $assetId, $updateData);
+                flash('success', 'Medienobjekt aktualisiert.');
+                redirect('admin/media', ['edit' => $assetId]);
+            } elseif ($action === 'delete_asset') {
+                require_csrf_token('admin/media');
+                $assetId = (int)($_POST['id'] ?? 0);
+                if ($assetId) {
+                    delete_media_asset($pdo, $assetId);
+                    flash('success', 'Medienobjekt gelöscht.');
+                }
+                redirect('admin/media');
+            }
+        }
+
+        $settings = get_all_settings($pdo);
+        $searchQuery = trim($_GET['q'] ?? '');
+        $assets = $searchQuery !== '' ? search_media_assets($pdo, $searchQuery) : get_media_assets($pdo);
+        $editingAsset = null;
+        if (isset($_GET['edit'])) {
+            $editingAsset = get_media_asset($pdo, (int)$_GET['edit']);
+        }
+        $flashSuccess = flash('success');
+        $flashError = flash('error');
+        view('admin/media', compact('settings', 'assets', 'editingAsset', 'flashSuccess', 'flashError', 'searchQuery'));
         break;
 
     case 'admin/home-layout':
@@ -545,6 +699,8 @@ switch ($route) {
                 }
             }
 
+            $selectedAssetId = normalize_nullable_id($_POST['media_asset_id'] ?? null);
+
             $data = [
                 'id' => $_POST['id'] ?? null,
                 'name' => trim((string)($_POST['name'] ?? '')),
@@ -552,7 +708,7 @@ switch ($route) {
                 'special_notes' => $_POST['special_notes'] ?? null,
                 'description' => $_POST['description'] ?? null,
                 'owner_id' => $_POST['owner_id'] ?? null,
-                'image_path' => $_POST['image_path'] ?? null,
+                'image_path' => normalize_media_path($_POST['image_path'] ?? null),
                 'is_private' => isset($_POST['is_private']),
                 'is_showcased' => isset($_POST['is_showcased']),
                 'is_piebald' => isset($_POST['is_piebald']),
@@ -593,20 +749,50 @@ switch ($route) {
             $data['genetics'] = $geneSummary ? implode(', ', $geneSummary) : null;
             $data['genetics_profile'] = $geneticsProfile ? json_encode($geneticsProfile, JSON_UNESCAPED_UNICODE) : null;
 
-            if ($errorMessage !== null) {
-                flash('error', $errorMessage);
+            $uploadError = null;
+            if ($errorMessage === null) {
+                if (!empty($_FILES['image']['name'])) {
+                    $assetId = create_media_asset_from_upload($pdo, $_FILES['image'], [
+                        'title' => $data['name'] !== '' ? $data['name'] : ($selectedSpecies['name'] ?? 'Tierbild'),
+                        'alt_text' => $data['name'] !== '' ? $data['name'] . ' Portrait' : null,
+                        'tags' => 'animals,profile',
+                    ]);
+                    if ($assetId) {
+                        $asset = get_media_asset($pdo, $assetId);
+                        if ($asset) {
+                            $data['image_path'] = $asset['file_path'];
+                            $selectedAssetId = $assetId;
+                        }
+                    } else {
+                        $uploadError = 'Upload fehlgeschlagen. Bitte Bildformat prüfen.';
+                    }
+                } elseif ($selectedAssetId) {
+                    $asset = get_media_asset($pdo, $selectedAssetId);
+                    if ($asset) {
+                        $data['image_path'] = $asset['file_path'];
+                    }
+                }
+
+                if (!$selectedAssetId && !empty($data['image_path'])) {
+                    $asset = ensure_media_asset_for_path($pdo, $data['image_path'], [
+                        'title' => $data['name'] !== '' ? $data['name'] : null,
+                        'tags' => 'animals,backfill',
+                    ]);
+                    if ($asset) {
+                        $data['image_path'] = $asset['file_path'];
+                    }
+                }
+            }
+
+            if ($errorMessage !== null || $uploadError !== null) {
+                flash('error', $errorMessage ?? $uploadError);
                 $prefillAnimal = array_merge($data, [
                     'species_slug' => $speciesSlug,
                     'age_parts' => $ageParts,
                     'gene_states' => $geneticsProfile ? $geneticsProfile : $geneStates,
+                    'media_asset_id' => $selectedAssetId,
                 ]);
             } else {
-                if (!empty($_FILES['image']['name'])) {
-                    $upload = handle_upload($_FILES['image']);
-                    if ($upload) {
-                        $data['image_path'] = $upload;
-                    }
-                }
                 if (!empty($data['id'])) {
                     update_animal($pdo, (int)$data['id'], $data);
                     flash('success', 'Tier aktualisiert.');
@@ -640,10 +826,17 @@ switch ($route) {
                     $editAnimal['gene_states'] = $decodedProfile;
                 }
             }
+            if (!empty($editAnimal['image_path']) && empty($editAnimal['media_asset_id'])) {
+                $asset = find_media_asset_by_path($pdo, $editAnimal['image_path']);
+                if ($asset) {
+                    $editAnimal['media_asset_id'] = (int)$asset['id'];
+                }
+            }
         }
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/animals', compact('animals', 'users', 'editAnimal', 'flashSuccess', 'flashError', 'settings', 'speciesList', 'speciesGenes'));
+        $mediaAssets = get_media_assets($pdo);
+        view('admin/animals', compact('animals', 'users', 'editAnimal', 'flashSuccess', 'flashError', 'settings', 'speciesList', 'speciesGenes', 'mediaAssets'));
         break;
 
     case 'admin/breeding':
@@ -814,6 +1007,8 @@ switch ($route) {
                 }
             }
 
+            $selectedAssetId = normalize_nullable_id($_POST['media_asset_id'] ?? null);
+
             $data = [
                 'id' => $_POST['id'] ?? null,
                 'title' => trim((string)($_POST['title'] ?? '')),
@@ -822,7 +1017,7 @@ switch ($route) {
                 'description' => $_POST['description'] ?? null,
                 'status' => $_POST['status'] ?? 'available',
                 'contact_email' => $_POST['contact_email'] ?? null,
-                'image_path' => $_POST['image_path'] ?? null,
+                'image_path' => normalize_media_path($_POST['image_path'] ?? null),
             ];
 
             $errorMessage = null;
@@ -857,19 +1052,48 @@ switch ($route) {
             $data['genetics'] = $geneSummary ? implode(', ', $geneSummary) : null;
             $data['genetics_profile'] = $geneticsProfile ? json_encode($geneticsProfile, JSON_UNESCAPED_UNICODE) : null;
 
-            if ($errorMessage !== null) {
-                flash('error', $errorMessage);
+            $uploadError = null;
+            if ($errorMessage === null) {
+                if (!empty($_FILES['image']['name'])) {
+                    $assetId = create_media_asset_from_upload($pdo, $_FILES['image'], [
+                        'title' => $data['title'] !== '' ? $data['title'] : 'Adoptionsbild',
+                        'tags' => 'adoption,upload',
+                    ]);
+                    if ($assetId) {
+                        $asset = get_media_asset($pdo, $assetId);
+                        if ($asset) {
+                            $data['image_path'] = $asset['file_path'];
+                            $selectedAssetId = $assetId;
+                        }
+                    } else {
+                        $uploadError = 'Upload fehlgeschlagen. Bitte Bildformat prüfen.';
+                    }
+                } elseif ($selectedAssetId) {
+                    $asset = get_media_asset($pdo, $selectedAssetId);
+                    if ($asset) {
+                        $data['image_path'] = $asset['file_path'];
+                    }
+                }
+
+                if (!$selectedAssetId && !empty($data['image_path'])) {
+                    $asset = ensure_media_asset_for_path($pdo, $data['image_path'], [
+                        'title' => $data['title'] !== '' ? $data['title'] : null,
+                        'tags' => 'adoption,backfill',
+                    ]);
+                    if ($asset) {
+                        $data['image_path'] = $asset['file_path'];
+                    }
+                }
+            }
+
+            if ($errorMessage !== null || $uploadError !== null) {
+                flash('error', $errorMessage ?? $uploadError);
                 $prefillListing = array_merge($data, [
                     'species_slug' => $speciesSlug,
                     'gene_states' => $geneticsProfile ? $geneticsProfile : $geneStates,
+                    'media_asset_id' => $selectedAssetId,
                 ]);
             } else {
-                if (!empty($_FILES['image']['name'])) {
-                    $upload = handle_upload($_FILES['image']);
-                    if ($upload) {
-                        $data['image_path'] = $upload;
-                    }
-                }
                 if (!empty($data['id'])) {
                     update_listing($pdo, (int)$data['id'], $data);
                     flash('success', 'Abgabeintrag aktualisiert.');
@@ -902,10 +1126,17 @@ switch ($route) {
                     $editListing['gene_states'] = $decodedProfile;
                 }
             }
+            if (!empty($editListing['image_path']) && empty($editListing['media_asset_id'])) {
+                $asset = find_media_asset_by_path($pdo, $editListing['image_path']);
+                if ($asset) {
+                    $editListing['media_asset_id'] = (int)$asset['id'];
+                }
+            }
         }
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/adoption', compact('listings', 'animals', 'editListing', 'flashSuccess', 'flashError', 'settings', 'speciesList', 'speciesGenes'));
+        $mediaAssets = get_media_assets($pdo);
+        view('admin/adoption', compact('listings', 'animals', 'editListing', 'flashSuccess', 'flashError', 'settings', 'speciesList', 'speciesGenes', 'mediaAssets'));
         break;
 
     case 'admin/care':
@@ -915,7 +1146,8 @@ switch ($route) {
             redirect('admin/dashboard');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (($_POST['action'] ?? '') === 'delete_care_article') {
+            $action = $_POST['action'] ?? 'save_care_article';
+            if ($action === 'delete_care_article') {
                 require_csrf_token('admin/care');
                 $articleId = (int)($_POST['article_id'] ?? 0);
                 if ($articleId) {
@@ -923,28 +1155,58 @@ switch ($route) {
                     flash('success', 'Artikel gelöscht.');
                 }
                 redirect('admin/care');
-            }
-
-            $redirectParams = !empty($_POST['id']) ? ['edit' => (int)$_POST['id']] : [];
-            require_csrf_token('admin/care', $redirectParams);
-            $data = [
-                'title' => trim($_POST['title'] ?? ''),
-                'slug' => trim($_POST['slug'] ?? ''),
-                'summary' => $_POST['summary'] ?? null,
-                'content' => $_POST['content'] ?? '',
-                'is_published' => isset($_POST['is_published']),
-            ];
-            if ($data['title'] && $data['content']) {
-                if (!empty($_POST['id'])) {
-                    update_care_article($pdo, (int)$_POST['id'], $data);
-                    flash('success', 'Artikel aktualisiert.');
+            } elseif ($action === 'save_care_article') {
+                $redirectParams = !empty($_POST['id']) ? ['edit' => (int)$_POST['id']] : [];
+                require_csrf_token('admin/care', $redirectParams);
+                $topicIds = isset($_POST['topic_ids']) && is_array($_POST['topic_ids']) ? $_POST['topic_ids'] : [];
+                $data = [
+                    'title' => trim($_POST['title'] ?? ''),
+                    'slug' => trim($_POST['slug'] ?? ''),
+                    'summary' => $_POST['summary'] ?? null,
+                    'content' => $_POST['content'] ?? '',
+                    'is_published' => isset($_POST['is_published']),
+                ];
+                if ($data['title'] && $data['content']) {
+                    if (!empty($_POST['id'])) {
+                        update_care_article($pdo, (int)$_POST['id'], $data, $topicIds);
+                        flash('success', 'Artikel aktualisiert.');
+                    } else {
+                        create_care_article($pdo, $data, $topicIds);
+                        flash('success', 'Artikel erstellt.');
+                    }
+                    redirect('admin/care');
+                }
+                flash('error', 'Bitte formulieren Sie einen Titel und den vollständigen Artikelinhalt.');
+            } elseif ($action === 'save_care_topic') {
+                $redirectParams = !empty($_POST['id']) ? ['edit_topic' => (int)$_POST['id']] : [];
+                require_csrf_token('admin/care', $redirectParams);
+                $topicData = [
+                    'title' => trim($_POST['topic_title'] ?? ''),
+                    'slug' => trim($_POST['topic_slug'] ?? ''),
+                    'description' => $_POST['topic_description'] ?? null,
+                    'parent_id' => $_POST['topic_parent_id'] ?? null,
+                ];
+                if ($topicData['title'] === '') {
+                    flash('error', 'Bitte vergeben Sie einen Themen-Titel.');
                 } else {
-                    create_care_article($pdo, $data);
-                    flash('success', 'Artikel erstellt.');
+                    if (!empty($_POST['id'])) {
+                        update_care_topic($pdo, (int)$_POST['id'], $topicData);
+                        flash('success', 'Thema aktualisiert.');
+                        redirect('admin/care', ['edit_topic' => (int)$_POST['id']]);
+                    } else {
+                        create_care_topic($pdo, $topicData);
+                        flash('success', 'Thema angelegt.');
+                        redirect('admin/care');
+                    }
+                }
+            } elseif ($action === 'delete_care_topic') {
+                require_csrf_token('admin/care');
+                $topicId = (int)($_POST['topic_id'] ?? 0);
+                if ($topicId) {
+                    delete_care_topic($pdo, $topicId);
+                    flash('success', 'Thema gelöscht.');
                 }
                 redirect('admin/care');
-            } else {
-                flash('error', 'Bitte formulieren Sie einen Titel und den vollständigen Artikelinhalt.');
             }
         }
         $settings = get_all_settings($pdo);
@@ -953,9 +1215,15 @@ switch ($route) {
         if (isset($_GET['edit'])) {
             $editArticle = get_care_article($pdo, (int)$_GET['edit']);
         }
+        $topicsTree = get_care_topics_hierarchy($pdo);
+        $flatTopics = get_flat_care_topics($pdo);
+        $topicToEdit = null;
+        if (isset($_GET['edit_topic'])) {
+            $topicToEdit = get_care_topic($pdo, (int)$_GET['edit_topic']);
+        }
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/care', compact('settings', 'careArticles', 'editArticle', 'flashSuccess', 'flashError'));
+        view('admin/care', compact('settings', 'careArticles', 'editArticle', 'topicsTree', 'flatTopics', 'topicToEdit', 'flashSuccess', 'flashError'));
         break;
 
     case 'admin/genetics':

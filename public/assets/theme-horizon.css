@@ -1,0 +1,56 @@
+body.theme-horizon {
+  --ui-body: #040613;
+  --ui-surface: rgba(17, 22, 40, 0.82);
+  --ui-surface-soft: rgba(17, 22, 40, 0.62);
+  --ui-surface-strong: rgba(23, 28, 54, 0.94);
+  --ui-border: rgba(100, 116, 139, 0.32);
+  --ui-border-strong: rgba(127, 90, 240, 0.65);
+  --ui-text: #f8fafc;
+  --ui-text-muted: rgba(203, 213, 225, 0.82);
+  --ui-text-subtle: rgba(148, 163, 184, 0.7);
+  background: radial-gradient(circle at 12% 18%, rgba(76, 29, 149, 0.6), transparent 45%),
+    radial-gradient(circle at 88% 0%, rgba(34, 211, 238, 0.22), transparent 52%),
+    linear-gradient(160deg, #050816, #0b1120 45%, #1e1b4b 92%);
+  color: var(--ui-text);
+}
+
+body.theme-horizon .app-header,
+body.theme-horizon .app-footer {
+  background: rgba(10, 13, 26, 0.82);
+  border-color: rgba(127, 90, 240, 0.28);
+}
+
+body.theme-horizon .app-brand__logo {
+  background: linear-gradient(150deg, rgba(127, 90, 240, 0.95), rgba(34, 211, 238, 0.75));
+  color: #040613;
+}
+
+body.theme-horizon .card {
+  background: rgba(17, 22, 40, 0.85);
+  border-color: rgba(127, 90, 240, 0.28);
+}
+
+body.theme-horizon .stat-card {
+  background: linear-gradient(155deg, rgba(22, 30, 56, 0.92), rgba(58, 21, 126, 0.65));
+  border-color: rgba(127, 90, 240, 0.35);
+}
+
+body.theme-horizon .admin-nav__link {
+  background: rgba(19, 24, 46, 0.72);
+  border-color: rgba(127, 90, 240, 0.25);
+}
+
+body.theme-horizon .admin-nav__link.is-active {
+  background: linear-gradient(135deg, rgba(127, 90, 240, 0.92), rgba(34, 211, 238, 0.8));
+}
+
+body.theme-horizon .hero-cta a {
+  border-color: rgba(127, 90, 240, 0.32);
+  background: rgba(15, 20, 38, 0.7);
+}
+
+body.theme-horizon .home-highlight-card,
+body.theme-horizon .adoption-card {
+  background: rgba(17, 22, 40, 0.78);
+  border-color: rgba(127, 90, 240, 0.25);
+}

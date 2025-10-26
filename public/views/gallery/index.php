@@ -15,8 +15,8 @@
         <?php if (!empty($items)): ?>
             <?php foreach ($items as $item): ?>
                 <article class="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-night-900/70 shadow-xl shadow-black/40 transition hover:border-brand-400/60 hover:shadow-glow">
-                    <?php if (!empty($item['image_path'])): ?>
-                        <img src="<?= BASE_URL . '/' . htmlspecialchars($item['image_path']) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="h-56 w-full object-cover" loading="lazy">
+                    <?php if ($src = media_url($item['image_path'] ?? null)): ?>
+                        <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="h-56 w-full object-cover" loading="lazy">
                     <?php endif; ?>
                     <div class="flex flex-1 flex-col gap-3 p-6">
                         <h2 class="text-xl font-semibold text-white"><?= htmlspecialchars($item['title']) ?></h2>
