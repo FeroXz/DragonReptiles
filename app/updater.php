@@ -49,25 +49,28 @@ function find_update_root(string $extractedPath): string
     return $extractedPath;
 }
 
-function apply_update_package(PDO $pdo, array $uploadedFile): array
+function sanitize_update_label(string $label): string
 {
-    if (($uploadedFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($uploadedFile['tmp_name'])) {
-        throw new RuntimeException('Upload fehlgeschlagen. Bitte erneut versuchen.');
-    }
+    $normalized = strtolower(preg_replace('/[^a-z0-9\-]+/i', '-', $label));
+    $trimmed = trim($normalized ?? '', '-');
+    return $trimmed !== '' ? '-' . $trimmed : '';
+}
 
-    if (!is_uploaded_file($uploadedFile['tmp_name'])) {
-        throw new RuntimeException('Die hochgeladene Datei ist ungültig.');
+function apply_update_from_path(PDO $pdo, string $zipPath, string $label = 'update'): array
+{
+    if (!is_file($zipPath)) {
+        throw new RuntimeException('Update-Datei wurde nicht gefunden.');
     }
 
     $zip = new ZipArchive();
-    if ($zip->open($uploadedFile['tmp_name']) !== true) {
+    if ($zip->open($zipPath) !== true) {
         throw new RuntimeException('Das Update-Paket konnte nicht geöffnet werden.');
     }
 
     $updatesPath = __DIR__ . '/../storage/updates';
     ensure_directory($updatesPath);
     $timestamp = date('YmdHis');
-    $extractPath = $updatesPath . '/' . $timestamp;
+    $extractPath = $updatesPath . '/' . $timestamp . sanitize_update_label($label);
     ensure_directory($extractPath);
 
     if (!$zip->extractTo($extractPath)) {
@@ -75,6 +78,11 @@ function apply_update_package(PDO $pdo, array $uploadedFile): array
         throw new RuntimeException('Das Update-Paket konnte nicht entpackt werden.');
     }
     $zip->close();
+
+    $archiveCopy = $extractPath . '/source.zip';
+    if (!@copy($zipPath, $archiveCopy)) {
+        @file_put_contents($archiveCopy . '.log', 'Quelle konnte nicht gesichert: ' . $zipPath);
+    }
 
     $root = find_update_root($extractPath);
     $basePath = realpath(__DIR__ . '/..');
@@ -124,4 +132,62 @@ function apply_update_package(PDO $pdo, array $uploadedFile): array
         'version' => $detectedVersion,
         'extracted' => $extractPath,
     ];
+}
+
+function apply_update_package(PDO $pdo, array $uploadedFile): array
+{
+    if (($uploadedFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($uploadedFile['tmp_name'])) {
+        throw new RuntimeException('Upload fehlgeschlagen. Bitte erneut versuchen.');
+    }
+
+    if (!is_uploaded_file($uploadedFile['tmp_name'])) {
+        throw new RuntimeException('Die hochgeladene Datei ist ungültig.');
+    }
+
+    return apply_update_from_path($pdo, $uploadedFile['tmp_name'], 'upload');
+}
+
+function download_repository_update(PDO $pdo): array
+{
+    if (!defined('APP_REPOSITORY_ZIP') || APP_REPOSITORY_ZIP === '') {
+        throw new RuntimeException('Es wurde keine Update-Quelle für das Repository konfiguriert.');
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 60,
+            'follow_location' => 1,
+            'header' => "User-Agent: " . APP_NAME . " Updater\r\n",
+        ],
+        'https' => [
+            'timeout' => 60,
+        ],
+    ]);
+
+    $resource = @fopen(APP_REPOSITORY_ZIP, 'rb', false, $context);
+    if (!$resource) {
+        throw new RuntimeException('Repository-Download konnte nicht gestartet werden.');
+    }
+
+    $updatesPath = __DIR__ . '/../storage/updates';
+    ensure_directory($updatesPath);
+    $timestamp = date('YmdHis');
+    $zipPath = $updatesPath . '/repository-' . $timestamp . '.zip';
+
+    $target = @fopen($zipPath, 'wb');
+    if (!$target) {
+        fclose($resource);
+        throw new RuntimeException('Heruntergeladene Update-Datei konnte nicht gespeichert werden.');
+    }
+
+    stream_copy_to_stream($resource, $target);
+    fclose($resource);
+    fclose($target);
+
+    if (!is_file($zipPath) || filesize($zipPath) === 0) {
+        @unlink($zipPath);
+        throw new RuntimeException('Das heruntergeladene Update-Paket ist leer.');
+    }
+
+    return apply_update_from_path($pdo, $zipPath, 'repository');
 }

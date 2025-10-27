@@ -644,9 +644,15 @@ switch ($route) {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_csrf_token('admin/update');
+            $action = $_POST['action'] ?? 'upload';
             try {
-                $result = apply_update_package($pdo, $_FILES['package'] ?? []);
-                $message = 'Update erfolgreich angewendet. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                if ($action === 'fetch-repository') {
+                    $result = download_repository_update($pdo);
+                    $message = 'Repository-Update eingespielt. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                } else {
+                    $result = apply_update_package($pdo, $_FILES['package'] ?? []);
+                    $message = 'Update erfolgreich angewendet. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                }
                 if (!empty($result['version'])) {
                     $message .= '. Neue Version: ' . $result['version'];
                 }
