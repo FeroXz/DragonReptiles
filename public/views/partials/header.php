@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nuxt/ui@4.1.0/dist/runtime/index.css">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <?php
+        $logoIconUrl = media_url($settings['logo_icon_path'] ?? null) ?? asset('logo-icon.svg');
+    ?>
+    <link rel="icon" type="image/svg+xml" href="<?= htmlspecialchars($logoIconUrl) ?>">
+    <link rel="apple-touch-icon" href="<?= htmlspecialchars($logoIconUrl) ?>">
+    <meta name="theme-color" content="#0b1120">
     <script>
         tailwind.config = {
             theme: {
@@ -54,8 +60,9 @@
 <header class="app-header">
     <div class="app-header__inner">
         <a href="<?= BASE_URL ?>/index.php" class="app-brand">
-            <span class="app-brand__logo">
-                <?= strtoupper(substr($settings['site_title'] ?? APP_NAME, 0, 2)) ?>
+            <?php $brandIcon = media_url($settings['logo_icon_path'] ?? null) ?? asset('logo-icon.svg'); ?>
+            <span class="app-brand__logo" aria-hidden="true">
+                <img src="<?= htmlspecialchars($brandIcon) ?>" alt="" width="44" height="44" loading="lazy">
             </span>
             <span>
                 <span class="app-brand__title"><?= htmlspecialchars($settings['site_title'] ?? APP_NAME) ?></span>

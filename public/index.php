@@ -644,9 +644,16 @@ switch ($route) {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_csrf_token('admin/update');
+            $action = $_POST['action'] ?? 'upload';
             try {
-                $result = apply_update_package($pdo, $_FILES['package'] ?? []);
-                $message = 'Update erfolgreich angewendet. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                if ($action === 'fetch-repository') {
+                    $result = download_repository_update($pdo);
+                    $branch = $result['branch'] ?? resolve_repository_branch($pdo);
+                    $message = 'Repository-Update aus Branch „' . ($branch ?? 'main') . '“ eingespielt. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                } else {
+                    $result = apply_update_package($pdo, $_FILES['package'] ?? []);
+                    $message = 'Update erfolgreich angewendet. Aktualisierte Dateien: ' . ($result['files'] ?? 0);
+                }
                 if (!empty($result['version'])) {
                     $message .= '. Neue Version: ' . $result['version'];
                 }
@@ -676,6 +683,10 @@ switch ($route) {
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_csrf_token('admin/settings');
+            $logoIconPath = normalize_media_path($_POST['logo_icon_path'] ?? '') ?? 'assets/logo-icon.svg';
+            $logoWordmarkPath = normalize_media_path($_POST['logo_wordmark_path'] ?? '') ?? 'assets/logo-wordmark.svg';
+            $repositoryBranch = normalize_branch_name($_POST['repository_branch'] ?? '')
+                ?? (defined('APP_REPOSITORY_BRANCH') ? APP_REPOSITORY_BRANCH : 'main');
             update_settings($pdo, [
                 'site_title' => $_POST['site_title'] ?? '',
                 'site_tagline' => $_POST['site_tagline'] ?? '',
@@ -684,6 +695,9 @@ switch ($route) {
                 'footer_text' => $_POST['footer_text'] ?? '',
                 'contact_email' => $_POST['contact_email'] ?? '',
                 'active_theme' => $_POST['active_theme'] ?? 'aurora',
+                'logo_icon_path' => $logoIconPath,
+                'logo_wordmark_path' => $logoWordmarkPath,
+                'repository_branch' => $repositoryBranch,
             ]);
             flash('success', 'Einstellungen gespeichert.');
             redirect('admin/settings');

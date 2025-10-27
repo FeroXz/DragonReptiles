@@ -54,6 +54,31 @@ function normalize_media_path(?string $path): ?string
     return $path !== '' ? $path : null;
 }
 
+function normalize_branch_name(?string $branch): ?string
+{
+    if ($branch === null) {
+        return null;
+    }
+
+    $branch = trim($branch);
+    if ($branch === '') {
+        return null;
+    }
+
+    $branch = preg_replace('#[^A-Za-z0-9._\-/]+#', '', $branch);
+    $branch = trim((string)$branch, '/');
+
+    if ($branch === '') {
+        return null;
+    }
+
+    if (str_contains($branch, '..') || str_contains($branch, '//')) {
+        return null;
+    }
+
+    return $branch;
+}
+
 function media_url(?string $path): ?string
 {
     $normalized = normalize_media_path($path);

@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `public/uploads/`.
 
-**Aktuelle Version:** 4.0.0
+**Aktuelle Version:** 4.3.1
 
 ## Kernfunktionen
 
@@ -10,6 +10,7 @@ Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes C
 - 🔒 **„Meine Tiere“** – angemeldete Benutzer sehen ausschließlich ihre privaten Tiere in einem separaten Bereich.
 - 📨 **Tierabgabe-Workflow** mit öffentlichen Inseraten, Kontaktformular und Nachrichteneingang für Administrator*innen.
 - ⚙️ **Einstellungen** für Seitentitel, Untertitel, Hero-/Abgabe-Text, Kontaktadresse und Footer (inkl. Versionshinweis).
+- 🪄 **Branding-Anpassung** – Logo-Icon und Wortmarke lassen sich direkt im Adminbereich konfigurieren.
 - 👥 **Benutzer- & Rechteverwaltung**: Admins können weitere Accounts mit eingeschränkten Rechten (Tiere, Adoption, Einstellungen) anlegen.
 - 📈 **Dashboard** mit Kennzahlen zu Bestand, Abgabeinträgen und neuen Anfragen.
 - 💾 **Persistente Speicherung** per SQLite – keine zusätzliche Server-Software notwendig.
@@ -18,6 +19,7 @@ Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes C
 - 🗂️ **Medienverwaltung** zur Organisation wiederverwendbarer Bilder und Alt-Texte.
 - 🧩 **Drag-&-Drop-Startseitenlayout** für News-, Adoption-, Pflege- und Galerie-Sektionen.
 - 🔄 **ZIP-Update-Manager** im Adminbereich – Updates ohne Verlust eigener Inhalte einspielen.
+- 🌿 **Branch-gesteuerte Repository-Updates** – Administrierbarer Git-Branch für automatische ZIP-Downloads.
 
 ## Systemvoraussetzungen
 
@@ -127,3 +129,9 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] CSRF-Validierung toleriert Token-Übergabe per GET/X-CSRF-Header und Genpool um den Swiss-Chocolate-Morph ergänzt (Version 3.8.0).
 - [x] Genetik-Rechner zeigt Kombinationstitel und Basisformen ohne Wildtyp-Duplikate, Referenzkarten unterstützen Bilder aus der Medienbibliothek und die Tierverwaltung nutzt eine Suchauswahl für Genetik wie der Rechner (Version 3.9.0).
 - [x] Vollständig Nuxt UI-basierte Startseite mit konfigurierbaren Standardsektionen, frei anlegbaren Custom-Bereichen und erweitertem Swiss-Chocolate-Genpool (Version 4.0.0).
+- [x] Rich-Text-Editor bietet einen Nuxt UI Komponenten-Picker für Hero-, Feature- und Callout-Bausteine (Version 4.1.0).
+- [x] Update-Manager lädt auf Wunsch das Repository automatisch herunter und aktualisiert ohne Inhaltsverlust, neues Branding inklusive Logo & Icon (Version 4.1.0).
+- [x] Logo-Icon und Wortmarke sind administrierbar und aktualisieren automatisch Favicon, Navigation und Login (Version 4.2.0).
+- [x] Repository-Updates protokollieren Version 4.2.1 zuverlässig – Fallback setzt die neue Versionsnummer auch bei nicht erkennbarer Konfiguration (Version 4.2.1).
+- [x] Repository-Branch für automatische Updates administrierbar gemacht und im Update-Manager sichtbar hinterlegt (Version 4.3.0).
+- [x] Standard-Branch für Repository-Updates auf den neuen Release-Stand 4.3.1 aktualisiert, damit ZIP-Downloads sofort die aktuelle Version liefern (Version 4.3.1).

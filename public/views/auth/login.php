@@ -1,6 +1,8 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
 <section class="mx-auto flex w-full max-w-md flex-col gap-6 px-4 sm:px-6 lg:px-8">
     <div class="rounded-3xl border border-white/5 bg-night-900/70 p-8 shadow-lg shadow-black/30">
+        <?php $wordmark = media_url($settings['logo_wordmark_path'] ?? null) ?? asset('logo-wordmark.svg'); ?>
+        <img src="<?= htmlspecialchars($wordmark) ?>" alt="<?= htmlspecialchars(APP_NAME) ?>" width="240" height="72" class="mx-auto mb-6 w-48 sm:w-56" loading="lazy">
         <h2 class="text-2xl font-semibold text-white"><?= htmlspecialchars(content_value($settings, 'login_title')) ?></h2>
         <?php if (!empty($_SESSION['initial_admin_credentials'])): ?>
             <?php $initialCredentials = $_SESSION['initial_admin_credentials']; unset($_SESSION['initial_admin_credentials']); ?>

@@ -27,6 +27,25 @@
         <label>Kontakt E-Mail
             <input type="email" name="contact_email" value="<?= htmlspecialchars($settings['contact_email'] ?? '') ?>">
         </label>
+        <label>Logo (Icon, 1:1)
+            <input type="text" name="logo_icon_path" value="<?= htmlspecialchars($settings['logo_icon_path'] ?? '') ?>" placeholder="z. B. assets/logo-icon.svg oder uploads/logo.png">
+            <span class="form-help">Pfad relativ zum Webroot oder vollständige URL. Standard: <code>assets/logo-icon.svg</code>.</span>
+            <?php if ($iconPreview = media_url($settings['logo_icon_path'] ?? null)): ?>
+                <img src="<?= htmlspecialchars($iconPreview) ?>" alt="Aktuelles Logo-Icon" class="mt-2 h-12 w-12 rounded-xl border border-white/10 bg-night-900/40 p-2" loading="lazy">
+            <?php endif; ?>
+        </label>
+        <label>Logo (Wortmarke)
+            <input type="text" name="logo_wordmark_path" value="<?= htmlspecialchars($settings['logo_wordmark_path'] ?? '') ?>" placeholder="z. B. assets/logo-wordmark.svg oder uploads/logo.svg">
+            <span class="form-help">Pfad relativ zum Webroot oder vollständige URL. Standard: <code>assets/logo-wordmark.svg</code>.</span>
+            <?php if ($wordmarkPreview = media_url($settings['logo_wordmark_path'] ?? null)): ?>
+                <img src="<?= htmlspecialchars($wordmarkPreview) ?>" alt="Aktuelle Wortmarke" class="mt-2 max-h-16 w-full rounded-xl border border-white/10 bg-night-900/40 object-contain p-3" loading="lazy">
+            <?php endif; ?>
+        </label>
+        <?php $defaultBranch = defined('APP_REPOSITORY_BRANCH') ? APP_REPOSITORY_BRANCH : 'main'; ?>
+        <label>Repository-Branch für Updates
+            <input type="text" name="repository_branch" value="<?= htmlspecialchars($settings['repository_branch'] ?? $defaultBranch) ?>" placeholder="z. B. <?= htmlspecialchars($defaultBranch) ?>">
+            <span class="form-help">Der Update-Manager lädt ZIP-Archive direkt aus diesem Git-Branch.</span>
+        </label>
         <label>Design
             <select name="active_theme">
                 <?php foreach ($themes as $key => $theme): ?>

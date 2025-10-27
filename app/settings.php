@@ -9,6 +9,9 @@ function ensure_default_settings(PDO $pdo): void
         'footer_text' => '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION,
         'contact_email' => 'info@example.com',
         'active_theme' => 'aurora',
+        'logo_icon_path' => 'assets/logo-icon.svg',
+        'logo_wordmark_path' => 'assets/logo-wordmark.svg',
+        'repository_branch' => defined('APP_REPOSITORY_BRANCH') ? APP_REPOSITORY_BRANCH : 'main',
         'home_sections_layout' => json_encode(default_home_sections_layout($pdo), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
         'app_version' => APP_VERSION,
     ];
@@ -37,6 +40,17 @@ function ensure_default_settings(PDO $pdo): void
         set_setting($pdo, 'app_version', APP_VERSION);
         $footer = '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION;
         set_setting($pdo, 'footer_text', $footer);
+    }
+
+    foreach ([
+        'logo_icon_path' => 'assets/logo-icon.svg',
+        'logo_wordmark_path' => 'assets/logo-wordmark.svg',
+        'repository_branch' => defined('APP_REPOSITORY_BRANCH') ? APP_REPOSITORY_BRANCH : 'main',
+    ] as $key => $default) {
+        $current = get_setting($pdo, $key);
+        if ($current === null || trim((string)$current) === '') {
+            set_setting($pdo, $key, $default);
+        }
     }
 }
 
