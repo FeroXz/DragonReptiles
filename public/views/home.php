@@ -1,4 +1,5 @@
 <?php include __DIR__ . '/partials/header.php'; ?>
+<?php $customSectionsMap = $customSectionsMap ?? []; ?>
 <section class="nui-container nui-section">
     <div class="nui-panel nui-panel--floating grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div class="nui-grid">
@@ -187,11 +188,11 @@
         <section class="nui-container nui-section">
             <div class="nui-section__header">
                 <div>
-                    <h2 class="nui-heading text-white sm:text-3xl">Galerie</h2>
-                    <p class="nui-muted mt-2 text-sm">Ausgewählte Impressionen aus Haltung, Zucht und Events.</p>
+                    <h2 class="nui-heading text-white sm:text-3xl"><?= htmlspecialchars(content_value($settings, 'home_gallery_title')) ?></h2>
+                    <p class="nui-muted mt-2 text-sm"><?= htmlspecialchars(content_value($settings, 'home_gallery_subtitle')) ?></p>
                 </div>
                 <a class="nui-pill justify-between text-sm font-semibold text-slate-100" href="<?= BASE_URL ?>/index.php?route=gallery">
-                    Zur Galerie
+                    <?= htmlspecialchars(content_value($settings, 'home_gallery_cta')) ?>
                     <span aria-hidden="true">→</span>
                 </a>
             </div>
@@ -214,6 +215,38 @@
                 <?php endforeach; ?>
             </div>
         </section>
+    <?php elseif (str_starts_with($section['key'], 'custom:')): ?>
+        <?php $customSection = $customSectionsMap[$section['key']] ?? null; ?>
+        <?php if ($customSection): ?>
+            <section class="nui-container nui-section">
+                <div class="nui-panel nui-panel--floating flex flex-col gap-6">
+                    <?php if (!empty($customSection['eyebrow'])): ?>
+                        <span class="inline-flex items-center gap-2 self-start rounded-full border border-brand-400/60 bg-brand-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-100">
+                            <?= htmlspecialchars($customSection['eyebrow']) ?>
+                        </span>
+                    <?php endif; ?>
+                    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div class="space-y-3">
+                            <h2 class="nui-heading text-white sm:text-3xl"><?= htmlspecialchars($customSection['title']) ?></h2>
+                            <?php if (!empty($customSection['subtitle'])): ?>
+                                <p class="nui-muted text-sm"><?= htmlspecialchars($customSection['subtitle']) ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($customSection['cta_label']) && !empty($customSection['cta_url'])): ?>
+                            <a href="<?= htmlspecialchars($customSection['cta_url']) ?>" class="nui-pill justify-between text-sm font-semibold text-brand-100">
+                                <?= htmlspecialchars($customSection['cta_label']) ?>
+                                <span aria-hidden="true">↗</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($customSection['body'])): ?>
+                        <div class="rich-text-content prose prose-invert max-w-none text-base leading-relaxed text-slate-200">
+                            <?= render_rich_text($customSection['body']) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        <?php endif; ?>
     <?php endif; ?>
 <?php endforeach; ?>
 

@@ -63,9 +63,17 @@ function get_listings(PDO $pdo): array
     return $pdo->query('SELECT * FROM adoption_listings ORDER BY created_at DESC')->fetchAll();
 }
 
-function get_public_listings(PDO $pdo): array
+function get_public_listings(PDO $pdo, ?int $limit = null): array
 {
-    $stmt = $pdo->query('SELECT * FROM adoption_listings WHERE status != "adopted" ORDER BY created_at DESC');
+    $sql = 'SELECT * FROM adoption_listings WHERE status != "adopted" ORDER BY created_at DESC';
+    if ($limit !== null && $limit > 0) {
+        $stmt = $pdo->prepare($sql . ' LIMIT :limit');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll();
 }
 

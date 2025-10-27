@@ -4,6 +4,7 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/themes.php';
+require_once __DIR__ . '/home_sections.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/animals.php';

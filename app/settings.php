@@ -9,7 +9,7 @@ function ensure_default_settings(PDO $pdo): void
         'footer_text' => '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION,
         'contact_email' => 'info@example.com',
         'active_theme' => 'aurora',
-        'home_sections_layout' => json_encode(default_home_sections_layout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        'home_sections_layout' => json_encode(default_home_sections_layout($pdo), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
         'app_version' => APP_VERSION,
     ];
 

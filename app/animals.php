@@ -61,9 +61,17 @@ function get_animals(PDO $pdo): array
     return $pdo->query('SELECT animals.*, users.username as owner_name FROM animals LEFT JOIN users ON users.id = animals.owner_id ORDER BY created_at DESC')->fetchAll();
 }
 
-function get_showcased_animals(PDO $pdo): array
+function get_showcased_animals(PDO $pdo, ?int $limit = null): array
 {
-    $stmt = $pdo->query('SELECT * FROM animals WHERE is_showcased = 1 AND (is_private = 0) ORDER BY created_at DESC');
+    $sql = 'SELECT * FROM animals WHERE is_showcased = 1 AND (is_private = 0) ORDER BY created_at DESC';
+    if ($limit !== null && $limit > 0) {
+        $stmt = $pdo->prepare($sql . ' LIMIT :limit');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll();
 }
 
