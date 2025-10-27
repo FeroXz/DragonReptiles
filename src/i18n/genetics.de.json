@@ -1,0 +1,43 @@
+{
+  "reset": "Zurücksetzen",
+  "calculate": "Kombination berechnen",
+  "parentA": "Tier A",
+  "parentB": "Tier B",
+  "normal": "Normal",
+  "het": "het",
+  "expressed": "Ausgeprägt",
+  "super": "Super",
+  "present": "Vorhanden",
+  "posHet": "pos. het",
+  "posHetHelper": "Wahrscheinlichkeit in %",
+  "warningIncompatible": "{gene} kollidiert mit {conflict} in Super-Form.",
+  "sectionTitles": {
+    "incomplete_dominant": "Inkomplett dominant",
+    "dominant": "Dominant",
+    "recessive": "Rezessiv",
+    "polygenic": "Polygen (Linien)"
+  },
+  "polygenicHint": "Linie vorhanden",
+  "speciesHeading": "Art wählen",
+  "speciesHint": "Auswahl legt verfügbare Gene fest.",
+  "noGenes": "Für diese Art sind keine Gene hinterlegt.",
+  "actionHint": "Aktionen",
+  "headingResults": "Ergebnisliste",
+  "filterSuper": "nur Superformen",
+  "filterHighProbability": "nur 25–100 %",
+  "filterShowHet": "zeige Het-Texte",
+  "notCalculated": "Lege zunächst Genetik für beide Tiere fest und starte die Berechnung.",
+  "empty": "Keine Kombinationen gefunden. Passe die Eltern-Genetik an.",
+  "remainder": "weitere {percent} %",
+  "normalForm": "Normalform",
+  "species": {
+    "hognose": {
+      "label": "Hakennasennatter",
+      "subtitle": "Heterodon nasicus"
+    },
+    "pogona": {
+      "label": "Bartagame",
+      "subtitle": "Pogona vitticeps"
+    }
+  }
+}
