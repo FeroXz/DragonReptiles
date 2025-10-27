@@ -1,4 +1,5 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
+<?php $mediaAssets = $mediaAssets ?? []; ?>
 <section class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
 <h1>Genetikverwaltung</h1>
 <?php include __DIR__ . '/nav.php'; ?>
@@ -185,7 +186,7 @@
                             </select>
                         </label>
                         <label>Label (Normalform)
-                            <input type="text" name="normal_label" value="<?= htmlspecialchars($editGene['normal_label'] ?? '') ?>" placeholder="z.B. Wildtyp">
+                            <input type="text" name="normal_label" value="<?= htmlspecialchars($editGene['normal_label'] ?? '') ?>" placeholder="z.B. Basis">
                         </label>
                         <label>Label (heterozygot)
                             <input type="text" name="heterozygous_label" value="<?= htmlspecialchars($editGene['heterozygous_label'] ?? '') ?>" placeholder="z.B. het Albino">
@@ -199,6 +200,24 @@
                         <label>Beschreibung
                             <textarea name="description" rows="4"><?= htmlspecialchars($editGene['description'] ?? '') ?></textarea>
                         </label>
+                        <label>Bild aus Medienbibliothek
+                            <select name="media_asset_id" data-gene-media-select>
+                                <option value="">— auswählen —</option>
+                                <?php foreach ($mediaAssets as $asset): ?>
+                                    <option value="<?= (int)$asset['id'] ?>" <?= (($editGene['media_asset_id'] ?? null) == $asset['id']) ? 'selected' : '' ?> data-media-preview="<?= htmlspecialchars(media_url($asset['file_path'] ?? null) ?? '') ?>" data-media-path="<?= htmlspecialchars($asset['file_path'] ?? '') ?>">
+                                        <?= htmlspecialchars($asset['title'] ?: ($asset['original_name'] ?: ('#' . $asset['id']))) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </label>
+                        <div class="media-picker-preview" data-gene-media-preview>
+                            <?php if ($src = media_url($editGene['image_path'] ?? null)): ?>
+                                <img src="<?= htmlspecialchars($src) ?>" alt="Aktuelles Genbild" class="mb-2 h-32 w-full rounded-2xl object-cover">
+                            <?php else: ?>
+                                <p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>
+                            <?php endif; ?>
+                        </div>
+                        <input type="hidden" name="image_path" value="<?= htmlspecialchars(normalize_media_path($editGene['image_path'] ?? '')) ?>">
                         <button type="submit">Speichern</button>
                     </form>
                 <?php endif; ?>
@@ -206,6 +225,31 @@
         </div>
     <?php endif; ?>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const geneMediaSelect = document.querySelector('[data-gene-media-select]');
+    const geneMediaPreview = document.querySelector('[data-gene-media-preview]');
+    const geneMediaPath = document.querySelector('input[name="image_path"]');
+    if (geneMediaSelect && geneMediaPreview) {
+        const renderGenePreview = () => {
+            const option = geneMediaSelect.selectedOptions[0];
+            const src = option ? option.getAttribute('data-media-preview') : '';
+            const path = option ? option.getAttribute('data-media-path') : '';
+            if (src) {
+                geneMediaPreview.innerHTML = '<img src="' + src + '" alt="Genbild" class="mb-2 h-32 w-full rounded-2xl object-cover">';
+            } else {
+                geneMediaPreview.innerHTML = '<p class="text-sm text-slate-400">Noch kein Bild ausgewählt.</p>';
+            }
+            if (geneMediaPath) {
+                geneMediaPath.value = path ? path : '';
+            }
+        };
+        geneMediaSelect.addEventListener('change', renderGenePreview);
+        renderGenePreview();
+    }
+});
+</script>
 
 </section>
 <?php include __DIR__ . '/../partials/footer.php'; ?>

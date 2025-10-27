@@ -95,7 +95,7 @@
                                 <?php foreach ($genes as $gene): ?>
                                     <?php
                                         $state = $currentGeneStates[$gene['slug']] ?? '';
-                                        $normalLabel = $gene['normal_label'] ?: ($gene['name'] . ' (Wildtyp)');
+                                        $normalLabel = $gene['normal_label'] ?: ($gene['name'] . ' (Basis)');
                                         $heteroLabel = $gene['heterozygous_label'] ?: ($gene['name'] . ' (het)');
                                         $homoLabel = $gene['homozygous_label'] ?: ($gene['name'] . ' (hom)');
                                     ?>

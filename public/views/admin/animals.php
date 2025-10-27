@@ -137,23 +137,31 @@
                             <?php if (empty($genes)): ?>
                                 <p class="form-hint">Für diese Art wurden noch keine Gene gepflegt. <a href="<?= BASE_URL ?>/index.php?route=admin/genetics&amp;species=<?= urlencode($species['slug']) ?>">Jetzt anlegen</a>.</p>
                             <?php else: ?>
-                                <?php foreach ($genes as $gene): ?>
-                                    <?php
+                                <?php
+                                    $genePayload = [];
+                                    $selectedStates = [];
+                                    foreach ($genes as $gene) {
+                                        $genePayload[] = [
+                                            'slug' => $gene['slug'],
+                                            'name' => $gene['name'],
+                                            'states' => [
+                                                [
+                                                    'key' => 'heterozygous',
+                                                    'label' => gene_state_label($gene, 'heterozygous'),
+                                                ],
+                                                [
+                                                    'key' => 'homozygous',
+                                                    'label' => gene_state_label($gene, 'homozygous'),
+                                                ],
+                                            ],
+                                        ];
                                         $state = $currentGeneStates[$gene['slug']] ?? '';
-                                        $normalLabel = $gene['normal_label'] ?: ($gene['name'] . ' (Wildtyp)');
-                                        $heteroLabel = $gene['heterozygous_label'] ?: ($gene['name'] . ' (het)');
-                                        $homoLabel = $gene['homozygous_label'] ?: ($gene['name'] . ' (hom)');
-                                    ?>
-                                    <label class="gene-select">
-                                        <span><?= htmlspecialchars($gene['name']) ?></span>
-                                        <select name="gene_states[<?= htmlspecialchars($gene['slug']) ?>]" <?= $isActive ? '' : 'disabled' ?>>
-                                            <option value="">Nicht festgelegt</option>
-                                            <option value="normal" <?= ($state === 'normal') ? 'selected' : '' ?>><?= htmlspecialchars($normalLabel) ?></option>
-                                            <option value="heterozygous" <?= ($state === 'heterozygous') ? 'selected' : '' ?>><?= htmlspecialchars($heteroLabel) ?></option>
-                                            <option value="homozygous" <?= ($state === 'homozygous') ? 'selected' : '' ?>><?= htmlspecialchars($homoLabel) ?></option>
-                                        </select>
-                                    </label>
-                                <?php endforeach; ?>
+                                        if ($state !== '') {
+                                            $selectedStates[$gene['slug']] = $state;
+                                        }
+                                    }
+                                ?>
+                                <div class="admin-gene-picker" data-animal-gene-picker data-gene-json='<?= htmlspecialchars(json_encode($genePayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') ?>' data-selected-json='<?= htmlspecialchars(json_encode($selectedStates, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') ?>' data-input-prefix="gene_states"></div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -221,9 +229,10 @@
                 groups.forEach(group => {
                     const isActive = group.dataset.speciesGenes === activeSlug && activeSlug !== '';
                     group.hidden = !isActive;
-                    group.querySelectorAll('select').forEach(select => {
-                        select.disabled = !isActive;
-                    });
+                    const picker = group.querySelector('[data-animal-gene-picker]');
+                    if (picker && picker.genePicker && typeof picker.genePicker.setEnabled === 'function') {
+                        picker.genePicker.setEnabled(isActive);
+                    }
                 });
             };
             speciesSelect.addEventListener('change', toggleGroups);

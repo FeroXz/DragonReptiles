@@ -187,13 +187,14 @@ switch ($route) {
         $genes = $selectedSpecies ? get_genetic_genes($pdo, (int)$selectedSpecies['id']) : [];
         $activeGenes = array_values(array_filter($genes, static fn($gene) => empty($gene['is_reference'])));
         $referenceGenes = array_values(array_filter($genes, static fn($gene) => !empty($gene['is_reference'])));
+        $combinationAliases = $selectedSpecies ? get_combination_aliases_for_species($activeGenes, $selectedSpecies['slug']) : [];
         $parentSelections = [
             'parent1' => $_POST['parent1'] ?? [],
             'parent2' => $_POST['parent2'] ?? [],
         ];
         $results = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $selectedSpecies && !empty($activeGenes)) {
-            $results = calculate_genetic_outcomes($activeGenes, $parentSelections['parent1'], $parentSelections['parent2']);
+            $results = calculate_genetic_outcomes($activeGenes, $parentSelections['parent1'], $parentSelections['parent2'], $combinationAliases);
         }
         view('genetics/index', [
             'settings' => $settings,
@@ -202,6 +203,7 @@ switch ($route) {
             'selectedSpeciesSlug' => $selectedSlug,
             'genes' => $activeGenes,
             'referenceGenes' => $referenceGenes,
+            'combinationAliases' => $combinationAliases,
             'parentSelections' => $parentSelections,
             'results' => $results,
         ]);
@@ -1271,6 +1273,16 @@ switch ($route) {
                     $redirectParams['edit_gene'] = (int)$_POST['id'];
                 }
                 require_csrf_token('admin/genetics', $redirectParams);
+                $selectedAssetId = normalize_nullable_id($_POST['media_asset_id'] ?? null);
+                $imagePath = null;
+                if ($selectedAssetId) {
+                    $asset = get_media_asset($pdo, $selectedAssetId);
+                    if ($asset) {
+                        $imagePath = $asset['file_path'] ?? null;
+                    }
+                } else {
+                    $imagePath = normalize_media_path($_POST['image_path'] ?? null);
+                }
                 $data = [
                     'species_id' => $speciesId,
                     'name' => trim($_POST['name'] ?? ''),
@@ -1278,6 +1290,7 @@ switch ($route) {
                     'shorthand' => trim($_POST['shorthand'] ?? ''),
                     'inheritance_mode' => $_POST['inheritance_mode'] ?? 'recessive',
                     'description' => $_POST['description'] ?? '',
+                    'image_path' => $imagePath,
                     'normal_label' => $_POST['normal_label'] ?? '',
                     'heterozygous_label' => $_POST['heterozygous_label'] ?? '',
                     'homozygous_label' => $_POST['homozygous_label'] ?? '',
@@ -1357,10 +1370,17 @@ switch ($route) {
                 $selectedSlug = $selectedSpecies['slug'] ?? $selectedSlug;
                 $genes = $selectedSpecies ? get_genetic_genes($pdo, (int)$selectedSpecies['id']) : [];
             }
+            if ($editGene && !empty($editGene['image_path'])) {
+                $asset = find_media_asset_by_path($pdo, $editGene['image_path']);
+                if ($asset) {
+                    $editGene['media_asset_id'] = (int)$asset['id'];
+                }
+            }
         }
 
         $flashSuccess = flash('success');
         $flashError = flash('error');
+        $mediaAssets = get_media_assets($pdo);
         view('admin/genetics', [
             'settings' => $settings,
             'speciesList' => $speciesList,
@@ -1371,6 +1391,7 @@ switch ($route) {
             'editGene' => $editGene,
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
+            'mediaAssets' => $mediaAssets,
         ]);
         break;
 

@@ -149,10 +149,17 @@ function verify_csrf_token(?string $token): bool
 
 function require_csrf_token(string $route, array $params = []): void
 {
-    $token = $_POST['_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+    $token = $_POST['_token']
+        ?? $_GET['_token']
+        ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+
     if (verify_csrf_token($token)) {
         return;
     }
+
+    // Wenn kein Token überprüft werden konnte, erzeugen wir ein frisches Token,
+    // damit das nächste Absenden nicht erneut an einem leeren Feld scheitert.
+    csrf_token();
 
     flash('error', 'Sicherheitsüberprüfung fehlgeschlagen. Bitte Formular erneut absenden.');
     redirect($route, $params);
