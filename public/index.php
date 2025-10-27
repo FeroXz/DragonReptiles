@@ -197,35 +197,8 @@ switch ($route) {
 
     case 'genetics':
         $settings = get_all_settings($pdo);
-        $speciesList = get_genetic_species($pdo);
-        $selectedSlug = $_POST['species_slug'] ?? $_GET['species'] ?? ($speciesList[0]['slug'] ?? null);
-        $selectedSpecies = $selectedSlug ? get_genetic_species_by_slug($pdo, $selectedSlug) : null;
-        if (!$selectedSpecies && !empty($speciesList)) {
-            $selectedSpecies = get_genetic_species_by_id($pdo, (int)$speciesList[0]['id']);
-            $selectedSlug = $speciesList[0]['slug'];
-        }
-        $genes = $selectedSpecies ? get_genetic_genes($pdo, (int)$selectedSpecies['id']) : [];
-        $activeGenes = array_values(array_filter($genes, static fn($gene) => empty($gene['is_reference'])));
-        $referenceGenes = array_values(array_filter($genes, static fn($gene) => !empty($gene['is_reference'])));
-        $combinationAliases = $selectedSpecies ? get_combination_aliases_for_species($activeGenes, $selectedSpecies['slug']) : [];
-        $parentSelections = [
-            'parent1' => $_POST['parent1'] ?? [],
-            'parent2' => $_POST['parent2'] ?? [],
-        ];
-        $results = null;
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $selectedSpecies && !empty($activeGenes)) {
-            $results = calculate_genetic_outcomes($activeGenes, $parentSelections['parent1'], $parentSelections['parent2'], $combinationAliases);
-        }
         view('genetics/index', [
             'settings' => $settings,
-            'speciesList' => $speciesList,
-            'selectedSpecies' => $selectedSpecies,
-            'selectedSpeciesSlug' => $selectedSlug,
-            'genes' => $activeGenes,
-            'referenceGenes' => $referenceGenes,
-            'combinationAliases' => $combinationAliases,
-            'parentSelections' => $parentSelections,
-            'results' => $results,
         ]);
         break;
 
