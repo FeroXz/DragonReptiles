@@ -217,6 +217,19 @@ main .prose :where(p, li) {
   transform: translateY(-2px);
 }
 
+.nui-button--primary {
+  border-color: rgba(124, 92, 255, 0.75);
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.92), rgba(34, 211, 238, 0.65));
+  color: #f8fafc;
+  box-shadow: 0 24px 60px rgba(99, 102, 241, 0.35);
+}
+
+.nui-button--primary:hover,
+.nui-button--primary:focus-visible {
+  border-color: rgba(165, 180, 252, 0.8);
+  box-shadow: 0 32px 70px rgba(99, 102, 241, 0.45);
+}
+
 .nui-pill.is-active {
   border-color: rgba(124, 92, 255, 0.85);
   background: linear-gradient(135deg, rgba(124, 92, 255, 0.92), rgba(56, 189, 248, 0.78));

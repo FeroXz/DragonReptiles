@@ -36,6 +36,19 @@ function initialize_database(PDO $pdo): void
         value TEXT NOT NULL
     )');
 
+    $pdo->exec('CREATE TABLE IF NOT EXISTS home_sections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        subtitle TEXT,
+        eyebrow TEXT,
+        body TEXT,
+        cta_label TEXT,
+        cta_url TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )');
+
     $pdo->exec('CREATE TABLE IF NOT EXISTS animals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,

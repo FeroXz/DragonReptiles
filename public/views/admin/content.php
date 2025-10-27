@@ -14,10 +14,13 @@
             </legend>
             <?php foreach ($entries as $key => $definition): ?>
                 <?php $value = content_value($settings, $key); ?>
+                <?php $type = $definition['type'] ?? 'text'; ?>
                 <label style="display:flex;flex-direction:column;gap:0.5rem;">
                     <span style="font-weight:600;"><?= htmlspecialchars($definition['label']) ?></span>
-                    <?php if (($definition['type'] ?? 'text') === 'richtext'): ?>
+                    <?php if ($type === 'richtext'): ?>
                         <textarea name="blocks[<?= htmlspecialchars($key) ?>]" class="rich-text" rows="4"><?= htmlspecialchars($value) ?></textarea>
+                    <?php elseif ($type === 'number'): ?>
+                        <input type="number" min="0" name="blocks[<?= htmlspecialchars($key) ?>]" value="<?= htmlspecialchars($value) ?>">
                     <?php else: ?>
                         <input type="text" name="blocks[<?= htmlspecialchars($key) ?>]" value="<?= htmlspecialchars($value) ?>">
                     <?php endif; ?>

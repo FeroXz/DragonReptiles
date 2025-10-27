@@ -45,6 +45,13 @@ function get_content_definitions(): array
             'type' => 'text',
             'default' => 'Ausgewählte Tiere aus dem Bestand',
         ],
+        'home_highlights_limit' => [
+            'group' => 'Startseite',
+            'label' => 'Highlights Anzahl',
+            'type' => 'number',
+            'default' => '3',
+            'help' => 'Maximale Anzahl an hervorgehobenen Tieren auf der Startseite.',
+        ],
         'home_adoption_title' => [
             'group' => 'Startseite',
             'label' => 'Vermittlung Überschrift',
@@ -62,6 +69,13 @@ function get_content_definitions(): array
             'label' => 'Vermittlung CTA',
             'type' => 'text',
             'default' => 'Kontakt aufnehmen',
+        ],
+        'home_adoption_limit' => [
+            'group' => 'Startseite',
+            'label' => 'Vermittlung Anzahl',
+            'type' => 'number',
+            'default' => '3',
+            'help' => 'Wie viele Vermittlungseinträge parallel gezeigt werden.',
         ],
         'home_news_title' => [
             'group' => 'Startseite',
@@ -87,6 +101,13 @@ function get_content_definitions(): array
             'type' => 'text',
             'default' => 'Details ansehen',
         ],
+        'home_news_limit' => [
+            'group' => 'Startseite',
+            'label' => 'News Anzahl',
+            'type' => 'number',
+            'default' => '3',
+            'help' => 'Legt fest, wie viele News-Artikel auf der Startseite erscheinen.',
+        ],
         'home_care_title' => [
             'group' => 'Startseite',
             'label' => 'Pflegewissen Überschrift',
@@ -110,6 +131,38 @@ function get_content_definitions(): array
             'label' => 'Pflegewissen Artikel-Link',
             'type' => 'text',
             'default' => 'Leitfaden öffnen',
+        ],
+        'home_care_limit' => [
+            'group' => 'Startseite',
+            'label' => 'Pflegeartikel Anzahl',
+            'type' => 'number',
+            'default' => '3',
+            'help' => 'Bestimmt, wie viele Pflegeartikel als Highlights angezeigt werden.',
+        ],
+        'home_gallery_title' => [
+            'group' => 'Startseite',
+            'label' => 'Galerie Überschrift',
+            'type' => 'text',
+            'default' => 'Galerie',
+        ],
+        'home_gallery_subtitle' => [
+            'group' => 'Startseite',
+            'label' => 'Galerie Unterzeile',
+            'type' => 'text',
+            'default' => 'Ausgewählte Impressionen aus Haltung, Zucht und Events.',
+        ],
+        'home_gallery_cta' => [
+            'group' => 'Startseite',
+            'label' => 'Galerie CTA',
+            'type' => 'text',
+            'default' => 'Zur Galerie',
+        ],
+        'home_gallery_limit' => [
+            'group' => 'Startseite',
+            'label' => 'Galerie Anzahl',
+            'type' => 'number',
+            'default' => '6',
+            'help' => 'Maximale Anzahl an Galerie-Highlights auf der Startseite.',
         ],
         'animals_title' => [
             'group' => 'Tierübersicht',
@@ -277,7 +330,18 @@ function content_value(array $settings, string $key): string
     return $settings[$key] ?? $default;
 }
 
-function get_home_section_definitions(): array
+function content_number_value(array $settings, string $key, int $default = 0): int
+{
+    $raw = content_value($settings, $key);
+    $value = filter_var($raw, FILTER_VALIDATE_INT);
+    if ($value === false) {
+        return $default;
+    }
+
+    return max(0, $value);
+}
+
+function builtin_home_section_definitions(): array
 {
     return [
         'highlights' => [
@@ -303,18 +367,60 @@ function get_home_section_definitions(): array
     ];
 }
 
-function default_home_sections_layout(): array
+function get_home_section_definitions(?PDO $pdo = null, ?array $customSections = null): array
 {
-    return array_map(
-        static fn($key) => ['key' => $key, 'enabled' => true],
-        array_keys(get_home_section_definitions())
-    );
+    $definitions = builtin_home_section_definitions();
+
+    if ($pdo instanceof PDO && $customSections === null) {
+        $customSections = get_custom_home_sections($pdo);
+    }
+
+    if (is_array($customSections)) {
+        foreach ($customSections as $section) {
+            if (!isset($section['id'])) {
+                continue;
+            }
+            $key = home_section_key_for_custom((int)$section['id']);
+            $definitions[$key] = [
+                'label' => $section['title'] ?? ('Bereich #' . $section['id']),
+                'description' => $section['subtitle'] ?? '',
+                'custom' => true,
+            ];
+        }
+    }
+
+    return $definitions;
 }
 
-function sanitize_home_sections_layout(array $layout): array
+function default_home_sections_layout(?PDO $pdo = null, ?array $customSections = null): array
 {
-    $definitions = get_home_section_definitions();
+    $layout = array_map(
+        static fn($key) => ['key' => $key, 'enabled' => true],
+        array_keys(builtin_home_section_definitions())
+    );
+
+    if ($pdo instanceof PDO) {
+        $sections = $customSections ?? get_custom_home_sections($pdo);
+        foreach ($sections as $section) {
+            if (!isset($section['id'])) {
+                continue;
+            }
+            $layout[] = [
+                'key' => home_section_key_for_custom((int)$section['id']),
+                'enabled' => true,
+            ];
+        }
+    }
+
+    return $layout;
+}
+
+function sanitize_home_sections_layout(array $layout, ?PDO $pdo = null, ?array $customSections = null): array
+{
+    $customSections = $customSections ?? ($pdo instanceof PDO ? get_custom_home_sections($pdo) : []);
+    $definitions = get_home_section_definitions($pdo, $customSections);
     $sanitized = [];
+
     foreach ($layout as $entry) {
         if (!is_array($entry) || empty($entry['key'])) {
             continue;
@@ -329,7 +435,17 @@ function sanitize_home_sections_layout(array $layout): array
         ];
     }
 
-    foreach ($definitions as $key => $_definition) {
+    foreach (array_keys(builtin_home_section_definitions()) as $builtinKey) {
+        if (!isset($sanitized[$builtinKey])) {
+            $sanitized[$builtinKey] = ['key' => $builtinKey, 'enabled' => true];
+        }
+    }
+
+    foreach ($customSections as $section) {
+        if (!isset($section['id'])) {
+            continue;
+        }
+        $key = home_section_key_for_custom((int)$section['id']);
         if (!isset($sanitized[$key])) {
             $sanitized[$key] = ['key' => $key, 'enabled' => true];
         }
@@ -338,21 +454,21 @@ function sanitize_home_sections_layout(array $layout): array
     return array_values($sanitized);
 }
 
-function get_home_sections_layout(array $settings): array
+function get_home_sections_layout(array $settings, ?PDO $pdo = null, ?array $customSections = null): array
 {
     $raw = $settings['home_sections_layout'] ?? null;
     if ($raw) {
         $decoded = json_decode($raw, true);
         if (is_array($decoded)) {
-            return sanitize_home_sections_layout($decoded);
+            return sanitize_home_sections_layout($decoded, $pdo, $customSections);
         }
     }
 
-    return default_home_sections_layout();
+    return default_home_sections_layout($pdo, $customSections);
 }
 
-function serialize_home_sections_layout(array $layout): string
+function serialize_home_sections_layout(array $layout, ?PDO $pdo = null, ?array $customSections = null): string
 {
-    return json_encode(sanitize_home_sections_layout($layout), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    return json_encode(sanitize_home_sections_layout($layout, $pdo, $customSections), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 }
 

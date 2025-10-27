@@ -14,6 +14,15 @@ const GENETIC_COMBINATION_ALIASES = [
                 ['gene_slug' => 'toffeebelly', 'state' => 'homozygous'],
             ],
         ],
+        [
+            'key' => 'swiss-chocolate',
+            'name' => 'Swiss Chocolate',
+            'display' => 'Swiss Chocolate Linie',
+            'synonyms' => ['Swiss Chocolate', 'Swiss Chocolat'],
+            'components' => [
+                ['gene_slug' => 'swiss-chocolate', 'state' => 'homozygous'],
+            ],
+        ],
     ],
 ];
 
@@ -1323,13 +1332,13 @@ function ensure_default_genetics(PDO $pdo): void
             'is_reference' => true,
         ],
         [
-            'name' => 'Swiss Chocolat',
-            'slug' => 'swiss-chocolat',
+            'name' => 'Swiss Chocolate Referenz',
+            'slug' => 'swiss-chocolate-reference',
             'inheritance_mode' => 'recessive',
-            'description' => 'Swiss Chocolat ist ein Hypermelanistischer Morph. Die Hakennasennattern haben einen dunklen, fast einfarbigen Kopf.',
+            'description' => 'Die Swiss Chocolate Linie zeigt tiefbraune, fast schokoladenfarbene Tiere mit satten Kontrasten. Diese Referenzkarte dokumentiert die homozygote Ausprägung.',
             'normal_label' => 'Nicht kombiniert',
-            'heterozygous_label' => 'Teil-Kombination',
-            'homozygous_label' => 'Komplett: Swiss Chocolat',
+            'heterozygous_label' => 'Träger Swiss Chocolate',
+            'homozygous_label' => 'Komplett: Swiss Chocolate',
             'display_order' => 71,
             'is_reference' => true,
         ],

@@ -133,9 +133,9 @@ function ensure_sample_content(PDO $pdo): void
             'Vorinstallierter Beispielcontent zeigt Tiere, Adoption und Galerie mit funktionierenden Bildern.',
         ],
         APP_VERSION => [
-            'Bestehende Bilder aus Tieren, Adoptionen und Galerie werden automatisch in der Medienverwaltung registriert.',
-            'Medienpfade werden normalisiert und stehen in allen Formularen mit Vorschau zur Auswahl bereit.',
-            'Release-News listen jetzt auch den Changelog der vorherigen Version auf.',
+            'Startseiten-Studio mit konfigurierbaren Standardsektionen inklusive Mengensteuerung pro Bereich.',
+            'Eigene Nuxt UI Custom-Sektionen lassen sich erstellen, bearbeiten und im Layout aktivieren.',
+            'Genetikbibliothek ergänzt Swiss-Chocolate-Linie samt Alias und Referenzkarte.',
         ],
     ];
     foreach ($releaseHighlights as $version => $highlights) {

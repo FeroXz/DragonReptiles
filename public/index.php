@@ -27,13 +27,33 @@ switch ($route) {
 
     case 'home':
         $settings = get_all_settings($pdo);
-        $animals = get_showcased_animals($pdo);
-        $listings = get_public_listings($pdo);
-        $latestNews = get_latest_published_news($pdo, 3);
-        $careHighlights = array_slice(get_published_care_articles($pdo), 0, 3);
-        $galleryItems = get_featured_gallery_items($pdo, 6);
-        $homeSections = get_home_sections_layout($settings);
-        view('home', compact('settings', 'animals', 'listings', 'latestNews', 'careHighlights', 'galleryItems', 'homeSections'));
+        $highlightLimit = max(0, content_number_value($settings, 'home_highlights_limit', 3));
+        $animals = $highlightLimit > 0 ? get_showcased_animals($pdo, $highlightLimit) : [];
+
+        $adoptionLimit = max(0, content_number_value($settings, 'home_adoption_limit', 3));
+        $listings = $adoptionLimit > 0 ? get_public_listings($pdo, $adoptionLimit) : [];
+
+        $newsLimit = max(0, content_number_value($settings, 'home_news_limit', 3));
+        $latestNews = $newsLimit > 0 ? get_latest_published_news($pdo, $newsLimit) : [];
+
+        $careLimit = max(0, content_number_value($settings, 'home_care_limit', 3));
+        $publishedCare = get_published_care_articles($pdo);
+        $careHighlights = $careLimit > 0 ? array_slice($publishedCare, 0, $careLimit) : [];
+
+        $galleryLimit = max(0, content_number_value($settings, 'home_gallery_limit', 6));
+        $galleryItems = $galleryLimit > 0 ? get_featured_gallery_items($pdo, $galleryLimit) : [];
+
+        $customSections = get_custom_home_sections($pdo);
+        $customSectionsMap = [];
+        foreach ($customSections as $section) {
+            if (!isset($section['id'])) {
+                continue;
+            }
+            $customSectionsMap[home_section_key_for_custom((int)$section['id'])] = $section;
+        }
+
+        $homeSections = get_home_sections_layout($settings, $pdo, $customSections);
+        view('home', compact('settings', 'animals', 'listings', 'latestNews', 'careHighlights', 'galleryItems', 'homeSections', 'customSectionsMap'));
         break;
 
     case 'animals':
@@ -445,22 +465,174 @@ switch ($route) {
             redirect('admin/dashboard');
         }
 
-        $settings = get_all_settings($pdo);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_csrf_token('admin/home-layout');
-            $layoutJson = $_POST['layout'] ?? '[]';
-            $decoded = json_decode($layoutJson, true);
-            $layout = is_array($decoded) ? sanitize_home_sections_layout($decoded) : default_home_sections_layout();
-            set_setting($pdo, 'home_sections_layout', serialize_home_sections_layout($layout));
-            flash('success', 'Startseiten-Layout wurde aktualisiert.');
-            redirect('admin/home-layout');
+            $intent = $_POST['intent'] ?? 'layout';
+            $settings = get_all_settings($pdo);
+            $customSections = get_custom_home_sections($pdo);
+
+            switch ($intent) {
+                case 'layout':
+                    $layoutJson = $_POST['layout'] ?? '[]';
+                    $decoded = json_decode($layoutJson, true);
+                    $layout = is_array($decoded)
+                        ? sanitize_home_sections_layout($decoded, $pdo, $customSections)
+                        : default_home_sections_layout($pdo, $customSections);
+                    set_setting($pdo, 'home_sections_layout', serialize_home_sections_layout($layout, $pdo, $customSections));
+                    flash('success', 'Startseiten-Layout wurde aktualisiert.');
+                    redirect('admin/home-layout');
+
+                case 'update-standard':
+                    $definitions = get_content_definitions();
+                    $editableKeys = [
+                        'home_hero_badge',
+                        'home_hero_secondary_intro',
+                        'home_care_primary_cta',
+                        'home_care_secondary_cta',
+                        'home_highlights_title',
+                        'home_highlights_subtitle',
+                        'home_highlights_limit',
+                        'home_adoption_title',
+                        'home_adoption_subtitle',
+                        'home_adoption_cta',
+                        'home_adoption_limit',
+                        'home_news_title',
+                        'home_news_subtitle',
+                        'home_news_cta',
+                        'home_news_post_cta',
+                        'home_news_limit',
+                        'home_care_title',
+                        'home_care_subtitle',
+                        'home_care_cta',
+                        'home_care_article_cta',
+                        'home_care_limit',
+                        'home_gallery_title',
+                        'home_gallery_subtitle',
+                        'home_gallery_cta',
+                        'home_gallery_limit',
+                    ];
+                    $blocks = $_POST['blocks'] ?? [];
+                    $payload = [];
+                    foreach ($blocks as $key => $value) {
+                        if (!in_array($key, $editableKeys, true) || !isset($definitions[$key])) {
+                            continue;
+                        }
+                        $payload[$key] = is_string($value) ? $value : '';
+                    }
+                    if ($payload) {
+                        update_settings($pdo, $payload);
+                        flash('success', 'Standardbereiche wurden angepasst.');
+                    } else {
+                        flash('error', 'Keine Änderungen erkannt.');
+                    }
+                    redirect('admin/home-layout');
+
+                case 'create-section':
+                    try {
+                        $sectionId = create_custom_home_section($pdo, $_POST);
+                        $settings = get_all_settings($pdo);
+                        $customSections = get_custom_home_sections($pdo);
+                        $layout = get_home_sections_layout($settings, $pdo, $customSections);
+                        $key = home_section_key_for_custom($sectionId);
+                        $exists = false;
+                        foreach ($layout as $entry) {
+                            if ($entry['key'] === $key) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        if (!$exists) {
+                            $layout[] = ['key' => $key, 'enabled' => true];
+                        }
+                        set_setting($pdo, 'home_sections_layout', serialize_home_sections_layout($layout, $pdo, $customSections));
+                        flash('success', 'Eigener Bereich erstellt.');
+                        redirect('admin/home-layout', ['edit' => $sectionId]);
+                    } catch (InvalidArgumentException $exception) {
+                        flash('error', $exception->getMessage());
+                        redirect('admin/home-layout');
+                    }
+
+                case 'update-section':
+                    $sectionId = (int)($_POST['section_id'] ?? 0);
+                    if ($sectionId <= 0) {
+                        flash('error', 'Ungültiger Bereich.');
+                        redirect('admin/home-layout');
+                    }
+                    try {
+                        update_custom_home_section($pdo, $sectionId, $_POST);
+                        flash('success', 'Eigener Bereich aktualisiert.');
+                    } catch (InvalidArgumentException $exception) {
+                        flash('error', $exception->getMessage());
+                    }
+                    redirect('admin/home-layout', ['edit' => $sectionId]);
+
+                case 'delete-section':
+                    $sectionId = (int)($_POST['section_id'] ?? 0);
+                    if ($sectionId <= 0) {
+                        flash('error', 'Ungültiger Bereich.');
+                        redirect('admin/home-layout');
+                    }
+                    delete_custom_home_section($pdo, $sectionId);
+                    $settings = get_all_settings($pdo);
+                    $customSections = get_custom_home_sections($pdo);
+                    $layout = get_home_sections_layout($settings, $pdo, $customSections);
+                    set_setting($pdo, 'home_sections_layout', serialize_home_sections_layout($layout, $pdo, $customSections));
+                    flash('success', 'Bereich wurde entfernt.');
+                    redirect('admin/home-layout');
+
+                default:
+                    flash('error', 'Unbekannte Aktion.');
+                    redirect('admin/home-layout');
+            }
         }
 
-        $layout = get_home_sections_layout($settings);
-        $definitions = get_home_section_definitions();
+        $settings = get_all_settings($pdo);
+        $customSections = get_custom_home_sections($pdo);
+        $layout = get_home_sections_layout($settings, $pdo, $customSections);
+        $definitions = get_home_section_definitions($pdo, $customSections);
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/home_layout', compact('settings', 'layout', 'definitions', 'flashSuccess', 'flashError'));
+        $editingSection = isset($_GET['edit']) ? get_custom_home_section($pdo, (int)$_GET['edit']) : null;
+        $contentDefinitions = get_content_definitions();
+        $editableKeys = [
+            'home_hero_badge',
+            'home_hero_secondary_intro',
+            'home_care_primary_cta',
+            'home_care_secondary_cta',
+            'home_highlights_title',
+            'home_highlights_subtitle',
+            'home_highlights_limit',
+            'home_adoption_title',
+            'home_adoption_subtitle',
+            'home_adoption_cta',
+            'home_adoption_limit',
+            'home_news_title',
+            'home_news_subtitle',
+            'home_news_cta',
+            'home_news_post_cta',
+            'home_news_limit',
+            'home_care_title',
+            'home_care_subtitle',
+            'home_care_cta',
+            'home_care_article_cta',
+            'home_care_limit',
+            'home_gallery_title',
+            'home_gallery_subtitle',
+            'home_gallery_cta',
+            'home_gallery_limit',
+        ];
+        $standardContent = [];
+        foreach ($editableKeys as $key) {
+            if (!isset($contentDefinitions[$key])) {
+                continue;
+            }
+            $standardContent[$key] = [
+                'definition' => $contentDefinitions[$key],
+                'value' => content_value($settings, $key),
+            ];
+        }
+
+        view('admin/home_layout', compact('settings', 'layout', 'definitions', 'flashSuccess', 'flashError', 'customSections', 'editingSection', 'standardContent'));
         break;
 
     case 'admin/update':
