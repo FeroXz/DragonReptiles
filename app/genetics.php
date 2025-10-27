@@ -2,6 +2,21 @@
 
 const GENETIC_INHERITANCE_MODES = ['recessive', 'dominant', 'incomplete_dominant'];
 
+const GENETIC_COMBINATION_ALIASES = [
+    'heterodon-nasicus' => [
+        [
+            'key' => 'toxic',
+            'name' => 'Toxic',
+            'display' => 'Axanthic Toffeebelly',
+            'synonyms' => ['Axanthic Toffeebelly', 'Axanthic Toffee Belly'],
+            'components' => [
+                ['gene_slug' => 'axanthic', 'state' => 'homozygous'],
+                ['gene_slug' => 'toffeebelly', 'state' => 'homozygous'],
+            ],
+        ],
+    ],
+];
+
 function get_genetic_species(PDO $pdo): array
 {
     return $pdo->query('SELECT * FROM genetic_species ORDER BY name ASC')->fetchAll();
@@ -146,7 +161,7 @@ function create_genetic_gene(PDO $pdo, array $data): int
 
     $inheritance = normalize_inheritance_mode($data['inheritance_mode'] ?? '');
 
-    $stmt = $pdo->prepare('INSERT INTO genetic_genes(species_id, name, slug, shorthand, inheritance_mode, description, normal_label, heterozygous_label, homozygous_label, is_reference, display_order) VALUES (:species_id, :name, :slug, :shorthand, :inheritance_mode, :description, :normal_label, :heterozygous_label, :homozygous_label, :is_reference, :display_order)');
+    $stmt = $pdo->prepare('INSERT INTO genetic_genes(species_id, name, slug, shorthand, inheritance_mode, description, image_path, normal_label, heterozygous_label, homozygous_label, is_reference, display_order) VALUES (:species_id, :name, :slug, :shorthand, :inheritance_mode, :description, :image_path, :normal_label, :heterozygous_label, :homozygous_label, :is_reference, :display_order)');
     $stmt->execute([
         'species_id' => $speciesId,
         'name' => $name,
@@ -154,6 +169,7 @@ function create_genetic_gene(PDO $pdo, array $data): int
         'shorthand' => trim($data['shorthand'] ?? '') ?: null,
         'inheritance_mode' => $inheritance,
         'description' => trim($data['description'] ?? '') ?: null,
+        'image_path' => normalize_media_path($data['image_path'] ?? null),
         'normal_label' => trim($data['normal_label'] ?? '') ?: null,
         'heterozygous_label' => trim($data['heterozygous_label'] ?? '') ?: null,
         'homozygous_label' => trim($data['homozygous_label'] ?? '') ?: null,
@@ -184,13 +200,14 @@ function update_genetic_gene(PDO $pdo, int $id, array $data): void
 
     $inheritance = normalize_inheritance_mode($data['inheritance_mode'] ?? $gene['inheritance_mode']);
 
-    $stmt = $pdo->prepare('UPDATE genetic_genes SET name = :name, slug = :slug, shorthand = :shorthand, inheritance_mode = :inheritance_mode, description = :description, normal_label = :normal_label, heterozygous_label = :heterozygous_label, homozygous_label = :homozygous_label, is_reference = :is_reference, display_order = :display_order, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+    $stmt = $pdo->prepare('UPDATE genetic_genes SET name = :name, slug = :slug, shorthand = :shorthand, inheritance_mode = :inheritance_mode, description = :description, image_path = :image_path, normal_label = :normal_label, heterozygous_label = :heterozygous_label, homozygous_label = :homozygous_label, is_reference = :is_reference, display_order = :display_order, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
     $stmt->execute([
         'name' => $name,
         'slug' => $slug,
         'shorthand' => trim($data['shorthand'] ?? '') ?: null,
         'inheritance_mode' => $inheritance,
         'description' => trim($data['description'] ?? '') ?: null,
+        'image_path' => normalize_media_path($data['image_path'] ?? $gene['image_path'] ?? null),
         'normal_label' => trim($data['normal_label'] ?? '') ?: null,
         'heterozygous_label' => trim($data['heterozygous_label'] ?? '') ?: null,
         'homozygous_label' => trim($data['homozygous_label'] ?? '') ?: null,
@@ -198,6 +215,67 @@ function update_genetic_gene(PDO $pdo, int $id, array $data): void
         'display_order' => isset($data['display_order']) ? (int)$data['display_order'] : (int)$gene['display_order'],
         'id' => $id,
     ]);
+}
+
+function get_combination_aliases_for_species(array $genes, string $speciesSlug): array
+{
+    $definitions = GENETIC_COMBINATION_ALIASES[$speciesSlug] ?? [];
+    if (empty($definitions)) {
+        return [];
+    }
+
+    $geneIndex = [];
+    foreach ($genes as $gene) {
+        $geneIndex[$gene['slug']] = $gene;
+    }
+
+    $aliases = [];
+    foreach ($definitions as $definition) {
+        if (empty($definition['components'])) {
+            continue;
+        }
+        $components = [];
+        foreach ($definition['components'] as $component) {
+            $slug = $component['gene_slug'] ?? null;
+            if (!$slug || !isset($geneIndex[$slug])) {
+                continue 2;
+            }
+            $gene = $geneIndex[$slug];
+            $state = sanitize_gene_state($component['state'] ?? 'homozygous');
+            $components[] = [
+                'gene_id' => (int)$gene['id'],
+                'gene_slug' => $slug,
+                'gene_name' => $gene['name'],
+                'state' => $state,
+                'label' => gene_state_label($gene, $state),
+            ];
+        }
+
+        if (empty($components)) {
+            continue;
+        }
+
+        $name = $definition['name'] ?? ($definition['display'] ?? null);
+        if (!$name) {
+            continue;
+        }
+
+        $display = $definition['display'] ?? $name;
+        $synonyms = array_merge(
+            [$name, $display],
+            array_filter($definition['synonyms'] ?? [])
+        );
+
+        $aliases[] = [
+            'key' => $definition['key'] ?? slugify($name),
+            'name' => $name,
+            'display' => $display,
+            'synonyms' => array_values(array_unique($synonyms)),
+            'components' => $components,
+        ];
+    }
+
+    return $aliases;
 }
 
 function delete_genetic_gene(PDO $pdo, int $id): void
@@ -239,7 +317,11 @@ function gene_state_label(array $gene, string $state): string
     $inheritance = $gene['inheritance_mode'];
     $name = $gene['name'];
 
-    $normalDefault = $gene['normal_label'] ?: 'Wildtyp';
+    $normalDefault = $gene['normal_label'] ?: 'Basisform';
+    $normalizedDefault = strtolower(trim((string)$normalDefault));
+    if (in_array($normalizedDefault, ['wildtyp', 'wildtype', 'normal'], true)) {
+        $normalDefault = 'Basisform';
+    }
     $heteroDefault = $gene['heterozygous_label'];
     $homoDefault = $gene['homozygous_label'];
 
@@ -323,7 +405,7 @@ function calculate_gene_distribution(array $gene, string $parentOneState, string
     return $states;
 }
 
-function calculate_genetic_outcomes(array $genes, array $parentOneSelections, array $parentTwoSelections): ?array
+function calculate_genetic_outcomes(array $genes, array $parentOneSelections, array $parentTwoSelections, array $combinationAliases = []): ?array
 {
     $geneResults = [];
 
@@ -406,6 +488,21 @@ function calculate_genetic_outcomes(array $genes, array $parentOneSelections, ar
     $combinedResults = [];
     foreach ($normalized as $entry) {
         $phenotypeParts = [];
+        $matchedCombos = [];
+        foreach ($combinationAliases as $alias) {
+            $isMatch = true;
+            foreach ($alias['components'] as $component) {
+                $geneId = $component['gene_id'];
+                $state = $entry['states'][$geneId] ?? 'normal';
+                if ($state !== $component['state']) {
+                    $isMatch = false;
+                    break;
+                }
+            }
+            if ($isMatch) {
+                $matchedCombos[] = $alias['display'];
+            }
+        }
         if (!empty($entry['visual_traits'])) {
             $phenotypeParts[] = implode(', ', $entry['visual_traits']);
         }
@@ -413,11 +510,12 @@ function calculate_genetic_outcomes(array $genes, array $parentOneSelections, ar
             $phenotypeParts[] = 'Träger: ' . implode(', ', $entry['carrier_traits']);
         }
         if (empty($phenotypeParts)) {
-            $phenotype = 'Wildtyp';
+            $phenotype = 'Basisform';
         } else {
             $phenotype = implode(' • ', $phenotypeParts);
         }
         $entry['phenotype'] = $phenotype;
+        $entry['combination_labels'] = $matchedCombos;
         $combinedResults[] = $entry;
     }
 
@@ -461,7 +559,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'albino',
             'inheritance_mode' => 'recessive',
             'description' => 'Der Albino-Morph ist ein rezessiver Morph, der die dunklen Töne, also das Melanin, aus der Farbe tilgt. Die Tiere sind meist gelb, orange oder rot und haben rote Augen.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Albino',
             'homozygous_label' => 'Albino',
             'display_order' => 1,
@@ -471,7 +569,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'anaconda',
             'inheritance_mode' => 'incomplete_dominant',
             'description' => 'Co-dominante Zeichnungsreduktion mit Superconda als nahezu patternless Superform.',
-            'normal_label' => 'Wildtyp',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Anaconda',
             'homozygous_label' => 'Super Anaconda',
             'display_order' => 2,
@@ -481,7 +579,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'arctic',
             'inheritance_mode' => 'incomplete_dominant',
             'description' => 'Bei Arctic Hakennasennattern ist der Farbkontrast höher, sie haben dunklerer Muster, die zur Mitte hin heller werden. Außerdem haben sie mehr Grautöne als klassische Tiere.',
-            'normal_label' => 'Wildtyp',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Arctic',
             'homozygous_label' => 'Super Arctic',
             'display_order' => 3,
@@ -491,7 +589,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'axanthic',
             'inheritance_mode' => 'recessive',
             'description' => 'Beim Axanthic Gen ist kaum bis keine rote Pigmentierung im Tier vorhanden. Als Resultat sieht man komplett graue Schlangen.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Axanthic',
             'homozygous_label' => 'Axanthic',
             'display_order' => 4,
@@ -501,7 +599,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'caramel',
             'inheritance_mode' => 'recessive',
             'description' => 'Caramelfarbenen Hakennasennattern lassen sich an ihrer geringen Melaninkonzentration, die zu einen pinken/pfirsichfarbenen Äußeren führt, erkennen. Eine weitere Charakteristik ist außerdem die abweichende Form der Kopfzeichnung.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Caramel',
             'homozygous_label' => 'Caramel',
             'display_order' => 5,
@@ -511,7 +609,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'evans-hypo-hypo',
             'inheritance_mode' => 'recessive',
             'description' => 'Eine Evans Hypo Hakennasennatter ist eine Form des Albinismus bei dem zwar kein Melanin vorhanden ist, im Gegensatz zu anderen dunklen Farbpigmenten. Das drückt sich vor allem an der Bauchseite deutlich aus.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Evans Hypo (Hypo)',
             'homozygous_label' => 'Evans Hypo (Hypo)',
             'display_order' => 6,
@@ -521,7 +619,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'extreme-red-purple-line',
             'inheritance_mode' => 'dominant',
             'description' => 'Bei diesen Hakennasennattern liegt eine sehr hohe Sättigung an rotem Farbstoff vor. Das drückt sich entweder in sehr roten oder schon fast dunkellilanen Tieren aus.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Extreme Red/Purple line',
             'homozygous_label' => 'Extreme Red/Purple line (homozygot)',
             'display_order' => 7,
@@ -531,7 +629,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'lavender',
             'inheritance_mode' => 'recessive',
             'description' => 'Lavender Hakennasennattern tragen kaum Melanin in sich. Dies führt dazu, dass die Tiere einen lavendelfarbenen oder pinken Ton haben.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Lavender',
             'homozygous_label' => 'Lavender',
             'display_order' => 8,
@@ -541,7 +639,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'pastel',
             'inheritance_mode' => 'incomplete_dominant',
             'description' => 'Der Pastel Morph gilt als „Verstärker“. Das Muster wirkt sauberer und die Farben werden verstärkt.',
-            'normal_label' => 'Wildtyp',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Pastel',
             'homozygous_label' => 'Super Pastel',
             'display_order' => 9,
@@ -551,7 +649,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'pistacchio',
             'inheritance_mode' => 'incomplete_dominant',
             'description' => 'Pistacchio Hakennasennattern haben im Gegensatz zu klassischen Tieren, einen lila angehauchten Bauch (statt Schwarz). Außerdem ist ihre Melaninkonzentration niedrig und das Muster hat einen leichten Grünton.',
-            'normal_label' => 'Wildtyp',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Pistacchio',
             'homozygous_label' => 'Super Pistacchio',
             'display_order' => 10,
@@ -561,7 +659,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'sable',
             'inheritance_mode' => 'recessive',
             'description' => 'Bei Sable Hakennasennattern haben eine konzentriertere Pigmentierung . Sie erscheinen dunkler.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Sable',
             'homozygous_label' => 'Sable',
             'display_order' => 11,
@@ -571,7 +669,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'savannah',
             'inheritance_mode' => 'recessive',
             'description' => 'Der Savannah-Morph ist noch relativ neu und eine Art Hypo. Das Tier hat hier dunklere Muster und eine beige Körperfarbe.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Savannah',
             'homozygous_label' => 'Savannah',
             'display_order' => 12,
@@ -581,7 +679,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'skullface',
             'inheritance_mode' => 'dominant',
             'description' => 'Der Skullface-Morph ist erst vor einigen Jahren zum ersten Mal in der Zucht aufgetaucht. Es ist ein dominanter Morph, der die typischen Kopfzeichnungen der Hakennasennatter entfernt.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Skullface',
             'homozygous_label' => 'Skullface (homozygot)',
             'display_order' => 13,
@@ -591,7 +689,7 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'toffee',
             'inheritance_mode' => 'recessive',
             'description' => 'Rezessive Linie mit karamellfarbenem Grundton und klarer Zeichnung.',
-            'normal_label' => 'Normal',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'het Toffee',
             'homozygous_label' => 'Toffee',
             'display_order' => 14,
@@ -601,10 +699,20 @@ function ensure_default_genetics(PDO $pdo): void
             'slug' => 'toffeebelly',
             'inheritance_mode' => 'incomplete_dominant',
             'description' => 'Der Toffeebelly Morph reduziert die Melaninkonzentration. Diese Tiere haben öfter Paradoxe Flecken auf Bauch und Körper.',
-            'normal_label' => 'Wildtyp',
+            'normal_label' => 'Basisform',
             'heterozygous_label' => 'Toffeebelly',
             'homozygous_label' => 'Super Toffeebelly',
             'display_order' => 15,
+        ],
+        [
+            'name' => 'Swiss Chocolate',
+            'slug' => 'swiss-chocolate',
+            'inheritance_mode' => 'recessive',
+            'description' => 'Swiss Chocolate vereint dunkle, kühle Brauntöne mit reduzierten Mustern und zählt zu den seltensten Linien der westlichen Hakennasennatter.',
+            'normal_label' => 'Basisform',
+            'heterozygous_label' => 'het Swiss Chocolate',
+            'homozygous_label' => 'Swiss Chocolate',
+            'display_order' => 16,
         ]
     ];
 

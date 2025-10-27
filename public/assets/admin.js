@@ -69,6 +69,269 @@
         }
     }
 
+    function normalizeGeneValue(value) {
+        return value
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
+
+    function initAnimalGenePicker(root) {
+        let geneData = [];
+        let selectedData = {};
+        try {
+            geneData = JSON.parse(root.getAttribute('data-gene-json') || '[]');
+            selectedData = JSON.parse(root.getAttribute('data-selected-json') || '{}');
+        } catch (error) {
+            console.error('Genetikdaten konnten nicht geladen werden.', error);
+            return;
+        }
+        if (!Array.isArray(geneData) || geneData.length === 0) {
+            return;
+        }
+
+        const inputPrefix = root.getAttribute('data-input-prefix') || 'gene_states';
+        const genesBySlug = new Map();
+        geneData.forEach((gene) => {
+            genesBySlug.set(gene.slug, gene);
+        });
+
+        const selections = new Map();
+        Object.entries(selectedData || {}).forEach(([slug, state]) => {
+            if (state) {
+                selections.set(slug, state);
+            }
+        });
+
+        const searchIndex = [];
+        geneData.forEach((gene) => {
+            (gene.states || []).forEach((state) => {
+                const tokens = new Set();
+                tokens.add(gene.name || '');
+                tokens.add(state.label || '');
+                if (state.key === 'heterozygous') {
+                    tokens.add(`het ${gene.name}`);
+                    tokens.add(`träger ${gene.name}`);
+                    tokens.add(`traeger ${gene.name}`);
+                } else {
+                    tokens.add(`visual ${gene.name}`);
+                    tokens.add(`super ${gene.name}`);
+                }
+                searchIndex.push({
+                    geneSlug: gene.slug,
+                    stateKey: state.key,
+                    stateLabel: state.label,
+                    geneName: gene.name,
+                    tokens: Array.from(tokens)
+                        .filter(Boolean)
+                        .map((token) => normalizeGeneValue(token)),
+                });
+            });
+        });
+
+        const container = document.createElement('div');
+        container.className = 'admin-gene-picker';
+        const tags = document.createElement('div');
+        tags.className = 'admin-gene-picker__tags';
+        const inputRow = document.createElement('div');
+        inputRow.className = 'admin-gene-picker__input';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Gen oder Status wählen …';
+        const clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.className = 'admin-gene-picker__clear';
+        clearButton.textContent = 'Zurücksetzen';
+        const suggestions = document.createElement('div');
+        suggestions.className = 'admin-gene-picker__suggestions';
+        suggestions.hidden = true;
+        const hiddenInputs = document.createElement('div');
+        hiddenInputs.style.display = 'none';
+
+        inputRow.appendChild(input);
+        inputRow.appendChild(clearButton);
+        container.appendChild(tags);
+        container.appendChild(inputRow);
+        container.appendChild(suggestions);
+        container.appendChild(hiddenInputs);
+
+        root.innerHTML = '';
+        root.appendChild(container);
+
+        let isEnabled = !root.closest('[hidden]');
+
+        function updateHiddenInputs() {
+            hiddenInputs.innerHTML = '';
+            if (!isEnabled) {
+                return;
+            }
+            selections.forEach((stateKey, slug) => {
+                const inputHidden = document.createElement('input');
+                inputHidden.type = 'hidden';
+                inputHidden.name = `${inputPrefix}[${slug}]`;
+                inputHidden.value = stateKey;
+                hiddenInputs.appendChild(inputHidden);
+            });
+        }
+
+        function renderTags() {
+            tags.innerHTML = '';
+            selections.forEach((stateKey, slug) => {
+                const gene = genesBySlug.get(slug);
+                if (!gene) {
+                    return;
+                }
+                const state = (gene.states || []).find((entry) => entry.key === stateKey);
+                if (!state) {
+                    return;
+                }
+                const tag = document.createElement('span');
+                tag.className = 'gene-tag';
+                const label = document.createElement('span');
+                const geneNorm = normalizeGeneValue(gene.name || '');
+                const stateNorm = normalizeGeneValue(state.label || '');
+                if (geneNorm && geneNorm === stateNorm) {
+                    label.textContent = state.label;
+                } else {
+                    label.textContent = `${gene.name}: ${state.label}`;
+                }
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'gene-tag__remove';
+                remove.setAttribute('aria-label', `${gene.name} entfernen`);
+                remove.textContent = '×';
+                remove.addEventListener('click', () => {
+                    selections.delete(slug);
+                    renderTags();
+                });
+                tag.appendChild(label);
+                tag.appendChild(remove);
+                tags.appendChild(tag);
+            });
+            if (!tags.children.length) {
+                const hint = document.createElement('p');
+                hint.className = 'text-muted';
+                hint.textContent = 'Keine Gene ausgewählt.';
+                tags.appendChild(hint);
+            }
+            updateHiddenInputs();
+        }
+
+        function renderSuggestions(query) {
+            const normalized = normalizeGeneValue(query || '');
+            suggestions.innerHTML = '';
+            if (!isEnabled) {
+                suggestions.hidden = true;
+                return;
+            }
+            const matches = searchIndex.filter((entry) => {
+                if (selections.get(entry.geneSlug) === entry.stateKey) {
+                    return false;
+                }
+                if (!normalized) {
+                    return true;
+                }
+                return entry.tokens.some((token) => token.includes(normalized));
+            });
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'admin-gene-picker__empty';
+                empty.textContent = normalized ? 'Keine passenden Einträge.' : 'Alle Varianten ausgewählt.';
+                suggestions.appendChild(empty);
+                suggestions.hidden = false;
+                return;
+            }
+            matches.slice(0, 8).forEach((entry) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.innerHTML = `<strong>${entry.stateLabel}</strong><span>${entry.geneName}</span>`;
+                button.addEventListener('click', () => {
+                    selections.set(entry.geneSlug, entry.stateKey);
+                    input.value = '';
+                    suggestions.hidden = true;
+                    suggestions.innerHTML = '';
+                    renderTags();
+                });
+                suggestions.appendChild(button);
+            });
+            suggestions.hidden = false;
+        }
+
+        input.addEventListener('input', () => {
+            const value = input.value.trim();
+            if (!value) {
+                renderSuggestions('');
+            } else {
+                renderSuggestions(value);
+            }
+        });
+
+        input.addEventListener('focus', () => {
+            if (!input.value.trim()) {
+                renderSuggestions('');
+            }
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const value = input.value.trim();
+                const normalized = normalizeGeneValue(value);
+                if (!normalized) {
+                    suggestions.hidden = true;
+                    return;
+                }
+                const match = searchIndex.find((entry) => {
+                    if (selections.get(entry.geneSlug) === entry.stateKey) {
+                        return false;
+                    }
+                    return entry.tokens.some((token) => token.includes(normalized));
+                });
+                if (match) {
+                    selections.set(match.geneSlug, match.stateKey);
+                    input.value = '';
+                    suggestions.hidden = true;
+                    suggestions.innerHTML = '';
+                    renderTags();
+                }
+            }
+        });
+
+        clearButton.addEventListener('click', () => {
+            if (!isEnabled) {
+                return;
+            }
+            selections.clear();
+            input.value = '';
+            suggestions.hidden = true;
+            suggestions.innerHTML = '';
+            renderTags();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!container.contains(event.target)) {
+                suggestions.hidden = true;
+            }
+        });
+
+        root.genePicker = {
+            setEnabled(enabled) {
+                isEnabled = !!enabled;
+                input.disabled = !isEnabled;
+                clearButton.disabled = !isEnabled;
+                if (!isEnabled) {
+                    suggestions.hidden = true;
+                }
+                updateHiddenInputs();
+            },
+        };
+
+        input.disabled = !isEnabled;
+        clearButton.disabled = !isEnabled;
+        renderTags();
+    }
+
     function updateLayoutInput(list) {
         const selector = list.getAttribute('data-sortable-input');
         if (!selector) {
@@ -173,6 +436,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('textarea.rich-text').forEach(wrapTextarea);
+        document.querySelectorAll('[data-animal-gene-picker]').forEach(initAnimalGenePicker);
         initSortables();
     });
 })();

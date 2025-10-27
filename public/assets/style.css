@@ -788,19 +788,39 @@ input[type="radio"] {
   background: rgba(19, 24, 42, 0.7);
 }
 
-.gene-parent__tags button {
-  border: none;
-  border-radius: 12px;
-  padding: 0.35rem 0.65rem;
+.gene-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 14px;
   background: rgba(127, 90, 240, 0.18);
   color: var(--ui-primary);
   font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  border: 1px solid rgba(127, 90, 240, 0.32);
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(8px);
 }
 
-.gene-parent__tags button:hover {
-  background: rgba(34, 211, 238, 0.22);
+.gene-tag--combo {
+  background: rgba(56, 189, 248, 0.18);
+  color: #67e8f9;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.gene-tag__remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.15rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.gene-tag__remove:hover {
+  background: rgba(255, 255, 255, 0.14);
   color: var(--ui-text);
 }
 
@@ -854,9 +874,141 @@ input[type="radio"] {
   color: var(--ui-text);
 }
 
+.gene-parent__suggestions .gene-suggestion--combo {
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.gene-parent__suggestions .gene-suggestion--combo strong {
+  color: #67e8f9;
+}
+
 .gene-reference {
   display: grid;
   gap: 1.5rem;
+}
+
+.gene-reference__image {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  margin: 0.75rem 0 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.gene-results {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.gene-results__summary table {
+  width: 100%;
+}
+
+.gene-results__per-gene {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .gene-results {
+    grid-template-columns: 1.25fr 1fr;
+    align-items: start;
+  }
+
+  .gene-results__per-gene {
+    grid-template-columns: 1fr;
+  }
+}
+
+.result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.tag-combo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.22);
+  color: #67e8f9;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.admin-gene-picker {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.admin-gene-picker__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-gene-picker__input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-gene-picker__input input {
+  flex: 1 1 auto;
+}
+
+.admin-gene-picker__clear {
+  border: none;
+  border-radius: 12px;
+  padding: 0.4rem 0.75rem;
+  background: rgba(148, 163, 184, 0.18);
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+
+.admin-gene-picker__clear:hover {
+  background: rgba(56, 189, 248, 0.22);
+  color: var(--ui-text);
+}
+
+.admin-gene-picker__suggestions {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(12, 18, 30, 0.92);
+  padding: 0.55rem;
+  display: grid;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.admin-gene-picker__suggestions button {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+
+.admin-gene-picker__suggestions button:hover {
+  background: rgba(127, 90, 240, 0.18);
+  color: var(--ui-text);
+}
+
+.admin-gene-picker__empty {
+  padding: 0.4rem;
+  color: var(--ui-text-muted);
+  font-size: 0.85rem;
 }
 
 .gene-reference__card {

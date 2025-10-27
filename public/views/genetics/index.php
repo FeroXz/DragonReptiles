@@ -46,16 +46,13 @@
             foreach ($genes as $gene) {
                 $geneId = (int)$gene['id'];
                 $stateEntries = [];
-                foreach (['normal', 'heterozygous', 'homozygous'] as $stateKey) {
+                foreach (['heterozygous', 'homozygous'] as $stateKey) {
                     $label = gene_state_label($gene, $stateKey);
                     $tokens = [$toLower($label), $toLower($gene['name'])];
                     if (!empty($gene['shorthand'])) {
                         $tokens[] = $toLower($gene['shorthand']);
                     }
-                    if ($stateKey === 'normal') {
-                        $tokens[] = 'wildtyp';
-                        $tokens[] = 'normal ' . $toLower($gene['name']);
-                    } elseif ($stateKey === 'heterozygous') {
+                    if ($stateKey === 'heterozygous') {
                         $tokens[] = 'het ' . $toLower($gene['name']);
                         $tokens[] = 'träger ' . $toLower($gene['name']);
                     } else {
@@ -76,11 +73,29 @@
                     'states' => $stateEntries,
                 ];
             }
+            $comboPayload = [];
+            foreach ($combinationAliases as $alias) {
+                $comboPayload[] = [
+                    'key' => $alias['key'],
+                    'name' => $alias['name'],
+                    'display' => $alias['display'],
+                    'synonyms' => $alias['synonyms'],
+                    'components' => array_map(static function ($component) {
+                        return [
+                            'geneId' => $component['gene_id'],
+                            'geneSlug' => $component['gene_slug'],
+                            'geneName' => $component['gene_name'],
+                            'stateKey' => $component['state'],
+                            'label' => $component['label'],
+                        ];
+                    }, $alias['components']),
+                ];
+            }
         ?>
         <form method="post" class="card gene-selector" data-genetic-selector>
             <input type="hidden" name="species_slug" value="<?= htmlspecialchars($selectedSpecies['slug']) ?>">
             <div class="gene-selector__intro">
-                <p><strong>Eingabehilfe:</strong> Tippen Sie einen Gen-Namen oder Trägerstatus (z.&nbsp;B. „Albino“, „het Toffee“, „Super Anaconda“). Bestätigen Sie den Vorschlag mit Enter oder einem Klick. Nicht ausgewählte Gene werden automatisch als Wildtyp gewertet.</p>
+                <p><strong>Eingabehilfe:</strong> Tippen Sie einen Gen-Namen oder Trägerstatus (z.&nbsp;B. „Albino“, „het Toffee“, „Super Anaconda“). Bestätigen Sie den Vorschlag mit Enter oder einem Klick. Nicht ausgewählte Gene bleiben als Basisform erhalten.</p>
             </div>
             <div class="alert alert-error" data-form-error hidden role="alert" aria-live="assertive"></div>
             <div class="gene-selector__parents">
@@ -109,6 +124,80 @@
             </div>
             <button type="submit" class="btn" style="margin-top:1.5rem;align-self:flex-start;"><?= htmlspecialchars(content_value($settings, 'genetics_submit')) ?></button>
         </form>
+        <?php if (!empty($results)): ?>
+            <section class="gene-results">
+                <div class="card gene-results__summary">
+                    <h2>Auswertung</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Wahrscheinlichkeit</th>
+                                <th>Ausprägung</th>
+                                <th>Genotyp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($results['combined'] as $entry): ?>
+                                <tr>
+                                    <td><?= number_format($entry['probability'] * 100, 1, ',', '.') ?>%</td>
+                                    <td>
+                                        <?php if (!empty($entry['combination_labels'])): ?>
+                                            <div class="result-tags">
+                                                <?php foreach ($entry['combination_labels'] as $comboLabel): ?>
+                                                    <span class="tag tag-combo"><?= htmlspecialchars($comboLabel) ?></span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div><?= htmlspecialchars($entry['phenotype'] ?: '–') ?></div>
+                                    </td>
+                                    <td>
+                                        <?php foreach ($entry['labels'] as $label): ?>
+                                            <div><?= htmlspecialchars($label) ?></div>
+                                        <?php endforeach; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="gene-results__per-gene">
+                    <?php foreach ($results['genes'] as $geneResult): ?>
+                        <?php $gene = $geneResult['gene']; ?>
+                        <article class="card gene-results__card">
+                            <h3><?= htmlspecialchars($gene['name']) ?></h3>
+                            <p class="text-muted" style="font-size:0.9rem;">Elter 1: <?= htmlspecialchars(gene_state_label($gene, $geneResult['parent_states']['parent_one'])) ?> · Elter 2: <?= htmlspecialchars(gene_state_label($gene, $geneResult['parent_states']['parent_two'])) ?></p>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Genotyp</th>
+                                        <th>Wahrscheinlichkeit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($geneResult['states'] as $state): ?>
+                                        <tr>
+                                            <td>
+                                                <?= htmlspecialchars($state['label']) ?>
+                                                <?php if ($state['is_visual']): ?>
+                                                    <span class="tag tag-visual">visuell</span>
+                                                <?php elseif ($state['is_carrier']): ?>
+                                                    <span class="tag tag-carrier">Träger</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?= number_format($state['probability'] * 100, 1, ',', '.') ?>%</td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $selectedSpecies): ?>
+            <div class="card" style="margin-top:2rem;">
+                <p>Bitte wählen Sie mindestens ein Gen mit Träger- oder visueller Ausprägung aus, um eine Auswertung zu erhalten.</p>
+            </div>
+        <?php endif; ?>
         <section class="gene-reference">
             <h2>Verfügbare Gene</h2>
             <div class="grid cards">
@@ -123,8 +212,10 @@
                             </div>
                             <span class="badge"><?= htmlspecialchars($modeLabels[$gene['inheritance_mode']] ?? $gene['inheritance_mode']) ?></span>
                         </header>
+                        <?php if ($imageUrl = media_url($gene['image_path'] ?? null)): ?>
+                            <img src="<?= htmlspecialchars($imageUrl) ?>" alt="<?= htmlspecialchars($gene['name']) ?>" class="gene-reference__image">
+                        <?php endif; ?>
                         <dl class="gene-reference__states">
-                            <div><dt>Wildtyp</dt><dd><?= htmlspecialchars(gene_state_label($gene, 'normal')) ?></dd></div>
                             <div><dt>Träger</dt><dd><?= htmlspecialchars(gene_state_label($gene, 'heterozygous')) ?></dd></div>
                             <div><dt>Visuell</dt><dd><?= htmlspecialchars(gene_state_label($gene, 'homozygous')) ?></dd></div>
                         </dl>
@@ -172,6 +263,7 @@
         <script>
             window.GENETIC_GENE_DATA = <?= json_encode($geneStatePayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
             window.GENETIC_PARENT_SELECTIONS = <?= json_encode($parentSelections, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+            window.GENETIC_COMBINATIONS = <?= json_encode($comboPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         </script>
     <?php elseif ($selectedSpecies): ?>
         <div class="card" style="margin-bottom:2rem;">
@@ -179,77 +271,6 @@
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($results)): ?>
-        <section style="margin-bottom:3rem;">
-            <h2>Gesamtauswertung</h2>
-            <div class="card">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Wahrscheinlichkeit</th>
-                            <th>Ausprägung</th>
-                            <th>Genotyp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($results['combined'] as $entry): ?>
-                            <tr>
-                                <td><?= number_format($entry['probability'] * 100, 1, ',', '.') ?>%</td>
-                                <td><?= htmlspecialchars($entry['phenotype']) ?></td>
-                                <td>
-                                    <?php foreach ($entry['labels'] as $label): ?>
-                                        <div><?= htmlspecialchars($label) ?></div>
-                                    <?php endforeach; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section style="margin-bottom:3rem;">
-            <h2>Genbezogene Verteilung</h2>
-            <div class="grid cards">
-                <?php foreach ($results['genes'] as $geneResult): ?>
-                    <?php $gene = $geneResult['gene']; ?>
-                    <article class="card">
-                        <h3><?= htmlspecialchars($gene['name']) ?></h3>
-                        <p class="text-muted" style="font-size:0.9rem;">Elter 1: <?= htmlspecialchars(gene_state_label($gene, $geneResult['parent_states']['parent_one'])) ?> · Elter 2: <?= htmlspecialchars(gene_state_label($gene, $geneResult['parent_states']['parent_two'])) ?></p>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Genotyp</th>
-                                    <th>Wahrscheinlichkeit</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($geneResult['states'] as $state): ?>
-                                    <tr>
-                                        <td>
-                                            <?= htmlspecialchars($state['label']) ?>
-                                            <?php if ($state['is_visual']): ?>
-                                                <span class="tag tag-visual">visuell</span>
-                                            <?php elseif ($state['is_carrier']): ?>
-                                                <span class="tag tag-carrier">Träger</span>
-                                            <?php else: ?>
-                                                <span class="tag tag-normal">Wildtyp</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= number_format($state['probability'] * 100, 1, ',', '.') ?>%</td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        </section>
-    <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $selectedSpecies): ?>
-        <div class="card" style="margin-bottom:3rem;">
-            <p>Bitte wählen Sie mindestens ein Gen mit Träger- oder visueller Ausprägung aus, um eine Auswertung zu erhalten.</p>
-        </div>
-    <?php endif; ?>
 <?php endif; ?>
 
 </section>

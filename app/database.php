@@ -215,6 +215,7 @@ function initialize_database(PDO $pdo): void
         shorthand TEXT,
         inheritance_mode TEXT NOT NULL,
         description TEXT,
+        image_path TEXT,
         normal_label TEXT,
         heterozygous_label TEXT,
         homozygous_label TEXT,
@@ -230,6 +231,9 @@ function initialize_database(PDO $pdo): void
     $geneColumnNames = array_column($geneColumns, 'name');
     if (!in_array('is_reference', $geneColumnNames, true)) {
         $pdo->exec('ALTER TABLE genetic_genes ADD COLUMN is_reference INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!in_array('image_path', $geneColumnNames, true)) {
+        $pdo->exec('ALTER TABLE genetic_genes ADD COLUMN image_path TEXT');
     }
 
     $pdo->exec('CREATE TABLE IF NOT EXISTS gallery_items (
