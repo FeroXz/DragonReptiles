@@ -16,8 +16,8 @@
             </header>
             <div class="prose prose-invert max-w-none text-sm text-slate-300">
                 <ol class="list-decimal space-y-3 pl-5">
-                    <li>Downloade das gewünschte Update als ZIP-Datei (z.&nbsp;B. vom GitHub-Release oder Pull Request).</li>
-                    <li>Klicke auf „Paket hochladen“ und wähle das ZIP aus. Der Inhalt wird ohne Nutzer-Uploads oder Datenbank zu überschreiben eingespielt.</li>
+                    <li>Nutze auf Wunsch „Repository-Update laden“, um automatisch die aktuelle Hauptversion aus dem Git-Repository herunterzuladen.</li>
+                    <li>Alternativ lade ein eigenes ZIP-Paket hoch. Benutzer-Uploads sowie die SQLite-Datenbank bleiben dabei unangetastet.</li>
                     <li>Nach erfolgreicher Aktualisierung wird die Versionsnummer automatisch angehoben.</li>
                 </ol>
                 <p class="mt-4 text-xs text-slate-400">Hinweis: Benutzerinhalte in <code>uploads/</code> sowie die SQLite-Datenbank bleiben unverändert. Ein Backup vor größeren Updates ist dennoch empfohlen.</p>
@@ -38,6 +38,20 @@
             </form>
         </article>
     </div>
+    <article class="card" style="margin-top:1.5rem;">
+        <header class="card-header">
+            <h2 class="card-title">Direktes Repository-Update</h2>
+            <p class="card-subtitle">Lade das aktuellste Paket aus dem konfigurierten Git-Repository und spiele es ohne Umwege ein.</p>
+        </header>
+        <form method="post" class="flex flex-col gap-4">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="fetch-repository">
+            <p class="text-sm text-slate-300">
+                Das Update berücksichtigt automatisch geschützte Bereiche wie <code>uploads/</code> und <code>storage/database.sqlite</code>. Eigene Inhalte bleiben dadurch erhalten.
+            </p>
+            <button type="submit" class="btn btn-secondary">Repository-Update laden</button>
+        </form>
+    </article>
     <article class="card" style="margin-top:1.5rem;">
         <header class="card-header">
             <h2 class="card-title">Protokollierte Update-Sitzungen</h2>

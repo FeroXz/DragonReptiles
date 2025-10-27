@@ -3,6 +3,74 @@
         return;
     }
 
+    const nuxtComponentSnippets = [
+        {
+            label: 'Hero Panel mit CTA',
+            description: 'Großer Aufmacher mit Titel, Beschreibung und Button.',
+            snippet: `
+<section class="nui-panel nui-panel--floating space-y-4" data-nui-component="hero">
+    <p class="badge">Nuxt UI Highlight</p>
+    <h2 class="nui-heading text-white text-3xl">Titel für deinen Bereich</h2>
+    <p class="nui-muted">Nutze diesen Bereich, um wichtige Inhalte hervorzuheben und Nutzer zur Interaktion einzuladen.</p>
+    <a class="nui-pill nui-button--primary w-max" href="#">Call to Action</a>
+</section>`
+        },
+        {
+            label: 'Feature-Kachelraster',
+            description: 'Drei Karten mit Icon-Badge und Texten.',
+            snippet: `
+<div class="nui-grid gap-6 md:grid-cols-3" data-nui-component="feature-grid">
+    <article class="nui-card flex flex-col gap-3">
+        <span class="badge badge-pattern w-max">Feature 1</span>
+        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
+        <p class="nui-muted text-sm">Beschreibe hier kurz die Besonderheit oder den Nutzen.</p>
+    </article>
+    <article class="nui-card flex flex-col gap-3">
+        <span class="badge badge-pattern w-max">Feature 2</span>
+        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
+        <p class="nui-muted text-sm">Nutze passende Icons oder Emojis, um Aufmerksamkeit zu wecken.</p>
+    </article>
+    <article class="nui-card flex flex-col gap-3">
+        <span class="badge badge-pattern w-max">Feature 3</span>
+        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
+        <p class="nui-muted text-sm">Verlinke bei Bedarf auf Detailseiten oder Downloads.</p>
+    </article>
+</div>`
+        },
+        {
+            label: 'Hinweis-Callout',
+            description: 'Schmale Info-Box mit Icon und Link.',
+            snippet: `
+<aside class="nui-panel nui-panel--muted flex flex-col gap-3" data-nui-component="callout">
+    <div class="flex items-center gap-3">
+        <span class="nui-pill" aria-hidden="true">⚡</span>
+        <h3 class="nui-heading text-xl text-white m-0">Wissenswertes auf einen Blick</h3>
+    </div>
+    <p class="nui-muted text-sm">Teile Hinweise, Voraussetzungen oder ergänzende Tipps direkt neben deinen Inhalten.</p>
+    <a class="nui-pill nui-button--primary w-max" href="#">Mehr erfahren</a>
+</aside>`
+        }
+    ];
+
+    function showNuxtComponentPicker(editor) {
+        const options = nuxtComponentSnippets
+            .map((component, index) => `${index + 1}. ${component.label} – ${component.description}`)
+            .join('\n');
+        const message = ['Nuxt UI Komponente auswählen:', options, '', 'Gib die Nummer der gewünschten Komponente ein.'].join('\n');
+        const choiceRaw = window.prompt(message);
+        if (choiceRaw === null) {
+            return;
+        }
+        const choice = parseInt(choiceRaw.trim(), 10);
+        if (!Number.isFinite(choice) || choice < 1 || choice > nuxtComponentSnippets.length) {
+            window.alert('Auswahl konnte nicht zugeordnet werden. Bitte erneut versuchen.');
+            return;
+        }
+        const snippet = nuxtComponentSnippets[choice - 1].snippet;
+        editor.focus();
+        document.execCommand('insertHTML', false, snippet);
+    }
+
     function createButton(label, title, onClick) {
         const button = document.createElement('button');
         button.type = 'button';
@@ -45,7 +113,8 @@
                     document.execCommand('createLink', false, url);
                 }
             } },
-            { label: '&#9003;', title: 'Formatierung löschen', action: () => document.execCommand('removeFormat', false) }
+            { label: '&#9003;', title: 'Formatierung löschen', action: () => document.execCommand('removeFormat', false) },
+            { label: 'NUI', title: 'Nuxt UI Komponente einfügen', action: () => showNuxtComponentPicker(editor) }
         ];
 
         commands.forEach((command) => toolbar.appendChild(createButton(command.label, command.title, command.action)));
