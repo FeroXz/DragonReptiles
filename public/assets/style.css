@@ -1614,6 +1614,18 @@ input[type="radio"] {
   box-shadow: var(--ui-shadow-medium);
   min-height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rich-text-components__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ui-text);
 }
 
 .component-gallery {
