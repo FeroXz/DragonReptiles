@@ -27,6 +27,10 @@
         <label>Kontakt E-Mail
             <input type="email" name="contact_email" value="<?= htmlspecialchars($settings['contact_email'] ?? '') ?>">
         </label>
+        <label>Admin-Logo (Pfad oder URL)
+            <input type="text" name="admin_logo_path" value="<?= htmlspecialchars($settings['admin_logo_path'] ?? '') ?>" placeholder="assets/logo-icon.svg">
+            <span class="form-hint">Relative Pfade zeigen auf <code>public/</code>, vollständige URLs werden unverändert genutzt.</span>
+        </label>
         <label>Design
             <select name="active_theme">
                 <?php foreach ($themes as $key => $theme): ?>

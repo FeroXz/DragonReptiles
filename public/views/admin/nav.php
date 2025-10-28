@@ -49,6 +49,33 @@ $normalizePath = static function (array $item): string {
 };
 ?>
 <nav class="admin-nav nui-panel nui-panel--floating" aria-label="Admin-Navigation">
+    <?php
+        $defaultAdminLogo = asset('logo-icon.svg');
+        $adminLogoSetting = trim((string)($settings['admin_logo_path'] ?? ''));
+        if ($adminLogoSetting === '') {
+            $adminLogoUrl = $defaultAdminLogo;
+        } elseif (preg_match('#^https?://#i', $adminLogoSetting)) {
+            $adminLogoUrl = $adminLogoSetting;
+        } else {
+            $normalizedLogo = normalize_media_path($adminLogoSetting);
+            if ($normalizedLogo === null) {
+                $adminLogoUrl = $defaultAdminLogo;
+            } else {
+                $baseUrl = rtrim(BASE_URL, '/');
+                $adminLogoUrl = ($baseUrl !== '' ? $baseUrl : '') . '/' . ltrim($normalizedLogo, '/');
+            }
+        }
+        $adminBrandTitle = $settings['site_title'] ?? APP_NAME;
+    ?>
+    <div class="admin-nav__brand">
+        <span class="admin-nav__brand-logo" aria-hidden="true">
+            <img src="<?= htmlspecialchars($adminLogoUrl) ?>" alt="" width="56" height="56" loading="lazy">
+        </span>
+        <span class="admin-nav__brand-text">
+            <span class="admin-nav__brand-title"><?= htmlspecialchars($adminBrandTitle) ?></span>
+            <span class="admin-nav__brand-subtitle">Adminbereich</span>
+        </span>
+    </div>
     <?php foreach ($menuItems as $item): ?>
         <?php
             $rawPath = $normalizePath($item);

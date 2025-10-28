@@ -9,6 +9,7 @@ function ensure_default_settings(PDO $pdo): void
         'footer_text' => '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION,
         'contact_email' => 'info@example.com',
         'active_theme' => 'aurora',
+        'admin_logo_path' => 'assets/logo-icon.svg',
         'home_sections_layout' => json_encode(default_home_sections_layout($pdo), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
         'app_version' => APP_VERSION,
     ];
@@ -37,6 +38,11 @@ function ensure_default_settings(PDO $pdo): void
         set_setting($pdo, 'app_version', APP_VERSION);
         $footer = '© ' . date('Y') . ' ' . APP_NAME . ' — Version ' . APP_VERSION;
         set_setting($pdo, 'footer_text', $footer);
+    }
+
+    $existingAdminLogo = get_setting($pdo, 'admin_logo_path');
+    if ($existingAdminLogo === 'logo-icon.svg') {
+        set_setting($pdo, 'admin_logo_path', 'assets/logo-icon.svg');
     }
 }
 
