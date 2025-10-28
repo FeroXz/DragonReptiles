@@ -1,15 +1,12 @@
 import { buildPhenotypeTokens } from './format.js';
 import { GeneDef, ParentGenotype, PairingResult, Zygosity } from './types.js';
 
-interface ParentEntry {
-  state: Zygosity;
-  posHet?: number;
-}
+type ParentEntry = { state: Zygosity; posHet?: number };
 
 const EPSILON = 1e-9;
 
 function clampProbability(value: number): number {
-  if (Number.isNaN(value) || !Number.isFinite(value)) {
+  if (!Number.isFinite(value) || Number.isNaN(value)) {
     return 0;
   }
   if (value < 0) {
@@ -21,7 +18,7 @@ function clampProbability(value: number): number {
   return value;
 }
 
-function normalizeEntry(value: Zygosity | ParentEntry | undefined): ParentEntry {
+function normalizeEntry(value: ParentGenotype[string]): ParentEntry {
   if (!value) {
     return { state: 'normal' };
   }
@@ -31,37 +28,38 @@ function normalizeEntry(value: Zygosity | ParentEntry | undefined): ParentEntry 
   return { state: value.state, posHet: value.posHet };
 }
 
-function mutatedAlleleProbability(gene: GeneDef, entry: ParentEntry): number {
-  const { state, posHet } = entry;
-  const posFraction = posHet !== undefined ? clampProbability(posHet / 100) : undefined;
+function posHetFraction(entry: ParentEntry): number {
+  if (entry.posHet === undefined) {
+    return 1;
+  }
+  return clampProbability(entry.posHet / 100);
+}
 
+function mutatedAlleleProbability(gene: GeneDef, entry: ParentEntry): number {
   switch (gene.type) {
     case 'recessive': {
-      if (state === 'expressed') {
+      if (entry.state === 'expressed') {
         return 1;
       }
-      if (state === 'het') {
-        if (posFraction !== undefined) {
-          return 0.5 * posFraction;
-        }
-        return 0.5;
+      if (entry.state === 'het') {
+        return 0.5 * posHetFraction(entry);
       }
-      if (posFraction !== undefined) {
-        return 0.5 * posFraction;
+      if (entry.state === 'normal' && entry.posHet !== undefined) {
+        return 0.5 * posHetFraction(entry);
       }
       return 0;
     }
     case 'incomplete_dominant': {
-      if (state === 'super') {
+      if (entry.state === 'super') {
         return 1;
       }
-      if (state === 'expressed') {
+      if (entry.state === 'expressed') {
         return 0.5;
       }
       return 0;
     }
     case 'dominant': {
-      if (state === 'expressed') {
+      if (entry.state === 'expressed') {
         return 0.5;
       }
       return 0;
@@ -78,10 +76,7 @@ interface StateProbability {
 
 function geneStateProbabilities(gene: GeneDef, parentA: ParentEntry, parentB: ParentEntry): StateProbability[] {
   if (gene.type === 'polygenic') {
-    const expressed = parentA.state === 'expressed' || parentB.state === 'expressed';
-    return [
-      { state: expressed ? 'expressed' : 'normal', probability: 1 }
-    ];
+    return [{ state: parentA.state === 'expressed' || parentB.state === 'expressed' ? 'expressed' : 'normal', probability: 1 }];
   }
 
   const mutatedA = mutatedAlleleProbability(gene, parentA);
@@ -116,21 +111,37 @@ function geneStateProbabilities(gene: GeneDef, parentA: ParentEntry, parentB: Pa
   }
 }
 
+function buildPolygenicGenotype(
+  parentA: ParentGenotype,
+  parentB: ParentGenotype,
+  polyGenes: GeneDef[]
+): Record<string, Zygosity> {
+  const genotype: Record<string, Zygosity> = {};
+  polyGenes.forEach((gene) => {
+    const entryA = normalizeEntry(parentA[gene.key]);
+    const entryB = normalizeEntry(parentB[gene.key]);
+    genotype[gene.key] = entryA.state === 'expressed' || entryB.state === 'expressed' ? 'expressed' : 'normal';
+  });
+  return genotype;
+}
+
 export function predictPairing(
   parentA: ParentGenotype,
   parentB: ParentGenotype,
   genes: GeneDef[]
 ): PairingResult[] {
-  const relevantGenes = genes.slice();
-  if (!relevantGenes.length) {
+  if (!genes.length) {
     return [];
   }
+
+  const polyGenes = genes.filter((gene) => gene.type === 'polygenic');
+  const standardGenes = genes.filter((gene) => gene.type !== 'polygenic');
 
   let combinations: Array<{ probability: number; genotype: Record<string, Zygosity>; key: string }> = [
     { probability: 1, genotype: {}, key: '' }
   ];
 
-  relevantGenes.forEach((gene) => {
+  standardGenes.forEach((gene) => {
     const entryA = normalizeEntry(parentA[gene.key]);
     const entryB = normalizeEntry(parentB[gene.key]);
     const states = geneStateProbabilities(gene, entryA, entryB).filter((item) => item.probability > EPSILON);
@@ -155,13 +166,15 @@ export function predictPairing(
     combinations = Array.from(next.entries()).map(([key, value]) => ({ key, ...value }));
   });
 
+  const polyGenotype = buildPolygenicGenotype(parentA, parentB, polyGenes);
+
   const results: PairingResult[] = combinations
     .map((combo) => {
-      const genotype: Record<string, Zygosity> = {};
-      relevantGenes.forEach((gene) => {
+      const genotype: Record<string, Zygosity> = { ...polyGenotype };
+      standardGenes.forEach((gene) => {
         genotype[gene.key] = combo.genotype[gene.key] ?? 'normal';
       });
-      const phenotypeTokens = buildPhenotypeTokens(genotype, relevantGenes);
+      const phenotypeTokens = buildPhenotypeTokens(genotype, genes);
       return {
         probability: combo.probability,
         genotype,

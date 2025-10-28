@@ -95,7 +95,7 @@ describe('predictPairing', () => {
 
   it('supports posHet probabilities', () => {
     const genes = [geneByKey(hognose, 'albino')];
-    const parentA: ParentGenotype = { albino: { state: 'normal', posHet: 66 } };
+    const parentA: ParentGenotype = { albino: { state: 'het', posHet: 66 } };
     const parentB: ParentGenotype = { albino: 'normal' };
     const results = predictPairing(parentA, parentB, genes);
     const probabilities = probabilityMap(results, 'albino');
