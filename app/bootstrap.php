@@ -7,6 +7,7 @@ require_once __DIR__ . '/themes.php';
 require_once __DIR__ . '/home_sections.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/menu.php';
 require_once __DIR__ . '/animals.php';
 require_once __DIR__ . '/adoption.php';
 require_once __DIR__ . '/users.php';
@@ -22,8 +23,10 @@ require_once __DIR__ . '/sample_content.php';
 
 $pdo = get_database_connection();
 initialize_database($pdo);
+ensure_menu_schema($pdo);
 ensure_default_admin($pdo);
 ensure_default_settings($pdo);
+ensure_default_menu_items($pdo);
 ensure_default_care_articles($pdo);
 ensure_default_care_topics($pdo);
 ensure_default_genetics($pdo);

@@ -66,55 +66,126 @@
             </span>
         </a>
         <nav class="app-nav" data-desktop-nav>
-            <a href="<?= BASE_URL ?>/index.php" class="app-nav__link <?= ($currentRoute === 'home') ? 'is-active' : '' ?>">Start</a>
-            <a href="<?= BASE_URL ?>/index.php?route=animals" class="app-nav__link <?= ($currentRoute === 'animals') ? 'is-active' : '' ?>">Tierübersicht</a>
-            <a href="<?= BASE_URL ?>/index.php?route=news" class="app-nav__link <?= ($currentRoute === 'news') ? 'is-active' : '' ?>">Neuigkeiten</a>
-            <div class="app-nav__group" data-nav-group>
-                <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="app-nav__link <?= $isCareActive ? 'is-active' : '' ?>" data-nav-trigger>
-                    Pflegeleitfaden
-                    <svg class="h-4 w-4" data-chevron fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                    </svg>
-                </a>
-                <div class="app-nav__dropdown" role="menu">
-                    <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'is-active' : '' ?>">Übersicht</a>
-                    <?php foreach (($navCareArticles ?? []) as $careNav): ?>
-                        <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="<?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <a href="<?= BASE_URL ?>/index.php?route=genetics" class="app-nav__link <?= ($currentRoute === 'genetics') ? 'is-active' : '' ?>">Genetik</a>
-            <?php foreach (($navPages ?? []) as $navPage): ?>
-                <?php
-                    $parentActive = ($currentRoute === 'page' && ($activePageSlug ?? '') === $navPage['slug']);
-                    $childActive = false;
-                    foreach ($navPage['children'] ?? [] as $childPage) {
-                        if ($currentRoute === 'page' && ($activePageSlug ?? '') === $childPage['slug']) {
-                            $childActive = true;
-                            break;
-                        }
+            <?php
+                $menuItems = array_values($menuItems ?? []);
+                $iconLibrary = function_exists('menu_icon_library') ? menu_icon_library() : [];
+                $normalizeMenuPath = static function (?string $path): string {
+                    $path = trim($path ?? '');
+                    if ($path === '') {
+                        return '';
                     }
-                    $isActive = $parentActive || $childActive;
+                    if (preg_match('#^https?://#i', $path)) {
+                        $parsedPath = parse_url($path, PHP_URL_PATH) ?? '';
+                        $parsedQuery = parse_url($path, PHP_URL_QUERY);
+                        $path = $parsedPath . ($parsedQuery ? '?' . $parsedQuery : '');
+                    }
+                    if (BASE_URL !== '' && str_starts_with($path, BASE_URL)) {
+                        $path = substr($path, strlen(BASE_URL));
+                    }
+                    if ($path === '') {
+                        return '';
+                    }
+                    return str_starts_with($path, '/') ? $path : '/' . $path;
+                };
+                $menuPaths = array_map(static function ($item) use ($normalizeMenuPath) {
+                    return $normalizeMenuPath($item['path'] ?? '');
+                }, $menuItems);
+                $additionalPages = [];
+                foreach (($navPages ?? []) as $navPage) {
+                    $pagePath = '/index.php?route=page&slug=' . urlencode($navPage['slug']);
+                    if (!in_array($pagePath, $menuPaths, true)) {
+                        $additionalPages[] = [
+                            'label' => $navPage['title'],
+                            'path' => $pagePath,
+                            'icon' => '',
+                            'target' => '_self',
+                        ];
+                    }
+                }
+                if ($additionalPages) {
+                    $menuItems = array_merge($menuItems, $additionalPages);
+                }
+                $buildMenuUrl = static function (array $item): string {
+                    $path = trim($item['path'] ?? '');
+                    if ($path === '') {
+                        return '#';
+                    }
+                    if (preg_match('#^https?://#i', $path)) {
+                        return $path;
+                    }
+                    $base = rtrim(BASE_URL, '/');
+                    return $base . $path;
+                };
+                $isMenuItemActive = static function (array $item) use ($normalizeMenuPath, $currentRoute, $activePageSlug, $activeCareSlug, $isCareActive): bool {
+                    $normalized = $normalizeMenuPath($item['path'] ?? '');
+                    if ($normalized === '/index.php' || $normalized === '/index.php?route=home' || $normalized === '/') {
+                        return $currentRoute === 'home';
+                    }
+                    $query = parse_url($normalized, PHP_URL_QUERY);
+                    $params = [];
+                    if ($query) {
+                        parse_str($query, $params);
+                    }
+                    $route = $params['route'] ?? null;
+                    if ($route === null) {
+                        return false;
+                    }
+                    if ($route === 'page') {
+                        $slug = $params['slug'] ?? null;
+                        return $currentRoute === 'page' && $slug && $slug === ($activePageSlug ?? '');
+                    }
+                    if ($route === 'care-guide') {
+                        return $isCareActive;
+                    }
+                    if ($route === 'care-article') {
+                        $slug = $params['slug'] ?? null;
+                        return $currentRoute === 'care-article' && $slug && $slug === ($activeCareSlug ?? '');
+                    }
+                    return $currentRoute === $route;
+                };
+            ?>
+            <?php foreach ($menuItems as $menuItem): ?>
+                <?php
+                    $url = $buildMenuUrl($menuItem);
+                    $target = ($menuItem['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
+                    $isActive = $isMenuItemActive($menuItem);
+                    $normalizedPath = $normalizeMenuPath($menuItem['path'] ?? '');
+                    $renderDropdown = $normalizedPath === '/index.php?route=care-guide' && !empty($navCareArticles);
                 ?>
-                <div class="app-nav__group" data-nav-group>
-                    <a href="<?= BASE_URL ?>/index.php?route=page&amp;slug=<?= urlencode($navPage['slug']) ?>" class="app-nav__link <?= $isActive ? 'is-active' : '' ?>" <?= !empty($navPage['children']) ? 'data-nav-trigger' : '' ?>>
-                        <?= htmlspecialchars($navPage['title']) ?>
-                        <?php if (!empty($navPage['children'])): ?>
+                <?php if ($renderDropdown): ?>
+                    <div class="app-nav__group" data-nav-group>
+                        <a href="<?= htmlspecialchars($url) ?>" class="app-nav__link <?= $isActive ? 'is-active' : '' ?>" data-nav-trigger target="<?= htmlspecialchars($target) ?>">
+                            <?php if (!empty($menuItem['icon'])): ?>
+                                <span class="app-nav__icon"><?= htmlspecialchars($menuItem['icon']) ?></span>
+                            <?php endif; ?>
+                            <?= htmlspecialchars($menuItem['label']) ?>
                             <svg class="h-4 w-4" data-chevron fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                             </svg>
-                        <?php endif; ?>
-                    </a>
-                    <?php if (!empty($navPage['children'])): ?>
+                        </a>
                         <div class="app-nav__dropdown" role="menu">
-                            <?php foreach ($navPage['children'] as $childPage): ?>
-                                <a href="<?= BASE_URL ?>/index.php?route=page&amp;slug=<?= urlencode($childPage['slug']) ?>" class="<?= ($currentRoute === 'page' && ($activePageSlug ?? '') === $childPage['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($childPage['title']) ?></a>
+                            <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'is-active' : '' ?>">Übersicht</a>
+                            <?php foreach (($navCareArticles ?? []) as $careNav): ?>
+                                <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="<?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
                             <?php endforeach; ?>
                         </div>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($url) ?>" class="app-nav__link <?= $isActive ? 'is-active' : '' ?>" target="<?= htmlspecialchars($target) ?>">
+                        <?php
+                            $iconKey = trim((string)($menuItem['icon'] ?? ''));
+                            if ($iconKey !== '') {
+                                if (isset($iconLibrary[$iconKey])) {
+                                    echo '<span class="app-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' . $iconLibrary[$iconKey] . '</svg></span>';
+                                } else {
+                                    echo '<span class="app-nav__icon" aria-hidden="true">' . htmlspecialchars($iconKey) . '</span>';
+                                }
+                            }
+                        ?>
+                        <?= htmlspecialchars($menuItem['label']) ?>
+                    </a>
+                <?php endif; ?>
             <?php endforeach; ?>
-            <a href="<?= BASE_URL ?>/index.php?route=adoption" class="app-nav__link <?= ($currentRoute === 'adoption') ? 'is-active' : '' ?>">Tierabgabe</a>
             <?php if (current_user()): ?>
                 <a href="<?= BASE_URL ?>/index.php?route=my-animals" class="app-nav__link <?= ($currentRoute === 'my-animals') ? 'is-active' : '' ?>">Meine Tiere</a>
                 <a href="<?= BASE_URL ?>/index.php?route=breeding" class="app-nav__link <?= ($currentRoute === 'breeding') ? 'is-active' : '' ?>">Zuchtplanung</a>
@@ -133,47 +204,33 @@
     </div>
     <div class="app-nav-mobile hidden" data-mobile-nav-panel>
         <nav>
-            <a href="<?= BASE_URL ?>/index.php" class="<?= ($currentRoute === 'home') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Start</a>
-            <a href="<?= BASE_URL ?>/index.php?route=animals" class="<?= ($currentRoute === 'animals') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Tierübersicht</a>
-            <a href="<?= BASE_URL ?>/index.php?route=news" class="<?= ($currentRoute === 'news') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Neuigkeiten</a>
-            <details class="group" <?= $isCareActive ? 'open' : '' ?>>
-                <summary class="app-nav__link">Pflegeleitfaden<svg class="h-4 w-4 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg></summary>
-                <div class="mt-2 space-y-1 pl-3 text-sm">
-                    <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Übersicht</a>
-                    <?php foreach (($navCareArticles ?? []) as $careNav): ?>
-                        <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="app-nav__link <?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-            <a href="<?= BASE_URL ?>/index.php?route=genetics" class="<?= ($currentRoute === 'genetics') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Genetik</a>
-            <?php foreach (($navPages ?? []) as $navPage): ?>
+            <?php foreach ($menuItems as $menuItem): ?>
                 <?php
-                    $parentActive = ($currentRoute === 'page' && ($activePageSlug ?? '') === $navPage['slug']);
-                    $childActive = false;
-                    foreach ($navPage['children'] ?? [] as $childPage) {
-                        if ($currentRoute === 'page' && ($activePageSlug ?? '') === $childPage['slug']) {
-                            $childActive = true;
-                            break;
-                        }
-                    }
+                    $url = $buildMenuUrl($menuItem);
+                    $target = ($menuItem['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
+                    $normalizedPath = $normalizeMenuPath($menuItem['path'] ?? '');
+                    $isActive = $isMenuItemActive($menuItem);
+                    $renderDropdown = $normalizedPath === '/index.php?route=care-guide' && !empty($navCareArticles);
                 ?>
-                <details class="group" <?= ($parentActive || $childActive) ? 'open' : '' ?>>
-                    <summary class="app-nav__link">
-                        <?= htmlspecialchars($navPage['title']) ?>
-                        <?php if (!empty($navPage['children'])): ?>
+                <?php if ($renderDropdown): ?>
+                    <details class="group" <?= $isCareActive ? 'open' : '' ?>>
+                        <summary class="app-nav__link">
+                            <?= htmlspecialchars($menuItem['label']) ?>
                             <svg class="h-4 w-4 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg>
-                        <?php endif; ?>
-                    </summary>
-                    <?php if (!empty($navPage['children'])): ?>
+                        </summary>
                         <div class="mt-2 space-y-1 pl-3 text-sm">
-                            <?php foreach ($navPage['children'] as $childPage): ?>
-                                <a href="<?= BASE_URL ?>/index.php?route=page&amp;slug=<?= urlencode($childPage['slug']) ?>" class="app-nav__link <?= ($currentRoute === 'page' && ($activePageSlug ?? '') === $childPage['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($childPage['title']) ?></a>
+                            <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Übersicht</a>
+                            <?php foreach (($navCareArticles ?? []) as $careNav): ?>
+                                <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="app-nav__link <?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
                             <?php endforeach; ?>
                         </div>
-                    <?php endif; ?>
-                </details>
+                    </details>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($url) ?>" class="<?= $isActive ? 'app-nav__link is-active' : 'app-nav__link' ?>" target="<?= htmlspecialchars($target) ?>">
+                        <?= htmlspecialchars($menuItem['label']) ?>
+                    </a>
+                <?php endif; ?>
             <?php endforeach; ?>
-            <a href="<?= BASE_URL ?>/index.php?route=adoption" class="<?= ($currentRoute === 'adoption') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Tierabgabe</a>
             <?php if (current_user()): ?>
                 <a href="<?= BASE_URL ?>/index.php?route=my-animals" class="<?= ($currentRoute === 'my-animals') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Meine Tiere</a>
                 <a href="<?= BASE_URL ?>/index.php?route=breeding" class="<?= ($currentRoute === 'breeding') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Zuchtplanung</a>

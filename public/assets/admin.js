@@ -3,72 +3,156 @@
         return;
     }
 
-    const nuxtComponentSnippets = [
-        {
-            label: 'Hero Panel mit CTA',
-            description: 'Großer Aufmacher mit Titel, Beschreibung und Button.',
-            snippet: `
-<section class="nui-panel nui-panel--floating space-y-4" data-nui-component="hero">
-    <p class="badge">Nuxt UI Highlight</p>
-    <h2 class="nui-heading text-white text-3xl">Titel für deinen Bereich</h2>
-    <p class="nui-muted">Nutze diesen Bereich, um wichtige Inhalte hervorzuheben und Nutzer zur Interaktion einzuladen.</p>
-    <a class="nui-pill nui-button--primary w-max" href="#">Call to Action</a>
-</section>`
-        },
-        {
-            label: 'Feature-Kachelraster',
-            description: 'Drei Karten mit Icon-Badge und Texten.',
-            snippet: `
-<div class="nui-grid gap-6 md:grid-cols-3" data-nui-component="feature-grid">
-    <article class="nui-card flex flex-col gap-3">
-        <span class="badge badge-pattern w-max">Feature 1</span>
-        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
-        <p class="nui-muted text-sm">Beschreibe hier kurz die Besonderheit oder den Nutzen.</p>
-    </article>
-    <article class="nui-card flex flex-col gap-3">
-        <span class="badge badge-pattern w-max">Feature 2</span>
-        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
-        <p class="nui-muted text-sm">Nutze passende Icons oder Emojis, um Aufmerksamkeit zu wecken.</p>
-    </article>
-    <article class="nui-card flex flex-col gap-3">
-        <span class="badge badge-pattern w-max">Feature 3</span>
-        <h3 class="nui-heading text-2xl text-white">Kurzer Titel</h3>
-        <p class="nui-muted text-sm">Verlinke bei Bedarf auf Detailseiten oder Downloads.</p>
-    </article>
-</div>`
-        },
-        {
-            label: 'Hinweis-Callout',
-            description: 'Schmale Info-Box mit Icon und Link.',
-            snippet: `
-<aside class="nui-panel nui-panel--muted flex flex-col gap-3" data-nui-component="callout">
-    <div class="flex items-center gap-3">
-        <span class="nui-pill" aria-hidden="true">⚡</span>
-        <h3 class="nui-heading text-xl text-white m-0">Wissenswertes auf einen Blick</h3>
-    </div>
-    <p class="nui-muted text-sm">Teile Hinweise, Voraussetzungen oder ergänzende Tipps direkt neben deinen Inhalten.</p>
-    <a class="nui-pill nui-button--primary w-max" href="#">Mehr erfahren</a>
-</aside>`
-        }
-    ];
+    const componentCatalogState = {
+        items: [],
+        categories: [],
+        promise: null,
+    };
 
-    function showNuxtComponentPicker(editor) {
-        const options = nuxtComponentSnippets
-            .map((component, index) => `${index + 1}. ${component.label} – ${component.description}`)
-            .join('\n');
-        const message = ['Nuxt UI Komponente auswählen:', options, '', 'Gib die Nummer der gewünschten Komponente ein.'].join('\n');
-        const choiceRaw = window.prompt(message);
-        if (choiceRaw === null) {
+    function loadComponentCatalog() {
+        if (componentCatalogState.promise) {
+            return componentCatalogState.promise;
+        }
+        componentCatalogState.promise = fetch('assets/nuxtui-catalog.json', { cache: 'no-store' })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (!Array.isArray(data)) {
+                    throw new Error('Unerwartetes Format');
+                }
+                componentCatalogState.items = data;
+                componentCatalogState.categories = Array.from(
+                    new Set(
+                        data
+                            .map((item) => (item.category || '').trim())
+                            .filter(Boolean),
+                    ),
+                ).sort((a, b) => a.localeCompare(b, 'de'));
+                return componentCatalogState.items;
+            })
+            .catch((error) => {
+                console.error('Komponentenkatalog konnte nicht geladen werden.', error);
+                componentCatalogState.items = [];
+                componentCatalogState.categories = [];
+                throw error;
+            });
+        return componentCatalogState.promise;
+    }
+
+    function sanitizeSnippet(html) {
+        if (typeof html !== 'string' || html.trim() === '') {
+            return '';
+        }
+        const template = document.createElement('template');
+        template.innerHTML = html;
+        const disallowed = new Set(['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'form']);
+        const allowed = new Set([
+            'class',
+            'href',
+            'target',
+            'rel',
+            'id',
+            'role',
+            'type',
+            'value',
+            'name',
+            'placeholder',
+            'required',
+            'min',
+            'max',
+            'minlength',
+            'maxlength',
+            'rows',
+            'cols',
+            'title',
+            'alt',
+            'tabindex',
+            'aria-label',
+            'aria-hidden',
+            'aria-live',
+            'aria-expanded',
+            'aria-controls',
+            'aria-current',
+            'data-nui-component',
+            'data-state',
+            'data-size',
+            'data-orientation',
+            'style',
+            'src',
+            'width',
+            'height',
+            'loading',
+            'colspan',
+            'rowspan',
+            'scope',
+        ]);
+        const booleanAttributes = new Set(['open', 'selected', 'checked', 'disabled']);
+        const nodesToRemove = [];
+        const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT, null);
+        while (walker.nextNode()) {
+            const element = walker.currentNode;
+            const tag = element.tagName.toLowerCase();
+            if (disallowed.has(tag)) {
+                nodesToRemove.push(element);
+                continue;
+            }
+            Array.from(element.attributes).forEach((attribute) => {
+                const name = attribute.name.toLowerCase();
+                if (name.startsWith('on')) {
+                    element.removeAttribute(attribute.name);
+                    return;
+                }
+                if ((name === 'href' || name === 'src') && /^javascript:/i.test(attribute.value)) {
+                    element.removeAttribute(attribute.name);
+                    return;
+                }
+                if (name.startsWith('data-') || name.startsWith('aria-')) {
+                    return;
+                }
+                if (booleanAttributes.has(name)) {
+                    return;
+                }
+                if (name === 'style') {
+                    const styleValue = attribute.value || '';
+                    if (/expression|url\s*\(|@import/i.test(styleValue)) {
+                        element.removeAttribute(attribute.name);
+                        return;
+                    }
+                    if (!/^[0-9a-zA-Z\s#:;.,%\-\(\)]+$/.test(styleValue)) {
+                        element.removeAttribute(attribute.name);
+                        return;
+                    }
+                    return;
+                }
+                if (!allowed.has(name)) {
+                    element.removeAttribute(attribute.name);
+                }
+            });
+        }
+        nodesToRemove.forEach((node) => node.remove());
+        return template.innerHTML.trim();
+    }
+
+    function insertSanitizedSnippet(editor, html) {
+        if (!html) {
             return;
         }
-        const choice = parseInt(choiceRaw.trim(), 10);
-        if (!Number.isFinite(choice) || choice < 1 || choice > nuxtComponentSnippets.length) {
-            window.alert('Auswahl konnte nicht zugeordnet werden. Bitte erneut versuchen.');
+        const selection = window.getSelection();
+        editor.focus({ preventScroll: false });
+        if (!selection || selection.rangeCount === 0) {
+            editor.insertAdjacentHTML('beforeend', html);
             return;
         }
-        const snippet = nuxtComponentSnippets[choice - 1].snippet;
-        editor.focus();
-        document.execCommand('insertHTML', false, snippet);
+        const range = selection.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) {
+            editor.insertAdjacentHTML('beforeend', html);
+            return;
+        }
+        document.execCommand('insertHTML', false, html);
     }
 
     function createButton(label, title, onClick) {
@@ -84,11 +168,199 @@
         return button;
     }
 
+    function createComponentCard(item, editor, sync) {
+        const card = document.createElement('article');
+        card.className = 'component-card';
+        card.setAttribute('role', 'listitem');
+
+        const header = document.createElement('header');
+        header.className = 'component-card__header';
+
+        const badge = document.createElement('span');
+        badge.className = 'component-card__badge';
+        badge.textContent = 'Nuxt UI';
+
+        const title = document.createElement('h3');
+        title.textContent = item.name || 'Komponente';
+
+        const category = document.createElement('span');
+        category.className = 'component-card__category';
+        category.textContent = item.category || '';
+
+        const description = document.createElement('p');
+        description.className = 'component-card__description';
+        description.textContent = item.description || '';
+
+        header.appendChild(badge);
+        header.appendChild(title);
+        if (category.textContent) {
+            header.appendChild(category);
+        }
+        if (description.textContent) {
+            header.appendChild(description);
+        }
+
+        const preview = document.createElement('div');
+        preview.className = 'component-card__preview';
+        const sanitized = sanitizeSnippet(item.snippet || '');
+        if (sanitized) {
+            preview.innerHTML = sanitized;
+        } else {
+            preview.innerHTML = '<p class="component-card__empty">Keine Vorschau verfügbar.</p>';
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'component-card__actions';
+
+        const insertButton = document.createElement('button');
+        insertButton.type = 'button';
+        insertButton.className = 'btn btn-primary';
+        insertButton.textContent = 'Einfügen';
+        insertButton.addEventListener('click', () => {
+            const snippet = sanitizeSnippet(item.snippet || '');
+            if (!snippet) {
+                window.alert('Snippet konnte nicht eingefügt werden.');
+                return;
+            }
+            insertSanitizedSnippet(editor, snippet);
+            sync();
+        });
+
+        const codeButton = document.createElement('button');
+        codeButton.type = 'button';
+        codeButton.className = 'btn btn-tertiary';
+        codeButton.textContent = 'Code ansehen';
+
+        const codeBlock = document.createElement('pre');
+        codeBlock.className = 'component-card__code';
+        codeBlock.hidden = true;
+        codeBlock.textContent = (item.snippet || '').trim();
+
+        codeButton.addEventListener('click', () => {
+            const visible = !codeBlock.hidden;
+            codeBlock.hidden = visible;
+            codeButton.textContent = visible ? 'Code ansehen' : 'Code verbergen';
+        });
+
+        actions.appendChild(insertButton);
+        actions.appendChild(codeButton);
+
+        card.appendChild(header);
+        card.appendChild(preview);
+        card.appendChild(actions);
+        card.appendChild(codeBlock);
+
+        return card;
+    }
+
+    function setupComponentGallery(container, editor, sync) {
+        container.innerHTML = '';
+        const gallery = document.createElement('div');
+        gallery.className = 'component-gallery';
+
+        const searchWrapper = document.createElement('div');
+        searchWrapper.className = 'component-gallery__search';
+        const searchInput = document.createElement('input');
+        searchInput.type = 'search';
+        searchInput.placeholder = 'Komponenten durchsuchen …';
+        searchWrapper.appendChild(searchInput);
+
+        const chips = document.createElement('div');
+        chips.className = 'component-gallery__chips';
+
+        const list = document.createElement('div');
+        list.className = 'component-gallery__list';
+        list.setAttribute('role', 'list');
+        list.innerHTML = '<p class="component-gallery__loading">Komponenten werden geladen …</p>';
+
+        gallery.appendChild(searchWrapper);
+        gallery.appendChild(chips);
+        gallery.appendChild(list);
+        container.appendChild(gallery);
+
+        const state = {
+            query: '',
+            category: 'all',
+        };
+
+        function renderChips() {
+            chips.innerHTML = '';
+            const categories = ['all', ...componentCatalogState.categories];
+            categories.forEach((category) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `component-chip${state.category === category ? ' is-active' : ''}`;
+                button.textContent = category === 'all' ? 'Alle' : category;
+                button.addEventListener('click', () => {
+                    state.category = category;
+                    renderChips();
+                    renderList();
+                });
+                chips.appendChild(button);
+            });
+        }
+
+        function getFilteredItems() {
+            const query = state.query.trim().toLowerCase();
+            return componentCatalogState.items.filter((item) => {
+                if (state.category !== 'all' && (item.category || '') !== state.category) {
+                    return false;
+                }
+                if (!query) {
+                    return true;
+                }
+                const haystack = [item.name, item.category, item.description]
+                    .map((value) => (value || '').toLowerCase());
+                return haystack.some((value) => value.includes(query));
+            });
+        }
+
+        function renderList() {
+            const items = getFilteredItems();
+            list.innerHTML = '';
+            if (!items.length) {
+                list.innerHTML = '<p class="component-gallery__empty">Keine passenden Komponenten gefunden.</p>';
+                return;
+            }
+            items.forEach((item) => {
+                list.appendChild(createComponentCard(item, editor, sync));
+            });
+        }
+
+        searchInput.addEventListener('input', () => {
+            state.query = searchInput.value;
+            renderList();
+        });
+
+        loadComponentCatalog()
+            .then(() => {
+                if (!componentCatalogState.items.length) {
+                    list.innerHTML = '<p class="component-gallery__empty">Keine Komponenten im Katalog verfügbar.</p>';
+                    return;
+                }
+                renderChips();
+                renderList();
+            })
+            .catch(() => {
+                list.innerHTML = '<p class="component-gallery__error">Katalog konnte nicht geladen werden.</p>';
+            });
+    }
+
     function wrapTextarea(textarea) {
         if (textarea.dataset.richTextified) {
             return;
         }
         textarea.dataset.richTextified = 'true';
+
+        const shell = document.createElement('div');
+        shell.className = 'rich-text-shell';
+
+        const main = document.createElement('div');
+        main.className = 'rich-text-main';
+
+        const note = document.createElement('p');
+        note.className = 'rich-text-note';
+        note.textContent = 'Komponente auswählen, Vorschau prüfen, Einfügen klicken.';
 
         const wrapper = document.createElement('div');
         wrapper.className = 'rich-text-wrapper';
@@ -113,17 +385,29 @@
                     document.execCommand('createLink', false, url);
                 }
             } },
-            { label: '&#9003;', title: 'Formatierung löschen', action: () => document.execCommand('removeFormat', false) },
-            { label: 'NUI', title: 'Nuxt UI Komponente einfügen', action: () => showNuxtComponentPicker(editor) }
+            { label: '&#9003;', title: 'Formatierung löschen', action: () => document.execCommand('removeFormat', false) }
         ];
 
         commands.forEach((command) => toolbar.appendChild(createButton(command.label, command.title, command.action)));
 
+        const sidebar = document.createElement('aside');
+        sidebar.className = 'rich-text-components';
+        const galleryContainer = document.createElement('div');
+        galleryContainer.className = 'component-gallery';
+        galleryContainer.innerHTML = '<p class="component-gallery__loading">Komponenten werden geladen …</p>';
+        sidebar.appendChild(galleryContainer);
+
         textarea.style.display = 'none';
-        textarea.parentNode.insertBefore(wrapper, textarea);
+        textarea.parentNode.insertBefore(shell, textarea);
+
         wrapper.appendChild(toolbar);
         wrapper.appendChild(editor);
         wrapper.appendChild(textarea);
+
+        main.appendChild(note);
+        main.appendChild(wrapper);
+        shell.appendChild(main);
+        shell.appendChild(sidebar);
 
         const sync = () => {
             textarea.value = editor.innerHTML.trim();
@@ -136,6 +420,8 @@
         if (form) {
             form.addEventListener('submit', sync);
         }
+
+        setupComponentGallery(galleryContainer, editor, sync);
     }
 
     function normalizeGeneValue(value) {
@@ -503,10 +789,474 @@
         });
     }
 
+    function initMenuManager(root) {
+        if (!root) {
+            return;
+        }
+        const endpoint = root.getAttribute('data-menu-endpoint');
+        if (!endpoint) {
+            return;
+        }
+        let csrfToken = root.getAttribute('data-menu-csrf') || '';
+        const modal = document.querySelector('[data-menu-modal]');
+        if (!modal) {
+            return;
+        }
+        const form = modal.querySelector('[data-menu-form]');
+        const errorBox = modal.querySelector('[data-menu-error]');
+        const title = modal.querySelector('#menu-modal-title');
+        const closeButtons = modal.querySelectorAll('[data-menu-close]');
+        const submitButton = modal.querySelector('[data-menu-submit]');
+        const idField = form.querySelector('[data-menu-field="id"]');
+        const labelField = form.querySelector('[data-menu-field="label"]');
+        const pathField = form.querySelector('[data-menu-field="path"]');
+        const iconField = form.querySelector('[data-menu-field="icon"]');
+        const targetField = form.querySelector('[data-menu-field="target"]');
+        const locationField = form.querySelector('[data-menu-field="location"]');
+        const visibleField = form.querySelector('[data-menu-field="visible"]');
+
+        const dragState = {
+            row: null,
+            location: null,
+        };
+
+        function updateCsrf(token) {
+            if (token) {
+                csrfToken = token;
+                root.setAttribute('data-menu-csrf', token);
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[char]);
+        }
+
+        function request(action, payload) {
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            };
+            if (csrfToken) {
+                options.headers['X-CSRF'] = csrfToken;
+            }
+            return fetch(`${endpoint}?action=${encodeURIComponent(action)}`, options).then(async (response) => {
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (error) {
+                    data = {};
+                }
+                updateCsrf(data.csrf);
+                if (!response.ok || data.ok === false) {
+                    const error = new Error(data.error || 'Aktion fehlgeschlagen.');
+                    error.details = data.details || null;
+                    error.status = response.status;
+                    throw error;
+                }
+                return data;
+            });
+        }
+
+        function refreshEmptyState(location) {
+            const tbody = root.querySelector(`tbody[data-menu-location="${location}"]`);
+            if (!tbody) {
+                return;
+            }
+            const emptyRow = tbody.querySelector(`[data-menu-empty="${location}"]`);
+            if (!emptyRow) {
+                return;
+            }
+            const hasRows = Boolean(tbody.querySelector('[data-menu-row]'));
+            emptyRow.hidden = hasRows;
+        }
+
+        function buildRow(item) {
+            const row = document.createElement('tr');
+            row.className = 'menu-manager__row';
+            row.setAttribute('data-menu-row', '');
+            row.dataset.id = String(item.id);
+            row.dataset.location = item.location || 'frontend';
+            row.dataset.label = item.label || '';
+            row.dataset.path = item.path || '';
+            row.dataset.icon = item.icon || '';
+            row.dataset.target = item.target || '_self';
+            row.dataset.visible = item.visible ? '1' : '0';
+            row.dataset.position = String(item.position ?? 0);
+            row.innerHTML = `
+                <td class="menu-manager__handle" data-menu-handle draggable="true" title="Zum Sortieren ziehen">⋮⋮</td>
+                <td>
+                    <strong>${escapeHtml(item.label)}</strong>
+                    <div class="menu-manager__path">${escapeHtml(item.path)}</div>
+                </td>
+                <td>${escapeHtml(item.icon || '')}</td>
+                <td>${escapeHtml(item.target || '_self')}</td>
+                <td>${item.visible ? '<span class="badge">sichtbar</span>' : '<span class="badge badge-muted">ausgeblendet</span>'}</td>
+                <td class="menu-manager__actions">
+                    <button type="button" class="btn btn-tertiary" data-menu-toggle>${item.visible ? 'Verbergen' : 'Anzeigen'}</button>
+                    <button type="button" class="btn btn-secondary" data-menu-edit>Bearbeiten</button>
+                    <button type="button" class="btn btn-secondary" data-menu-delete>Entfernen</button>
+                </td>
+            `;
+            return row;
+        }
+
+        function updateRow(row, item) {
+            row.dataset.label = item.label || '';
+            row.dataset.path = item.path || '';
+            row.dataset.icon = item.icon || '';
+            row.dataset.target = item.target || '_self';
+            row.dataset.visible = item.visible ? '1' : '0';
+            row.dataset.position = String(item.position ?? row.dataset.position || 0);
+            row.dataset.location = item.location || row.dataset.location || 'frontend';
+            const cells = row.querySelectorAll('td');
+            const labelCell = cells[1];
+            const iconCell = cells[2];
+            const targetCell = cells[3];
+            const statusCell = cells[4];
+            if (labelCell) {
+                const strong = labelCell.querySelector('strong');
+                const path = labelCell.querySelector('.menu-manager__path');
+                if (strong) {
+                    strong.textContent = item.label || '';
+                }
+                if (path) {
+                    path.textContent = item.path || '';
+                }
+            }
+            if (iconCell) {
+                iconCell.textContent = item.icon || '';
+            }
+            if (targetCell) {
+                targetCell.textContent = item.target || '_self';
+            }
+            if (statusCell) {
+                statusCell.innerHTML = item.visible ? '<span class="badge">sichtbar</span>' : '<span class="badge badge-muted">ausgeblendet</span>';
+            }
+            const toggleButton = row.querySelector('[data-menu-toggle]');
+            if (toggleButton) {
+                toggleButton.textContent = item.visible ? 'Verbergen' : 'Anzeigen';
+            }
+        }
+
+        function bindRowEvents(row) {
+            const toggleButton = row.querySelector('[data-menu-toggle]');
+            const editButton = row.querySelector('[data-menu-edit]');
+            const deleteButton = row.querySelector('[data-menu-delete]');
+            const handle = row.querySelector('[data-menu-handle]');
+
+            if (handle) {
+                handle.addEventListener('dragstart', (event) => {
+                    const targetRow = event.target.closest('[data-menu-row]');
+                    if (!targetRow) {
+                        return;
+                    }
+                    dragState.row = targetRow;
+                    dragState.location = targetRow.dataset.location;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', targetRow.dataset.id || '');
+                    targetRow.classList.add('is-dragging');
+                });
+                handle.addEventListener('dragend', () => {
+                    if (dragState.row) {
+                        dragState.row.classList.remove('is-dragging');
+                    }
+                    dragState.row = null;
+                    dragState.location = null;
+                });
+            }
+
+            row.addEventListener('dragover', (event) => {
+                if (!dragState.row || dragState.location !== row.dataset.location) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                const targetRect = row.getBoundingClientRect();
+                const after = event.clientY > targetRect.top + targetRect.height / 2;
+                const parent = row.parentElement;
+                if (!parent) {
+                    return;
+                }
+                if (after) {
+                    parent.insertBefore(dragState.row, row.nextSibling);
+                } else {
+                    parent.insertBefore(dragState.row, row);
+                }
+            });
+
+            row.addEventListener('drop', (event) => {
+                if (!dragState.row || dragState.location !== row.dataset.location) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                finalizeReorder(dragState.location);
+                dragState.row.classList.remove('is-dragging');
+                dragState.row = null;
+                dragState.location = null;
+            });
+
+            if (toggleButton) {
+                toggleButton.addEventListener('click', () => {
+                    const id = Number(row.dataset.id);
+                    if (!id) {
+                        return;
+                    }
+                    request('toggle', { id })
+                        .then((response) => {
+                            if (response.data) {
+                                updateRow(row, response.data);
+                            }
+                        })
+                        .catch((error) => {
+                            window.alert(error.message || 'Status konnte nicht aktualisiert werden.');
+                        });
+                });
+            }
+
+            if (editButton) {
+                editButton.addEventListener('click', () => {
+                    const data = {
+                        id: Number(row.dataset.id),
+                        label: row.dataset.label || '',
+                        path: row.dataset.path || '',
+                        icon: row.dataset.icon || '',
+                        target: row.dataset.target || '_self',
+                        visible: Number(row.dataset.visible) === 1 ? 1 : 0,
+                        location: row.dataset.location || 'frontend',
+                    };
+                    openModal(data);
+                });
+            }
+
+            if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                    const id = Number(row.dataset.id);
+                    if (!id) {
+                        return;
+                    }
+                    if (!window.confirm('Eintrag wirklich löschen?')) {
+                        return;
+                    }
+                    request('delete', { id })
+                        .then(() => {
+                            const location = row.dataset.location || 'frontend';
+                            row.remove();
+                            refreshEmptyState(location);
+                        })
+                        .catch((error) => {
+                            window.alert(error.message || 'Eintrag konnte nicht gelöscht werden.');
+                        });
+                });
+            }
+        }
+
+        function bindSectionDnD(section) {
+            const location = section.getAttribute('data-menu-location');
+            if (!location) {
+                return;
+            }
+            section.addEventListener('dragover', (event) => {
+                if (!dragState.row || dragState.location !== location) {
+                    return;
+                }
+                event.preventDefault();
+                const targetRow = event.target.closest('[data-menu-row]');
+                if (targetRow) {
+                    return;
+                }
+                const headerRow = event.target.closest('.menu-manager__section');
+                if (headerRow) {
+                    const firstRow = section.querySelector('[data-menu-row]');
+                    if (firstRow && firstRow !== dragState.row) {
+                        section.insertBefore(dragState.row, firstRow);
+                    }
+                    return;
+                }
+                const rows = section.querySelectorAll('[data-menu-row]');
+                const lastRow = rows.length ? rows[rows.length - 1] : null;
+                if (lastRow && lastRow !== dragState.row) {
+                    section.appendChild(dragState.row);
+                } else if (!lastRow) {
+                    section.appendChild(dragState.row);
+                }
+            });
+            section.addEventListener('drop', (event) => {
+                if (!dragState.row || dragState.location !== location) {
+                    return;
+                }
+                event.preventDefault();
+                finalizeReorder(location);
+                dragState.row.classList.remove('is-dragging');
+                dragState.row = null;
+                dragState.location = null;
+            });
+        }
+
+        function finalizeReorder(location) {
+            const rows = Array.from(root.querySelectorAll(`[data-menu-row][data-location="${location}"]`));
+            const payload = rows.map((row, index) => ({
+                id: Number(row.dataset.id),
+                position: index,
+            }));
+            request('reorder', payload)
+                .then(() => {
+                    rows.forEach((row, index) => {
+                        row.dataset.position = String(index);
+                    });
+                })
+                .catch((error) => {
+                    window.alert(error.message || 'Sortierung konnte nicht gespeichert werden.');
+                });
+        }
+
+        function openModal(item) {
+            form.reset();
+            errorBox.hidden = true;
+            errorBox.textContent = '';
+            if (item && item.id) {
+                title.textContent = 'Menüeintrag bearbeiten';
+                idField.value = String(item.id);
+                labelField.value = item.label || '';
+                pathField.value = item.path || '';
+                iconField.value = item.icon || '';
+                targetField.value = item.target || '_self';
+                locationField.value = item.location || 'frontend';
+                visibleField.checked = Number(item.visible) === 1;
+            } else {
+                title.textContent = 'Neuer Menüeintrag';
+                idField.value = '';
+                labelField.value = '';
+                pathField.value = '';
+                iconField.value = '';
+                targetField.value = '_self';
+                locationField.value = 'frontend';
+                visibleField.checked = true;
+            }
+            modal.hidden = false;
+            document.body.classList.add('menu-manager--modal-open');
+            window.setTimeout(() => {
+                labelField.focus();
+            }, 0);
+        }
+
+        function closeModal() {
+            modal.hidden = true;
+            document.body.classList.remove('menu-manager--modal-open');
+        }
+
+        closeButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                closeModal();
+            });
+        });
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.hidden) {
+                closeModal();
+            }
+        });
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            errorBox.hidden = true;
+            errorBox.textContent = '';
+            const payload = {
+                label: labelField.value.trim(),
+                path: pathField.value.trim(),
+                icon: iconField.value.trim(),
+                target: targetField.value,
+                location: locationField.value,
+                visible: visibleField.checked ? 1 : 0,
+            };
+            const isUpdate = Boolean(idField.value);
+            if (isUpdate) {
+                payload.id = Number(idField.value);
+            }
+            submitButton.disabled = true;
+            request(isUpdate ? 'update' : 'create', payload)
+                .then((response) => {
+                    const item = response.data;
+                    if (!item) {
+                        throw new Error('Antwort ohne Daten.');
+                    }
+                    const location = item.location || 'frontend';
+                    const existingRow = root.querySelector(`[data-menu-row][data-id="${item.id}"]`);
+                    if (existingRow) {
+                        const previousLocation = existingRow.dataset.location || 'frontend';
+                        if (previousLocation !== location) {
+                            const replacement = buildRow(item);
+                            bindRowEvents(replacement);
+                            const targetBody = root.querySelector(`tbody[data-menu-location="${location}"]`);
+                            if (targetBody) {
+                                targetBody.appendChild(replacement);
+                            }
+                            existingRow.remove();
+                            refreshEmptyState(previousLocation);
+                        } else {
+                            updateRow(existingRow, item);
+                        }
+                        refreshEmptyState(location);
+                    } else {
+                        const newRow = buildRow(item);
+                        bindRowEvents(newRow);
+                        const targetBody = root.querySelector(`tbody[data-menu-location="${location}"]`);
+                        if (targetBody) {
+                            targetBody.appendChild(newRow);
+                        }
+                        refreshEmptyState(location);
+                    }
+                    closeModal();
+                })
+                .catch((error) => {
+                    const details = error.details && typeof error.details === 'object' ? Object.values(error.details).join(' ') : '';
+                    errorBox.textContent = details || error.message || 'Aktion fehlgeschlagen.';
+                    errorBox.hidden = false;
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+        });
+
+        const newButton = root.querySelector('[data-menu-new]');
+        if (newButton) {
+            newButton.addEventListener('click', () => {
+                openModal(null);
+            });
+        }
+
+        Array.from(root.querySelectorAll('[data-menu-row]')).forEach((row) => {
+            bindRowEvents(row);
+        });
+
+        Array.from(root.querySelectorAll('tbody[data-menu-location]')).forEach((section) => {
+            bindSectionDnD(section);
+        });
+
+        refreshEmptyState('frontend');
+        refreshEmptyState('admin');
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('textarea.rich-text').forEach(wrapTextarea);
         document.querySelectorAll('[data-animal-gene-picker]').forEach(initAnimalGenePicker);
         initSortables();
+        document.querySelectorAll('[data-menu-manager]').forEach(initMenuManager);
     });
 })();
 

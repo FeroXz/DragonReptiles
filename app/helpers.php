@@ -13,6 +13,13 @@ function view(string $template, array $data = []): void
         if (!isset($data['navCareArticles']) && function_exists('get_published_care_articles')) {
             $data['navCareArticles'] = get_published_care_articles($pdo);
         }
+        if (!isset($data['menuItems']) && function_exists('get_visible_menu_items')) {
+            $data['menuItems'] = get_visible_menu_items($pdo, 'frontend');
+        }
+        $routeForContext = $data['currentRoute'] ?? ($GLOBALS['currentRoute'] ?? '');
+        if (!isset($data['adminMenuItems']) && function_exists('get_visible_menu_items') && is_string($routeForContext) && str_starts_with($routeForContext, 'admin/')) {
+            $data['adminMenuItems'] = get_visible_menu_items($pdo, 'admin');
+        }
     }
 
     extract($data);
