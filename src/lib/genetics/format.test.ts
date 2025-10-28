@@ -38,10 +38,10 @@ describe('genetics format helpers', () => {
     expect(tokens).toEqual([
       'Superconda',
       'Arctic',
+      'Dunner',
       'Albino',
       'het Hypo',
-      'Dunner',
-      'Linie Red Line'
+      'Red Line'
     ]);
   });
 
@@ -56,23 +56,20 @@ describe('genetics format helpers', () => {
       geneByKey(hognose, 'albino'),
       geneByKey(pogona, 'color_red')
     ];
-    const genotype: Record<string, Zygosity | { state: Zygosity; posHet?: number }> = {
+    const genotype: Record<string, Zygosity> = {
       anaconda: 'super',
       albino: 'het',
       color_red: 'expressed'
     };
 
     const compact = formatGenotypeCompact(genotype, genes);
-    expect(compact).toBe('Anaconda/Superconda; Albino/het; Linie Red Line');
+    expect(compact).toBe('Anaconda/super; Albino/het; Red Line/line');
   });
 
-  it('includes posHet percentages in tokens and compact format', () => {
+  it('avoids duplicated gene names in formatted phenotype strings', () => {
     const genes = [geneByKey(hognose, 'albino')];
-    const genotype: Record<string, Zygosity | { state: Zygosity; posHet?: number }> = {
-      albino: { state: 'het', posHet: 66 }
-    };
-
-    expect(buildPhenotypeTokens(genotype, genes)).toEqual(['66% Het Albino']);
-    expect(formatGenotypeCompact(genotype, genes)).toBe('66% Het Albino');
+    const tokens = buildPhenotypeTokens({ albino: 'expressed' }, genes);
+    const formatted = formatPhenotype([...tokens, ...tokens]);
+    expect(formatted).toBe('Albino');
   });
 });

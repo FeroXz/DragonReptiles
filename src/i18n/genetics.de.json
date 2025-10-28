@@ -9,25 +9,9 @@
   "super": "Super",
   "present": "Vorhanden",
   "posHet": "pos. het",
-  "posHetHelper": "Wahrscheinlichkeit in %",
-  "warningIncompatible": "{gene} kollidiert mit {conflict} in Super-Form.",
-  "searchPlaceholder": "Gen suchen…",
-  "searchClear": "Suchfeld leeren",
-  "searchNoMatches": "Keine Treffer",
-  "chipRemove": "entfernen",
-  "incompatible": "nicht kombinierbar",
-  "sectionTitles": {
-    "incomplete_dominant": "Inkomplett dominant",
-    "dominant": "Dominant",
-    "recessive": "Rezessiv",
-    "polygenic": "Polygen (Linien)"
-  },
   "polygenicHint": "Linie vorhanden",
-  "speciesHeading": "Art wählen",
-  "speciesHint": "Auswahl legt verfügbare Gene fest.",
-  "noGenes": "Für diese Art sind keine Gene hinterlegt.",
-  "actionHint": "Aktionen",
-  "headingResults": "Ergebnisliste",
+  "warningIncompatible": "{gene} kollidiert mit {conflict} in Super-Form.",
+  "filterLabel": "Filter",
   "filterSuper": "nur Superformen",
   "filterHighProbability": "nur 25–100 %",
   "filterShowHet": "zeige Het-Texte",
@@ -35,6 +19,14 @@
   "empty": "Keine Kombinationen gefunden. Passe die Eltern-Genetik an.",
   "remainder": "weitere {percent} %",
   "normalForm": "Normalform",
+  "speciesHeading": "Art wählen",
+  "speciesHint": "Auswahl legt verfügbare Gene fest.",
+  "sectionTitles": {
+    "incomplete_dominant": "Inkomplett dominant",
+    "dominant": "Dominant",
+    "recessive": "Rezessiv",
+    "polygenic": "Polygen (Linien)"
+  },
   "species": {
     "hognose": {
       "label": "Hakennasennatter",

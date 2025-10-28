@@ -1,23 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { predictPairing } from '@lib/genetics/engine.js';
-import { GeneDef, ParentGenotype, PairingResult, Zygosity } from '@lib/genetics/types.js';
+import { GeneDef, ParentGenotype, PairingResult } from '@lib/genetics/types.js';
 import hognoseGenes from '@data/genes/hognose.json';
 import pogonaGenes from '@data/genes/pogona.json';
-import { GenotypeSearch } from './GenotypeSearch.js';
-import { ResultTable } from './ResultTable.js';
-import morphAliases from '@data/morph-aliases.json';
 import translationsDe from '@i18n/genetics.de.json';
+import { ParentPicker } from './ParentPicker.js';
+import { ResultList } from './ResultList.js';
 import '../../styles/genetics.css';
 
-interface SpeciesOption {
-  key: 'hognose' | 'pogona';
-  label: string;
-  subtitle: string;
-  genes: GeneDef[];
-}
-
-interface GeneticsMessages {
+interface Messages {
   reset: string;
   calculate: string;
   parentA: string;
@@ -28,22 +20,32 @@ interface GeneticsMessages {
   super: string;
   present: string;
   posHet: string;
-  posHetHelper: string;
-  warningIncompatible: string;
   polygenicHint: string;
-  speciesHeading: string;
-  speciesHint: string;
-  noGenes: string;
-  actionHint: string;
-  headingResults: string;
+  warningIncompatible: string;
+  filterSuper: string;
+  filterHighProbability: string;
+  filterShowHet: string;
+  filterLabel: string;
   notCalculated: string;
   empty: string;
   remainder: string;
   normalForm: string;
+  speciesHeading: string;
+  speciesHint: string;
+  sectionTitles: Record<'recessive' | 'incomplete_dominant' | 'dominant' | 'polygenic', string>;
   species: Record<'hognose' | 'pogona', { label: string; subtitle: string }>;
 }
 
-const messages = translationsDe as GeneticsMessages;
+type SpeciesKey = 'hognose' | 'pogona';
+
+const messages = translationsDe as Messages;
+
+interface SpeciesOption {
+  key: SpeciesKey;
+  label: string;
+  subtitle: string;
+  genes: GeneDef[];
+}
 
 const SPECIES: SpeciesOption[] = [
   {
@@ -60,304 +62,149 @@ const SPECIES: SpeciesOption[] = [
   }
 ];
 
-const generalText = {
-  speciesHeading: messages.speciesHeading,
-  speciesHint: messages.speciesHint,
-  parentA: messages.parentA,
-  parentB: messages.parentB,
-  calculate: messages.calculate,
-  reset: messages.reset,
-  noGenes: messages.noGenes,
-  actionHint: messages.actionHint,
-  headingResults: messages.headingResults,
-  notCalculated: messages.notCalculated,
-  empty: messages.empty,
-  remainder: messages.remainder
+interface FilterState {
+  superOnly: boolean;
+  highProbability: boolean;
+  showHet: boolean;
+}
+
+const DEFAULT_FILTERS: FilterState = {
+  superOnly: false,
+  highProbability: false,
+  showHet: true
 };
 
-type MorphAliasEntry = { name: string; genes: string[] };
-
-const MORPH_ALIASES = morphAliases as Record<'hognose' | 'pogona', MorphAliasEntry[]>;
-
-function toZygosity(entry: ParentGenotype[string]): Zygosity | undefined {
-  if (!entry) {
-    return undefined;
-  }
-  if (typeof entry === 'string') {
-    return entry;
-  }
-  return entry.state;
-}
-
-function encodeState(gene: GeneDef, state: Zygosity): string | null {
-  if (gene.type === 'recessive') {
-    if (state === 'het') {
-      return 'het';
-    }
-    if (state === 'expressed') {
-      return 'expressed';
-    }
-    return null;
-  }
-  if (gene.type === 'incomplete_dominant') {
-    if (state === 'super') {
-      return 'super';
-    }
-    if (state === 'expressed') {
-      return 'expressed';
-    }
-    return null;
-  }
-  if (gene.type === 'dominant') {
-    if (state === 'expressed') {
-      return 'present';
-    }
-    return null;
-  }
-  if (gene.type === 'polygenic') {
-    if (state === 'expressed') {
-      return 'poly';
-    }
-    return null;
-  }
-  return null;
-}
-
-function decodeState(gene: GeneDef, token: string | undefined): Zygosity | null {
-  const normalized = token?.toLowerCase();
-  if (!normalized || normalized === 'expressed') {
-    if (gene.type === 'recessive' || gene.type === 'incomplete_dominant' || gene.type === 'dominant' || gene.type === 'polygenic') {
-      return 'expressed';
-    }
-    return null;
-  }
-  if (normalized === 'het' && gene.type === 'recessive') {
-    return 'het';
-  }
-  if (normalized === 'super' && gene.type === 'incomplete_dominant') {
-    return 'super';
-  }
-  if (normalized === 'present' && gene.type === 'dominant') {
-    return 'expressed';
-  }
-  if (normalized === 'poly' && gene.type === 'polygenic') {
-    return 'expressed';
-  }
-  if (normalized === 'expressed') {
-    return 'expressed';
-  }
-  return null;
-}
-
-function encodeParent(genotype: ParentGenotype, genes: GeneDef[]): string {
-  const parts: string[] = [];
-  genes.forEach((gene) => {
-    const state = toZygosity(genotype[gene.key]);
-    if (!state || state === 'normal') {
-      return;
-    }
-    const encoded = encodeState(gene, state);
-    if (!encoded) {
-      return;
-    }
-    parts.push(`${gene.key},${encoded}`);
-  });
-  return parts.join(';');
-}
-
-function geneMatchesIdentifier(gene: GeneDef, identifier: string): boolean {
-  const normalized = identifier.trim().toLowerCase();
-  if (gene.key.toLowerCase() === normalized) {
-    return true;
-  }
-  if (gene.aliases?.some((alias) => alias.toLowerCase() === normalized)) {
-    return true;
-  }
-  if (gene.searchAliases?.some((alias) => alias.toLowerCase() === normalized)) {
-    return true;
-  }
-  return false;
-}
-
-function decodeParent(serialized: string | null, genes: GeneDef[]): ParentGenotype {
-  if (!serialized) {
-    return {};
-  }
-  const entries = serialized.split(';').map((entry) => entry.trim()).filter(Boolean);
-  if (!entries.length) {
-    return {};
-  }
-  const value: ParentGenotype = {};
-  entries.forEach((entry) => {
-    const [identifier, rawState] = entry.split(',');
-    if (!identifier) {
-      return;
-    }
-    const gene = genes.find((candidate) => geneMatchesIdentifier(candidate, identifier));
-    if (!gene) {
-      return;
-    }
-    const state = decodeState(gene, rawState?.trim());
-    if (!state) {
-      return;
-    }
-    value[gene.key] = state;
-  });
-  return value;
-}
-
 export function Calculator() {
-  const [activeSpeciesKey, setActiveSpeciesKey] = useState<SpeciesOption['key']>(SPECIES[0].key);
+  const [speciesKey, setSpeciesKey] = useState<SpeciesKey>('hognose');
   const [parentA, setParentA] = useState<ParentGenotype>({});
   const [parentB, setParentB] = useState<ParentGenotype>({});
-  const [results, setResults] = useState<PairingResult[]>([]);
-  const [remainderProbability, setRemainderProbability] = useState(0);
-  const [calculated, setCalculated] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [results, setResults] = useState<PairingResult[] | null>(null);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
-  const activeSpecies = useMemo(
-    () => SPECIES.find((species) => species.key === activeSpeciesKey) ?? SPECIES[0],
-    [activeSpeciesKey]
-  );
+  const species = useMemo(() => SPECIES.find((entry) => entry.key === speciesKey) ?? SPECIES[0], [speciesKey]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const speciesParam = params.get('s');
-    const resolvedSpecies = speciesParam === 'hognose' || speciesParam === 'pogona' ? speciesParam : activeSpeciesKey;
-    if (resolvedSpecies !== activeSpeciesKey) {
-      setActiveSpeciesKey(resolvedSpecies);
-    }
-    const targetSpecies = SPECIES.find((option) => option.key === resolvedSpecies) ?? activeSpecies;
-    const decodedA = decodeParent(params.get('a'), targetSpecies.genes);
-    const decodedB = decodeParent(params.get('b'), targetSpecies.genes);
-    if (Object.keys(decodedA).length) {
-      setParentA(decodedA);
-    }
-    if (Object.keys(decodedB).length) {
-      setParentB(decodedB);
-    }
-    setInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (!initialized) {
-      return;
-    }
-    const params = new URLSearchParams();
-    params.set('s', activeSpeciesKey);
-    const encodedA = encodeParent(parentA, activeSpecies.genes);
-    const encodedB = encodeParent(parentB, activeSpecies.genes);
-    if (encodedA) {
-      params.set('a', encodedA);
-    }
-    if (encodedB) {
-      params.set('b', encodedB);
-    }
-    const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
-    window.history.replaceState({}, '', nextUrl);
-  }, [activeSpeciesKey, activeSpecies.genes, parentA, parentB, initialized]);
-
-  const resetCalculation = () => {
-    setResults([]);
-    setRemainderProbability(0);
-    setCalculated(false);
+  const handleSpeciesChange = (key: SpeciesKey) => {
+    setSpeciesKey(key);
+    setParentA({});
+    setParentB({});
+    setResults(null);
+    setFilters(DEFAULT_FILTERS);
   };
 
   const handleCalculate = () => {
-    if (!activeSpecies.genes.length) {
-      resetCalculation();
-      setCalculated(true);
-      return;
-    }
-    const prediction = predictPairing(parentA, parentB, activeSpecies.genes);
-    const sorted = [...prediction].sort((a, b) => b.probability - a.probability);
-    const topResults = sorted.slice(0, 50);
-    const remainder = sorted.slice(50).reduce((sum, entry) => sum + entry.probability, 0);
-    setResults(topResults);
-    setRemainderProbability(remainder);
-    setCalculated(true);
+    const resultList = predictPairing(parentA, parentB, species.genes);
+    setResults(resultList);
   };
 
   const handleReset = () => {
     setParentA({});
     setParentB({});
-    resetCalculation();
+    setResults(null);
+    setFilters(DEFAULT_FILTERS);
   };
 
-  const handleSelectSpecies = (key: SpeciesOption['key']) => {
-    if (key === activeSpeciesKey) {
-      return;
+  const activeResults = useMemo(() => {
+    if (!results) {
+      return [];
     }
-    setActiveSpeciesKey(key);
-    setParentA({});
-    setParentB({});
-    resetCalculation();
-  };
+    const sorted = [...results].sort((a, b) => b.probability - a.probability);
+    const top = sorted.slice(0, 12);
+    return top;
+  }, [results]);
+
+  const remainderProbability = useMemo(() => {
+    if (!results) {
+      return 0;
+    }
+    const sumTop = activeResults.reduce((acc, result) => acc + result.probability, 0);
+    const total = results.reduce((acc, result) => acc + result.probability, 0);
+    const remainder = Math.max(total - sumTop, 0);
+    return remainder > 0.0001 ? remainder : 0;
+  }, [activeResults, results]);
+
+  const hasResults = results !== null;
 
   return (
     <div className="genetics-calculator">
       <section className="genetics-calculator__species">
         <header>
-          <h2>{generalText.speciesHeading}</h2>
-          <p>{generalText.speciesHint}</p>
+          <h2>{messages.speciesHeading}</h2>
+          <p>{messages.speciesHint}</p>
         </header>
-        <div className="species-selector" role="group" aria-label={generalText.speciesHeading}>
-          {SPECIES.map((species) => (
+        <div className="genetics-calculator__species-list">
+          {SPECIES.map((entry) => (
             <button
-              key={species.key}
               type="button"
-              className={clsx('species-chip', { 'is-active': species.key === activeSpecies.key })}
-              onClick={() => handleSelectSpecies(species.key)}
+              key={entry.key}
+              className={clsx('chip-button', { 'is-active': entry.key === species.key })}
+              onClick={() => handleSpeciesChange(entry.key)}
             >
-              <span className="species-chip__label">{species.label}</span>
-              <span className="species-chip__subtitle">{species.subtitle}</span>
+              <span className="chip-button__label">{entry.label}</span>
+              <span className="chip-button__subtitle">{entry.subtitle}</span>
             </button>
           ))}
         </div>
       </section>
-
-      {!activeSpecies.genes.length ? (
-        <p className="genetics-calculator__empty">{generalText.noGenes}</p>
-      ) : (
-        <div className="genetics-calculator__grid">
-          <div className="genotype-panel">
-            <header>
-              <h2>{generalText.parentA}</h2>
-            </header>
-            <GenotypeSearch species={activeSpecies.key} value={parentA} onChange={setParentA} />
-          </div>
-          <div className="genotype-panel">
-            <header>
-              <h2>{generalText.parentB}</h2>
-            </header>
-            <GenotypeSearch species={activeSpecies.key} value={parentB} onChange={setParentB} />
-          </div>
-        </div>
-      )}
-
-      <div className="genetics-actionbar" aria-label={generalText.actionHint}>
-        <button type="button" className="btn-secondary" onClick={handleReset}>
-          {generalText.reset}
+      <div className="genetics-calculator__parents">
+        <ParentPicker
+          label={messages.parentA}
+          genes={species.genes}
+          value={parentA}
+          onChange={setParentA}
+          messages={{
+            normal: messages.normal,
+            het: messages.het,
+            expressed: messages.expressed,
+            super: messages.super,
+            present: messages.present,
+            posHet: messages.posHet,
+            polygenicHint: messages.polygenicHint,
+            warningIncompatible: messages.warningIncompatible,
+            sectionTitles: messages.sectionTitles
+          }}
+        />
+        <ParentPicker
+          label={messages.parentB}
+          genes={species.genes}
+          value={parentB}
+          onChange={setParentB}
+          messages={{
+            normal: messages.normal,
+            het: messages.het,
+            expressed: messages.expressed,
+            super: messages.super,
+            present: messages.present,
+            posHet: messages.posHet,
+            polygenicHint: messages.polygenicHint,
+            warningIncompatible: messages.warningIncompatible,
+            sectionTitles: messages.sectionTitles
+          }}
+        />
+      </div>
+      <ResultList
+        results={activeResults}
+        genes={species.genes}
+        filters={filters}
+        onFiltersChange={setFilters}
+        remainderProbability={remainderProbability}
+        messages={{
+          filterSuper: messages.filterSuper,
+          filterHighProbability: messages.filterHighProbability,
+          filterShowHet: messages.filterShowHet,
+          filterLabel: messages.filterLabel,
+          empty: hasResults ? messages.empty : messages.notCalculated,
+          remainder: messages.remainder,
+          normalForm: messages.normalForm
+        }}
+      />
+      <div className="genetics-actionbar">
+        <button type="button" className="btn btn-secondary" onClick={handleReset}>
+          {messages.reset}
         </button>
-        <button type="button" className="btn" onClick={handleCalculate} disabled={!activeSpecies.genes.length}>
-          {generalText.calculate}
+        <button type="button" className="btn" onClick={handleCalculate}>
+          {messages.calculate}
         </button>
       </div>
-
-      <ResultTable
-        results={results}
-        genes={activeSpecies.genes}
-        calculated={calculated}
-        remainderProbability={remainderProbability}
-        emptyText={generalText.empty}
-        heading={generalText.headingResults}
-        notCalculatedText={generalText.notCalculated}
-        remainderTextTemplate={generalText.remainder}
-        morphAliases={MORPH_ALIASES[activeSpecies.key] ?? []}
-      />
     </div>
   );
 }
-
-export default Calculator;
