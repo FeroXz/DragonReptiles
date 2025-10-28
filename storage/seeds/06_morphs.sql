@@ -1,7 +1,25 @@
--- seed: morphs
-INSERT INTO morphs (species_slug, name, type) VALUES
-('pogona-vitticeps','Hypo','recessive'),
-('pogona-vitticeps','Zero','recessive'),
-('heterodon-nasicus','Albino','recessive'),
-('heterodon-nasicus','Arctic','incomplete_dominant');
+-- seed: genetic_genes
+INSERT INTO genetic_genes (id, species_id, name, slug, shorthand, inheritance_mode, description, image_path, normal_label, heterozygous_label, homozygous_label, is_reference, display_order, created_at, updated_at) VALUES
+    (1, 1, 'Hypo Citrus', 'hypo-citrus', 'Hypo', 'recessive', 'Reduzierte Melanin-Ausprägung mit leuchtend gelber Grundfarbe.', NULL, 'Wildtyp', 'Hypo', 'Super Hypo', 0, 0, '2024-01-03 09:00:00', '2024-01-03 09:00:00'),
+    (2, 1, 'Translucent', 'translucent', 'Trans', 'recessive', 'Durchscheinende Schuppen und auffällig schwarze Augen bei Jungtieren.', NULL, 'Normal', 'Translucent', 'Super Trans', 0, 1, '2024-01-03 09:05:00', '2024-01-03 09:05:00'),
+    (3, 1, 'Zero', 'zero', 'Zero', 'recessive', 'Kompletter Pigmentverlust mit rein weißem Erscheinungsbild.', NULL, 'Normal', 'Zero het', 'Zero', 0, 2, '2024-01-03 09:10:00', '2024-01-03 09:10:00'),
+    (4, 2, 'Toffee Belly', 'toffee-belly', 'Toffee', 'recessive', 'Sorgt für karamellfarbene Bauchschuppen und helles Pattern.', NULL, 'Normal', 'Toffee Belly het', 'Toffee Belly', 0, 0, '2024-01-03 09:15:00', '2024-01-03 09:15:00'),
+    (5, 2, 'Arctic', 'arctic', 'Arctic', 'incomplete_dominant', 'Hellt das Grundmuster auf und intensiviert die Kopfzeichnung.', NULL, 'Normal', 'Arctic', 'Super Arctic', 0, 1, '2024-01-03 09:20:00', '2024-01-03 09:20:00'),
+    (6, 2, 'Conda', 'conda', 'Conda', 'incomplete_dominant', 'Verkürzt das Muster zu kräftigen Bändern und reduziert Flecken.', NULL, 'Normal', 'Conda', 'Superconda', 0, 2, '2024-01-03 09:25:00', '2024-01-03 09:25:00'),
+    (7, 3, 'Pastel', 'pastel', 'Pastel', 'incomplete_dominant', 'Hellt die Farbpalette auf und verstärkt Gelbanteile.', NULL, 'Normal', 'Pastel', 'Super Pastel', 0, 0, '2024-01-03 09:30:00', '2024-01-03 09:30:00'),
+    (8, 3, 'Clown', 'clown', 'Clown', 'recessive', 'Sorgt für reduzierte Pattern-Elemente und ein klares Rückenstreifen-Muster.', NULL, 'Normal', 'Clown het', 'Clown', 0, 1, '2024-01-03 09:35:00', '2024-01-03 09:35:00'),
+    (9, 3, 'Desert Ghost', 'desert-ghost', 'DG', 'recessive', 'Satte Kontraste, dauerhaft saubere Farben und helles Grau.', NULL, 'Normal', 'DG het', 'Desert Ghost', 0, 2, '2024-01-03 09:40:00', '2024-01-03 09:40:00'),
+    (10, 4, 'Tangerine', 'tangerine', 'Tang', 'dominant', 'Liniengezogene Orange-Intensivierung mit vielen Untervarianten.', NULL, 'Normal', 'Tang Linie', 'Super Tang', 0, 0, '2024-01-03 09:45:00', '2024-01-03 09:45:00'),
+    (11, 4, 'Eclipse', 'eclipse', 'Eclipse', 'recessive', 'Sorgt für voll pigmentierte Augen und dunkle Schwanzspitzen.', NULL, 'Normal', 'Eclipse het', 'Eclipse', 0, 1, '2024-01-03 09:50:00', '2024-01-03 09:50:00'),
+    (12, 4, 'White & Yellow', 'white-and-yellow', 'W&Y', 'incomplete_dominant', 'Kontrastreiche Linien mit hohem Weißanteil und veränderten Mustern.', NULL, 'Normal', 'White & Yellow', 'Super W&Y', 0, 2, '2024-01-03 09:55:00', '2024-01-03 09:55:00'),
+    (13, 5, 'Biak Blue', 'biak-blue', 'Biak', 'dominant', 'Starke Blauanteile bei adulten Tieren aus Biak-Linien.', NULL, 'Normal', 'Biak Blue', 'Biak High Blue', 0, 0, '2024-01-03 10:00:00', '2024-01-03 10:00:00'),
+    (14, 5, 'Aru White', 'aru-white', 'Aru', 'dominant', 'Hoher Weißanteil im Kopfbereich mit sanften Übergängen.', NULL, 'Normal', 'Aru White', 'Aru Super White', 0, 1, '2024-01-03 10:05:00', '2024-01-03 10:05:00'),
+    (15, 6, 'Miami', 'miami', 'Miami', 'dominant', 'Silbrig-graue Grundfarbe mit intensiven roten Sattelflecken.', NULL, 'Normal', 'Miami Linie', 'Super Miami', 0, 0, '2024-01-03 10:10:00', '2024-01-03 10:10:00'),
+    (16, 6, 'Anerythristic', 'anery', 'Anery', 'recessive', 'Entzieht rote Pigmente und lässt kontrastreiche Schwarz-Weiß-Muster entstehen.', NULL, 'Normal', 'Anery het', 'Anery', 0, 1, '2024-01-03 10:15:00', '2024-01-03 10:15:00'),
+    (17, 6, 'Scaleless', 'scaleless', 'Scaleless', 'recessive', 'Schuppenloser Phänotyp mit seidiger Hautstruktur.', NULL, 'Normal', 'Scaleless het', 'Scaleless', 0, 2, '2024-01-03 10:20:00', '2024-01-03 10:20:00'),
+    (18, 7, 'Sunset', 'sunset', 'Sunset', 'dominant', 'Sattes Kupferrot mit warmen Übergängen Richtung Schwanz.', NULL, 'Normal', 'Sunset Linie', 'Sunset Intensiv', 0, 0, '2024-01-03 10:25:00', '2024-01-03 10:25:00'),
+    (19, 7, 'Axanthic', 'axanthic-scincoides', 'Ax', 'recessive', 'Reduziert gelbe Pigmente und erzeugt kühle Grautöne.', NULL, 'Normal', 'Axanthic het', 'Axanthic', 0, 1, '2024-01-03 10:30:00', '2024-01-03 10:30:00'),
+    (20, 8, 'High Contrast', 'high-contrast-gila', 'HC', 'dominant', 'Betont dunkle Bänder und orangefarbene Highlights.', NULL, 'Normal', 'High Contrast', 'Extreme HC', 0, 0, '2024-01-03 10:35:00', '2024-01-03 10:35:00'),
+    (21, 9, 'Red Ridge', 'red-ridge', 'RR', 'dominant', 'Sattes Rot auf Rücken und Schwanz mit klarer Abgrenzung.', NULL, 'Normal', 'Red Ridge', 'Super Red Ridge', 0, 0, '2024-01-03 10:40:00', '2024-01-03 10:40:00'),
+    (22, 10, 'Nelsoni', 'nelsoni', 'Nelsoni', 'recessive', 'Klassisches Dreifarbmuster mit hoher Kontrastwirkung.', NULL, 'Normal', 'Nelsoni het', 'Nelsoni', 0, 0, '2024-01-03 10:45:00', '2024-01-03 10:45:00');
 -- end

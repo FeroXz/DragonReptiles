@@ -673,6 +673,13 @@ switch ($route) {
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_csrf_token('admin/settings');
+            $adminLogoInput = trim((string)($_POST['admin_logo_path'] ?? ''));
+            if ($adminLogoInput !== '' && !preg_match('#^https?://#i', $adminLogoInput)) {
+                $normalizedLogo = normalize_media_path($adminLogoInput);
+                $adminLogoPath = $normalizedLogo ?? '';
+            } else {
+                $adminLogoPath = $adminLogoInput;
+            }
             update_settings($pdo, [
                 'site_title' => $_POST['site_title'] ?? '',
                 'site_tagline' => $_POST['site_tagline'] ?? '',
@@ -681,6 +688,7 @@ switch ($route) {
                 'footer_text' => $_POST['footer_text'] ?? '',
                 'contact_email' => $_POST['contact_email'] ?? '',
                 'active_theme' => $_POST['active_theme'] ?? 'aurora',
+                'admin_logo_path' => $adminLogoPath,
             ]);
             flash('success', 'Einstellungen gespeichert.');
             redirect('admin/settings');

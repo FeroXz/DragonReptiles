@@ -180,3 +180,4 @@ curl -b 'PHPSESSID=...' 'https://example.com/admin/api/update.php?action=log'
 - [x] MorphMarket-kompatibler Genetik-Rechner mit Chip-Suche, Tabellen-Resultaten, Badge-Farben und teilbarer URL (Version 4.4.0).
 - [x] Serverseitiger Admin-Deploy mit Dry-Run, Live-Log, Abbruch und Wartungs-Bypass (Version 4.5.0).
 - [x] SQLite-Seed-Dump & Import-Skripte inklusive Admin-Hinweisblock mit Makefile-Befehlen (Version 4.6.0).
+- [x] Umfangreicher Seed-Datensatz für Import/Export inklusive konfigurierbarem Admin-Branding (Version 4.7.0).

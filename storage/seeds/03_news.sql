@@ -1,4 +1,16 @@
--- seed: news
-INSERT INTO news (title, slug, body, published_at) VALUES
-('Launch', 'launch', '<p>CMS installiert. Dies ist ein Beispielbeitrag.</p>', CURRENT_TIMESTAMP);
+-- seed: news_posts
+DELETE FROM news_posts;
+DELETE FROM sqlite_sequence WHERE name = 'news_posts';
+
+INSERT INTO news_posts (id, title, slug, excerpt, content, is_published, published_at, created_at, updated_at) VALUES
+    (1, 'Release 4.7.0 veröffentlicht', 'release-4-7-0', 'Neue Seeds, Admin-Branding und viele Komfortupdates stehen bereit.', '<p>Mit Version 4.7.0 liefern wir über 120 Beispiel-Datensätze, ein flexibles Admin-Branding und feinjustierte Workflows für Medien, Seiten und Deployments.</p>', 1, '2024-02-01 09:00:00', '2024-02-01 09:00:00', '2024-02-01 09:00:00'),
+    (2, 'Neues Pflege-Video-Setup', 'pflege-video-setup', 'Wir testen ein 8K-Videostudio für Pflege-Guides.', '<p>Das Studio ermöglicht Makroaufnahmen von Fütterungen und Terrarium-Optimierungen inklusive Live-Streaming für Mitglieder.</p>', 1, '2024-01-25 18:30:00', '2024-01-25 18:30:00', '2024-01-25 18:30:00'),
+    (3, 'Community-Beta startet', 'community-beta', 'Ab sofort kann das Community-Portal getestet werden.', '<p>In der Beta sammeln wir Feedback zur neuen Austauschplattform, zum Wissensranking und zu personalisierten Tier-Timelines.</p>', 1, '2024-01-20 12:15:00', '2024-01-20 12:15:00', '2024-01-20 12:15:00'),
+    (4, 'Sensorik-Upgrade im Inkubator', 'sensorik-upgrade', 'Mehr Sicherheit durch redundante Sensorik.', '<p>Wir haben unsere Inkubatoren mit doppelt ausgelegter Temperatur- und Luftfeuchtigkeitsmessung ausgestattet und die Werte werden live im Dashboard dargestellt.</p>', 1, '2024-01-18 07:45:00', '2024-01-18 07:45:00', '2024-01-18 07:45:00'),
+    (5, 'Neue Patenschaftsprogramme', 'patenschaften-2024', 'Unterstütze schwierige Fälle dauerhaft.', '<p>Mit den Patenschaften finanzieren wir Spezialfutter, Medikamente und externe Untersuchungen für chronisch erkrankte Tiere.</p>', 1, '2024-01-14 10:10:00', '2024-01-14 10:10:00', '2024-01-14 10:10:00'),
+    (6, 'Automatischer Futterplan', 'automatischer-futterplan', 'Machine-Learning-gestützter Futterplaner in Pilotphase.', '<p>Das neue Tool analysiert Gewichtsdaten, Wachstumskurven und Lichtzyklen, um passende Fütterungsempfehlungen zu geben.</p>', 1, '2024-01-09 15:00:00', '2024-01-09 15:00:00', '2024-01-09 15:00:00'),
+    (7, 'Virtuelle Terrarium-Touren', 'virtuelle-terrarium-touren', 'VR-Brillen zeigen Setup-Optimierungen in Echtzeit.', '<p>Wir dokumentieren Best-Practice-Terrarien in 3D und lassen Besucher virtuell durch unterschiedliche Klimazonen wandern.</p>', 1, '2024-01-05 19:20:00', '2024-01-05 19:20:00', '2024-01-05 19:20:00'),
+    (8, 'Medienbibliothek erweitert', 'medienbibliothek-erweitert', 'Über 300 neue Assets mit Tagging-System.', '<p>Alle Fotos wurden mit IPTC-Daten versehen und können per Volltext durchsucht werden. Die neue Filterleiste spart viel Zeit.</p>', 1, '2023-12-28 08:05:00', '2023-12-28 08:05:00', '2023-12-28 08:05:00'),
+    (9, 'Smarte Klimaregelung', 'smarte-klimaregelung', 'Einrichtung wechselt automatisch zwischen Tages- und Nachtprofilen.', '<p>Die Steuerung basiert auf Open-Source-Hardware und lässt sich im Admin-Bereich konfigurieren. Alerts werden per Push versendet.</p>', 1, '2023-12-20 06:55:00', '2023-12-20 06:55:00', '2023-12-20 06:55:00'),
+    (10, 'Erfolgreiche Nachzucht-Serie', 'nachzucht-serie', 'Zwölf neue Tiere aus dem Swiss-Chocolate-Projekt.', '<p>Wir teilen detaillierte Brutprotokolle, Gewichtsentwicklungen und Verpaarungsnotizen inklusive Download für interessierte Halter*innen.</p>', 1, '2023-12-15 11:45:00', '2023-12-15 11:45:00', '2023-12-15 11:45:00');
 -- end
