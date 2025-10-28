@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { GenotypeSearch } from './GenotypeSearch.js';
+import { ResultTable } from './ResultTable.js';
 import { predictPairing } from '@lib/genetics/engine.js';
-import { GeneDef, ParentGenotype, PairingResult } from '@lib/genetics/types.js';
-import hognoseGenes from '@data/genes/hognose.json';
-import pogonaGenes from '@data/genes/pogona.json';
+import { getGenesForSpecies } from '@lib/genetics/species.js';
+import { ParentGenotype, PairingResult, SpeciesKey } from '@lib/genetics/types.js';
 import translationsDe from '@i18n/genetics.de.json';
-import { ParentPicker } from './ParentPicker.js';
-import { ResultList } from './ResultList.js';
+import morphAliases from '@data/morph-aliases.json';
 import '../../styles/genetics.css';
 
 interface Messages {
@@ -14,29 +14,10 @@ interface Messages {
   calculate: string;
   parentA: string;
   parentB: string;
-  normal: string;
-  het: string;
-  expressed: string;
-  super: string;
-  present: string;
-  posHet: string;
-  polygenicHint: string;
-  warningIncompatible: string;
-  filterSuper: string;
-  filterHighProbability: string;
-  filterShowHet: string;
-  filterLabel: string;
-  notCalculated: string;
-  empty: string;
-  remainder: string;
-  normalForm: string;
   speciesHeading: string;
   speciesHint: string;
-  sectionTitles: Record<'recessive' | 'incomplete_dominant' | 'dominant' | 'polygenic', string>;
-  species: Record<'hognose' | 'pogona', { label: string; subtitle: string }>;
+  species: Record<SpeciesKey, { label: string; subtitle: string }>;
 }
-
-type SpeciesKey = 'hognose' | 'pogona';
 
 const messages = translationsDe as Messages;
 
@@ -44,85 +25,137 @@ interface SpeciesOption {
   key: SpeciesKey;
   label: string;
   subtitle: string;
-  genes: GeneDef[];
 }
 
 const SPECIES: SpeciesOption[] = [
   {
     key: 'hognose',
     label: messages.species.hognose.label,
-    subtitle: messages.species.hognose.subtitle,
-    genes: (hognoseGenes as GeneDef[]).map((gene) => ({ ...gene }))
+    subtitle: messages.species.hognose.subtitle
   },
   {
     key: 'pogona',
     label: messages.species.pogona.label,
-    subtitle: messages.species.pogona.subtitle,
-    genes: (pogonaGenes as GeneDef[]).map((gene) => ({ ...gene }))
+    subtitle: messages.species.pogona.subtitle
   }
 ];
 
-interface FilterState {
-  superOnly: boolean;
-  highProbability: boolean;
-  showHet: boolean;
+function normalizeState(value: ParentGenotype[string]): ParentGenotype[string] | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (typeof value === 'string') {
+    return value === 'normal' ? undefined : value;
+  }
+  if (value.state === 'normal') {
+    return undefined;
+  }
+  return { state: value.state };
 }
 
-const DEFAULT_FILTERS: FilterState = {
-  superOnly: false,
-  highProbability: false,
-  showHet: true
-};
+function parseParent(query: string | null, allowed: Set<string>): ParentGenotype {
+  if (!query) {
+    return {};
+  }
+  const entries = query.split(';');
+  const result: ParentGenotype = {};
+  entries.forEach((entry) => {
+    const [geneKey, state] = entry.split(',');
+    if (!geneKey || !state || !allowed.has(geneKey)) {
+      return;
+    }
+    if (state === 'het' || state === 'expressed' || state === 'super') {
+      result[geneKey] = state;
+    }
+  });
+  return result;
+}
+
+function encodeParent(parent: ParentGenotype, allowed: Set<string>): string {
+  const parts: string[] = [];
+  allowed.forEach((geneKey) => {
+    const entry = normalizeState(parent[geneKey]);
+    if (!entry) {
+      return;
+    }
+    if (typeof entry === 'string') {
+      parts.push(`${geneKey},${entry}`);
+    } else if (entry.state !== 'normal') {
+      parts.push(`${geneKey},${entry.state}`);
+    }
+  });
+  return parts.join(';');
+}
 
 export function Calculator() {
   const [speciesKey, setSpeciesKey] = useState<SpeciesKey>('hognose');
   const [parentA, setParentA] = useState<ParentGenotype>({});
   const [parentB, setParentB] = useState<ParentGenotype>({});
   const [results, setResults] = useState<PairingResult[] | null>(null);
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [hydrated, setHydrated] = useState(false);
 
-  const species = useMemo(() => SPECIES.find((entry) => entry.key === speciesKey) ?? SPECIES[0], [speciesKey]);
+  const genes = useMemo(() => getGenesForSpecies(speciesKey), [speciesKey]);
+  const allowedKeys = useMemo(() => new Set(genes.map((gene) => gene.key)), [genes]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const speciesParam = params.get('s');
+    const initialSpecies: SpeciesKey = speciesParam === 'pogona' ? 'pogona' : 'hognose';
+    if (initialSpecies !== speciesKey) {
+      setSpeciesKey(initialSpecies);
+    }
+    const initialGenes = getGenesForSpecies(initialSpecies);
+    const initialSet = new Set(initialGenes.map((gene) => gene.key));
+    const parsedA = parseParent(params.get('a'), initialSet);
+    const parsedB = parseParent(params.get('b'), initialSet);
+    if (Object.keys(parsedA).length > 0) {
+      setParentA(parsedA);
+    }
+    if (Object.keys(parsedB).length > 0) {
+      setParentB(parsedB);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    const params = new URLSearchParams();
+    params.set('s', speciesKey);
+    const encodedA = encodeParent(parentA, allowedKeys);
+    const encodedB = encodeParent(parentB, allowedKeys);
+    if (encodedA) {
+      params.set('a', encodedA);
+    }
+    if (encodedB) {
+      params.set('b', encodedB);
+    }
+    const queryString = params.toString();
+    const base = window.location.pathname;
+    const nextUrl = queryString ? `${base}?${queryString}` : base;
+    window.history.replaceState(null, '', nextUrl);
+  }, [speciesKey, parentA, parentB, allowedKeys, hydrated]);
 
   const handleSpeciesChange = (key: SpeciesKey) => {
     setSpeciesKey(key);
     setParentA({});
     setParentB({});
     setResults(null);
-    setFilters(DEFAULT_FILTERS);
   };
 
   const handleCalculate = () => {
-    const resultList = predictPairing(parentA, parentB, species.genes);
-    setResults(resultList);
+    const prediction = predictPairing(parentA, parentB, genes).slice(0, 50);
+    setResults(prediction);
   };
 
   const handleReset = () => {
     setParentA({});
     setParentB({});
     setResults(null);
-    setFilters(DEFAULT_FILTERS);
   };
 
-  const activeResults = useMemo(() => {
-    if (!results) {
-      return [];
-    }
-    const sorted = [...results].sort((a, b) => b.probability - a.probability);
-    const top = sorted.slice(0, 12);
-    return top;
-  }, [results]);
-
-  const remainderProbability = useMemo(() => {
-    if (!results) {
-      return 0;
-    }
-    const sumTop = activeResults.reduce((acc, result) => acc + result.probability, 0);
-    const total = results.reduce((acc, result) => acc + result.probability, 0);
-    const remainder = Math.max(total - sumTop, 0);
-    return remainder > 0.0001 ? remainder : 0;
-  }, [activeResults, results]);
-
-  const hasResults = results !== null;
+  const activeResults = results ?? [];
 
   return (
     <div className="genetics-calculator">
@@ -136,7 +169,7 @@ export function Calculator() {
             <button
               type="button"
               key={entry.key}
-              className={clsx('chip-button', { 'is-active': entry.key === species.key })}
+              className={clsx('chip-button', { 'is-active': entry.key === speciesKey })}
               onClick={() => handleSpeciesChange(entry.key)}
             >
               <span className="chip-button__label">{entry.label}</span>
@@ -145,66 +178,32 @@ export function Calculator() {
           ))}
         </div>
       </section>
-      <div className="genetics-calculator__parents">
-        <ParentPicker
-          label={messages.parentA}
-          genes={species.genes}
-          value={parentA}
-          onChange={setParentA}
-          messages={{
-            normal: messages.normal,
-            het: messages.het,
-            expressed: messages.expressed,
-            super: messages.super,
-            present: messages.present,
-            posHet: messages.posHet,
-            polygenicHint: messages.polygenicHint,
-            warningIncompatible: messages.warningIncompatible,
-            sectionTitles: messages.sectionTitles
-          }}
-        />
-        <ParentPicker
-          label={messages.parentB}
-          genes={species.genes}
-          value={parentB}
-          onChange={setParentB}
-          messages={{
-            normal: messages.normal,
-            het: messages.het,
-            expressed: messages.expressed,
-            super: messages.super,
-            present: messages.present,
-            posHet: messages.posHet,
-            polygenicHint: messages.polygenicHint,
-            warningIncompatible: messages.warningIncompatible,
-            sectionTitles: messages.sectionTitles
-          }}
-        />
-      </div>
-      <ResultList
-        results={activeResults}
-        genes={species.genes}
-        filters={filters}
-        onFiltersChange={setFilters}
-        remainderProbability={remainderProbability}
-        messages={{
-          filterSuper: messages.filterSuper,
-          filterHighProbability: messages.filterHighProbability,
-          filterShowHet: messages.filterShowHet,
-          filterLabel: messages.filterLabel,
-          empty: hasResults ? messages.empty : messages.notCalculated,
-          remainder: messages.remainder,
-          normalForm: messages.normalForm
-        }}
-      />
-      <div className="genetics-actionbar">
-        <button type="button" className="btn btn-secondary" onClick={handleReset}>
+      <section className="genetics-calculator__inputs">
+        <div className="search-panel">
+          <div className="panel-label">{messages.parentA}</div>
+          <GenotypeSearch species={speciesKey} value={parentA} onChange={setParentA} />
+        </div>
+        <div className="search-panel">
+          <div className="panel-label">{messages.parentB}</div>
+          <GenotypeSearch species={speciesKey} value={parentB} onChange={setParentB} />
+        </div>
+      </section>
+      <section className="genetics-calculator__actions">
+        <button type="button" className="action-secondary" onClick={handleReset}>
           {messages.reset}
         </button>
-        <button type="button" className="btn" onClick={handleCalculate}>
+        <button type="button" className="action-primary" onClick={handleCalculate}>
           {messages.calculate}
         </button>
-      </div>
+      </section>
+      <section className="genetics-calculator__results">
+        <ResultTable
+          results={activeResults}
+          genes={genes}
+          species={speciesKey}
+          aliases={morphAliases as typeof morphAliases}
+        />
+      </section>
     </div>
   );
 }

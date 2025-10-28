@@ -6,16 +6,17 @@ export interface PhenotypeOptions {
 
 interface NormalizedEntry {
   state: Zygosity;
+  posHet?: number;
 }
 
-function normalizeEntry(entry: Zygosity | { state: Zygosity } | undefined): NormalizedEntry | null {
+function normalizeEntry(entry: Zygosity | { state: Zygosity; posHet?: number } | undefined): NormalizedEntry | null {
   if (!entry) {
     return null;
   }
   if (typeof entry === 'string') {
     return { state: entry };
   }
-  return { state: entry.state };
+  return { state: entry.state, posHet: entry.posHet };
 }
 
 function normalizeToken(token: string): string {
@@ -23,23 +24,42 @@ function normalizeToken(token: string): string {
 }
 
 function superLabelForGene(gene: GeneDef): string {
-  if (gene.key === 'anaconda') {
-    return 'Superconda';
-  }
-  if (gene.key === 'leatherback') {
-    return 'Silkback';
-  }
-  return `Super ${gene.name}`;
+  return gene.superLabel ?? `Super ${gene.name}`;
 }
 
-function tokenForState(gene: GeneDef, state: Zygosity): string | null {
+function normalizePercent(value: number | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const rounded = Math.round(value);
+  const canonical = [33, 50, 66];
+  for (const target of canonical) {
+    if (Math.abs(rounded - target) <= 3) {
+      return target;
+    }
+  }
+  return rounded;
+}
+
+function tokenForState(gene: GeneDef, entry: NormalizedEntry): string | null {
+  const { state, posHet } = entry;
   switch (gene.type) {
     case 'recessive':
       if (state === 'expressed') {
         return gene.name;
       }
       if (state === 'het') {
-        return `het ${gene.name}`;
+        const percent = normalizePercent(posHet);
+        if (percent !== undefined) {
+          return `${percent}% Het ${gene.name}`;
+        }
+        return `Het ${gene.name}`;
+      }
+      if (state === 'normal' && posHet !== undefined) {
+        const percent = normalizePercent(posHet);
+        if (percent !== undefined) {
+          return `${percent}% Het ${gene.name}`;
+        }
       }
       return null;
     case 'incomplete_dominant':
@@ -65,7 +85,8 @@ function tokenForState(gene: GeneDef, state: Zygosity): string | null {
   }
 }
 
-function priorityForToken(gene: GeneDef, state: Zygosity): number {
+function priorityForToken(gene: GeneDef, entry: NormalizedEntry): number {
+  const { state, posHet } = entry;
   if (state === 'super') {
     return 0;
   }
@@ -75,17 +96,20 @@ function priorityForToken(gene: GeneDef, state: Zygosity): number {
   if (gene.type === 'recessive' && state === 'expressed') {
     return 2;
   }
-  if (gene.type === 'recessive' && state === 'het') {
+  if (gene.type === 'recessive' && state === 'het' && posHet === undefined) {
     return 3;
   }
-  if (gene.type === 'polygenic') {
+  if (gene.type === 'recessive' && (state === 'het' || state === 'normal') && posHet !== undefined) {
     return 4;
   }
-  return 5;
+  if (gene.type === 'polygenic') {
+    return 5;
+  }
+  return 6;
 }
 
 export function buildPhenotypeTokens(
-  genotype: Record<string, Zygosity | { state: Zygosity }>,
+  genotype: Record<string, Zygosity | { state: Zygosity; posHet?: number }>,
   genes: GeneDef[],
   options: PhenotypeOptions = {}
 ): string[] {
@@ -100,11 +124,11 @@ export function buildPhenotypeTokens(
     if (!includeHet && gene.type === 'recessive' && entry.state === 'het') {
       return;
     }
-    const label = tokenForState(gene, entry.state);
+    const label = tokenForState(gene, entry);
     if (!label) {
       return;
     }
-    tokens.push({ label, priority: priorityForToken(gene, entry.state) });
+    tokens.push({ label, priority: priorityForToken(gene, entry) });
   });
 
   const deduped = new Map<string, { label: string; priority: number }>();
