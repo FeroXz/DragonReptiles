@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `public/uploads/`.
 
-**Aktuelle Version:** 4.4.0
+**Aktuelle Version:** 4.5.0
 
 ## Kernfunktionen
 
@@ -98,6 +98,41 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 
 
 
+## Admin-Update
+
+### Voraussetzungen
+- Installiere `lftp` auf dem Server, damit das Deploy-Skript Dateien per SFTP spiegeln kann.
+- Hinterlege die Zugangsdaten in `config/deploy.php` oder setze die passenden Umgebungsvariablen (`GITHUB_OWNER`, `GITHUB_REPO`, `SFTP_HOST`, `SFTP_PORT`, `SFTP_USER`, `SFTP_PASS`, `SFTP_KEY_BASE64`, `DEPLOY_TARGET_DIR`, `DRY_RUN`).
+
+### Bedienung im Adminbereich
+- Im Adminbereich unter „Update-Manager“ steht die Karte „System-Update“ bereit.
+- Dort lässt sich wahlweise ein Dry-Run auslösen, optional eine konkrete Pull-Request-Nummer hinterlegen und der Fortschritt über den Live-Log verfolgen.
+- Während des Deployments wird automatisch `storage/maintenance.flag` gesetzt – öffentliche Seiten liefern HTTP 503, der Admin-Bereich bleibt dank Wartungs-Bypass erreichbar.
+- Der „Abbrechen“-Button sendet ein SIGTERM an das Deploy-Skript, wartet kurz und erzwingt falls nötig einen SIGKILL.
+
+### API-Beispiele
+Alle Endpunkte erfordern eine aktive Admin-Session sowie das Header-Feld `X-CSRF` (der Wert wird auf der Adminseite angezeigt).
+
+```bash
+# Start mit optionaler PR-Nummer (Dry-Run deaktiviert)
+curl -X POST 'https://example.com/admin/api/update.php?action=start' \
+  -H 'Content-Type: application/json' \
+  -H 'X-CSRF: CSRF_TOKEN' \
+  -b 'PHPSESSID=...' \
+  -d '{"dry_run": false, "pr": 123}'
+
+# Status-Abfrage inklusive Log-Tail
+curl -b 'PHPSESSID=...' 'https://example.com/admin/api/update.php?action=status'
+
+# Deploy abbrechen
+curl -X POST 'https://example.com/admin/api/update.php?action=cancel' \
+  -H 'X-CSRF: CSRF_TOKEN' \
+  -b 'PHPSESSID=...'
+
+# Vollständige Log-Ausgabe abrufen
+curl -b 'PHPSESSID=...' 'https://example.com/admin/api/update.php?action=log'
+```
+
 # cms
 
 ## Verbesserungen
@@ -132,3 +167,4 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] MorphMarket-orientierter Genetik-Rechner mit React-Oberfläche, Chip-Filtern, Superform-Labels und Wahrscheinlichkeitsbalken (Version 4.2.0).
 - [x] MorphMarket-Suchleiste für Eltern-Genetik inklusive Vorschlagschips und Konfliktprüfung ersetzt Segment-Schalter (Version 4.3.0).
 - [x] MorphMarket-kompatibler Genetik-Rechner mit Chip-Suche, Tabellen-Resultaten, Badge-Farben und teilbarer URL (Version 4.4.0).
+- [x] Serverseitiger Admin-Deploy mit Dry-Run, Live-Log, Abbruch und Wartungs-Bypass (Version 4.5.0).
