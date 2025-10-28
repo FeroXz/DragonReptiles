@@ -94,4 +94,20 @@ $normalizePath = static function (array $item): string {
             <span class="admin-nav__label"><?= htmlspecialchars($item['label']) ?></span>
         </a>
     <?php endforeach; ?>
+    <?php
+        $appEnvValue = $_SERVER['APP_ENV'] ?? getenv('APP_ENV');
+        $appEnv = ($appEnvValue !== false && $appEnvValue !== null) ? (string) $appEnvValue : 'production';
+        if ($appEnv === 'local'):
+    ?>
+        <div class="admin-nav__seed-tools nui-panel nui-panel--muted" style="margin-top: 1.5rem; padding: 1.2rem; display: grid; gap: 0.75rem;">
+            <div>
+                <p class="text-sm font-semibold" style="margin: 0;">Seeds: dump/import</p>
+                <p class="text-xs" style="margin: 0.25rem 0 0; opacity: 0.75;">Shell-Kommandos für die lokale Umgebung:</p>
+            </div>
+            <div class="admin-nav__seed-tools-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="nui-pill admin-nav__seed-command" title="make seed-dump">make seed-dump</button>
+                <button type="button" class="nui-pill admin-nav__seed-command" title="make seed-import">make seed-import</button>
+            </div>
+        </div>
+    <?php endif; ?>
 </nav>

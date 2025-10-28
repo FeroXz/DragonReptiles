@@ -95,6 +95,17 @@ node scripts/seed_check.mjs
 
 Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefundenen Seed-Dateien auf und weist darauf hin, wenn keine Seeds vorhanden sind. Liegt ein Manifest mit einem `required`-Array vor, werden fehlende Einträge explizit markiert und das Skript beendet sich mit einem Fehlercode.
 
+### Seeds exportieren & importieren
+
+Für lokale Sicherungen und Wiederherstellungen der SQLite-Datenbank stehen Makefile-Kürzel bereit:
+
+```bash
+make seed-dump   # Exportiert Inserts nach storage/seeds/
+make seed-import # Spielt gespeicherte Seeds wieder ein
+```
+
+Beim Import werden alle SQL-Dateien gemäß `manifest.json` berücksichtigt und optional benutzerdefinierte Skripte aus `storage/seeds/custom/` ausgeführt.
+
 
 
 
@@ -168,5 +179,4 @@ curl -b 'PHPSESSID=...' 'https://example.com/admin/api/update.php?action=log'
 - [x] MorphMarket-Suchleiste für Eltern-Genetik inklusive Vorschlagschips und Konfliktprüfung ersetzt Segment-Schalter (Version 4.3.0).
 - [x] MorphMarket-kompatibler Genetik-Rechner mit Chip-Suche, Tabellen-Resultaten, Badge-Farben und teilbarer URL (Version 4.4.0).
 - [x] Serverseitiger Admin-Deploy mit Dry-Run, Live-Log, Abbruch und Wartungs-Bypass (Version 4.5.0).
-- [x] Navigationen werden über einen Admin-Editor verwaltet, inklusive Drag-&-Drop-Sortierung, Sichtbarkeit und Zielsteuerung (Version 4.6.0).
-- [x] Rich-Text-Editor erhält eine Nuxt UI Komponenten-Galerie mit Live-Vorschau, Suche und sicherer Snippet-Einfügung (Version 4.6.0).
+- [x] SQLite-Seed-Dump & Import-Skripte inklusive Admin-Hinweisblock mit Makefile-Befehlen (Version 4.6.0).
