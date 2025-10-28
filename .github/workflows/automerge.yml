@@ -1,4 +1,3 @@
-# .github/workflows/automerge.yml
 name: automerge-all
 on:
   workflow_dispatch: {}   
@@ -25,12 +24,12 @@ jobs:
       - uses: pascalgn/automerge-action@v0.16.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_LABELS: ""             # "" = ALLE PRs mergen (kein Label nötig)
-          UPDATE_LABELS: ""            # PRs auch ohne Label aktuell halten
-          UPDATE_METHOD: rebase        # hält PRs per Rebase aktuell (s. Hinweis unten)
+          MERGE_LABELS: "mergeai"      # Nur PRs mit diesem Label mergen
+          UPDATE_LABELS: "mergeai"     # Nur PRs mit diesem Label aktuell halten
+          UPDATE_METHOD: rebase        # hält PRs per Rebase aktuell
           MERGE_METHOD: squash         # sauberer Verlauf in main
           MERGE_DELETE_BRANCH: "true"  # PR-Branch nach Merge löschen
-          MERGE_FORKS: "true"          # bei Bedarf auf "false" setzen
-          BASE_BRANCHES: "main"        # nur in main mergen
+          MERGE_FORKS: "true"
+          BASE_BRANCHES: "main"
           MERGE_RETRIES: "12"
           MERGE_RETRY_SLEEP: "10000"
