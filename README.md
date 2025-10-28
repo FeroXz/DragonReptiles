@@ -2,7 +2,7 @@
 
 Dragon Reptiles ist ein leichtgewichtiges, auf PHP 8.3 und SQLite basierendes CMS für Reptilienhalter. Es vereint Tierverwaltung, Tierabgabe, Wiki-Inhalte sowie ein Admin-Backend mit granularen Berechtigungen. Alle Inhalte werden persistiert in einer lokalen SQLite-Datenbank gespeichert, Medien landen im Verzeichnis `public/uploads/`.
 
-**Aktuelle Version:** 4.3.0
+**Aktuelle Version:** 4.4.0
 
 ## Kernfunktionen
 
@@ -131,3 +131,4 @@ Ohne Manifest-Datei (`storage/seeds/manifest.json`) listet das Skript alle gefun
 - [x] Update-Manager lädt auf Wunsch das Repository automatisch herunter und aktualisiert ohne Inhaltsverlust, neues Branding inklusive Logo & Icon (Version 4.1.0).
 - [x] MorphMarket-orientierter Genetik-Rechner mit React-Oberfläche, Chip-Filtern, Superform-Labels und Wahrscheinlichkeitsbalken (Version 4.2.0).
 - [x] MorphMarket-Suchleiste für Eltern-Genetik inklusive Vorschlagschips und Konfliktprüfung ersetzt Segment-Schalter (Version 4.3.0).
+- [x] MorphMarket-kompatibler Genetik-Rechner mit Chip-Suche, Tabellen-Resultaten, Badge-Farben und teilbarer URL (Version 4.4.0).
