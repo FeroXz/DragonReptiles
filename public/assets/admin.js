@@ -8,6 +8,7 @@
         categories: [],
         promise: null,
     };
+    let activeEditor = null;
 
     function loadComponentCatalog() {
         if (componentCatalogState.promise) {
@@ -137,12 +138,12 @@
         return template.innerHTML.trim();
     }
 
-    function insertSanitizedSnippet(editor, html) {
-        if (!html) {
+    function performInsertAtCursor(editor, html) {
+        if (!editor || typeof html !== 'string' || html.trim() === '') {
             return;
         }
-        const selection = window.getSelection();
         editor.focus({ preventScroll: false });
+        const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) {
             editor.insertAdjacentHTML('beforeend', html);
             return;
@@ -154,6 +155,13 @@
         }
         document.execCommand('insertHTML', false, html);
     }
+
+    function insertAtCursor(html) {
+        const sanitized = sanitizeSnippet(html || '');
+        performInsertAtCursor(activeEditor, sanitized);
+    }
+
+    window.insertAtCursor = insertAtCursor;
 
     function createButton(label, title, onClick) {
         const button = document.createElement('button');
@@ -216,13 +224,20 @@
         insertButton.type = 'button';
         insertButton.className = 'btn btn-primary';
         insertButton.textContent = 'Einfügen';
+        const hasSnippet = !!sanitized;
+        insertButton.disabled = !hasSnippet;
+        if (!hasSnippet) {
+            insertButton.setAttribute('aria-disabled', 'true');
+            insertButton.title = 'Für diese Komponente steht kein Snippet zur Verfügung.';
+        } else {
+            insertButton.removeAttribute('aria-disabled');
+            insertButton.removeAttribute('title');
+        }
         insertButton.addEventListener('click', () => {
-            const snippet = sanitizeSnippet(item.snippet || '');
-            if (!snippet) {
-                window.alert('Snippet konnte nicht eingefügt werden.');
+            if (!hasSnippet) {
                 return;
             }
-            insertSanitizedSnippet(editor, snippet);
+            performInsertAtCursor(editor, sanitized);
             sync();
         });
 
@@ -392,6 +407,12 @@
 
         const sidebar = document.createElement('aside');
         sidebar.className = 'rich-text-components';
+
+        const sidebarTitle = document.createElement('h2');
+        sidebarTitle.className = 'rich-text-components__title';
+        sidebarTitle.textContent = 'Komponenten';
+        sidebar.appendChild(sidebarTitle);
+
         const galleryContainer = document.createElement('div');
         galleryContainer.className = 'component-gallery';
         galleryContainer.innerHTML = '<p class="component-gallery__loading">Komponenten werden geladen …</p>';
@@ -414,7 +435,15 @@
         };
 
         editor.addEventListener('input', sync);
-        editor.addEventListener('blur', sync);
+        editor.addEventListener('focus', () => {
+            activeEditor = editor;
+        });
+        editor.addEventListener('blur', () => {
+            sync();
+            if (activeEditor === editor) {
+                activeEditor = null;
+            }
+        });
 
         const form = textarea.closest('form');
         if (form) {

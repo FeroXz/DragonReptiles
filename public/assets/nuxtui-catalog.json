@@ -18,6 +18,12 @@
     "snippet": "<section class=\"nui-card space-y-3\">\n  <header class=\"flex items-center justify-between gap-2\">\n    <h3 class=\"nui-heading text-xl\">Bereichstitel</h3>\n    <span class=\"badge badge-pattern\">Nuxt UI</span>\n  </header>\n  <p class=\"nui-muted text-sm\">Kurzer Beschreibungstext, der den Inhalt zusammenfasst.</p>\n  <footer class=\"flex items-center justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n    <button class=\"nui-button nui-button--primary\">Speichern</button>\n  </footer>\n</section>"
   },
   {
+    "name": "UPanel",
+    "category": "Layout",
+    "description": "Schwebendes Panel mit Kopfzeile und Grid-Inhalt.",
+    "snippet": "<section class=\"nui-panel nui-panel--floating space-y-4\">\n  <header class=\"flex items-center justify-between gap-3\">\n    <div>\n      <h3 class=\"nui-heading text-lg\">Panelüberschrift</h3>\n      <p class=\"nui-muted text-sm\">Kurzer erklärender Untertitel.</p>\n    </div>\n    <span class=\"badge badge-pattern\">Aktiv</span>\n  </header>\n  <div class=\"nui-grid gap-3 md:grid-cols-2\">\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Inhalt oder Statistik.</p>\n    </div>\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Weiterer Panelbereich.</p>\n    </div>\n  </div>\n</section>"
+  },
+  {
     "name": "UAlert",
     "category": "Feedback",
     "description": "Hinweisbox mit Icon und Call-to-Action.",
@@ -28,6 +34,12 @@
     "category": "Label",
     "description": "Akzentuierte Pill-Badge für Status.",
     "snippet": "<span class=\"badge badge-pattern\">Neu</span>"
+  },
+  {
+    "name": "UPill",
+    "category": "Navigation",
+    "description": "Interaktives Pill-Element für Links oder Aktionen.",
+    "snippet": "<a class=\"nui-pill justify-between text-sm font-semibold text-brand-100\" href=\"#\">\n  <span>Mehr erfahren</span>\n  <span aria-hidden=\"true\">→</span>\n</a>"
   },
   {
     "name": "UAccordion",
