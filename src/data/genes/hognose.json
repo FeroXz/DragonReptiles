@@ -5,5 +5,5 @@
   {"key":"lavender","name":"Lavender","type":"recessive","species":["hognose"]},
   {"key":"hypo","name":"Hypo","type":"recessive","species":["hognose"]},
   {"key":"arctic","name":"Arctic","type":"incomplete_dominant","species":["hognose"],"aliases":[]},
-  {"key":"anaconda","name":"Anaconda","type":"incomplete_dominant","species":["hognose"],"aliases":["conda"],"notes":"Homozygote Anzeige als 'Superconda'"}
+  {"key":"anaconda","name":"Anaconda","type":"incomplete_dominant","species":["hognose"],"aliases":["conda"],"notes":"Homozygote Anzeige als 'Superconda'","superLabel":"Superconda"}
 ]

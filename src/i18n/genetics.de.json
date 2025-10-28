@@ -11,6 +11,11 @@
   "posHet": "pos. het",
   "posHetHelper": "Wahrscheinlichkeit in %",
   "warningIncompatible": "{gene} kollidiert mit {conflict} in Super-Form.",
+  "searchPlaceholder": "Gen suchen…",
+  "searchClear": "Suchfeld leeren",
+  "searchNoMatches": "Keine Treffer",
+  "chipRemove": "entfernen",
+  "incompatible": "nicht kombinierbar",
   "sectionTitles": {
     "incomplete_dominant": "Inkomplett dominant",
     "dominant": "Dominant",
