@@ -1,65 +1,100 @@
-import { GeneDef } from './types';
+import { GeneDef } from './types.js';
 
 export type Option = {
   geneKey: string;
   state: 'het' | 'expressed' | 'super' | 'present' | 'poly';
   label: string;
   keywords: string[];
-  group: 'rezessiv' | 'inkomplett dominant' | 'dominant' | 'polygen';
+  group: 'recessive' | 'id' | 'dominant' | 'poly';
 };
+
+function normalizeKeyword(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function collectKeywords(gene: GeneDef, extras: string[] = []): string[] {
+  const raw = [gene.name, ...(gene.aliases ?? []), ...(gene.searchAliases ?? []), ...extras];
+  const keywords = new Set<string>();
+  raw.forEach((entry) => {
+    const normalized = normalizeKeyword(entry);
+    if (!normalized) {
+      return;
+    }
+    keywords.add(normalized);
+    normalized.split(/\s+/).forEach((part) => {
+      const partNormalized = normalizeKeyword(part);
+      if (partNormalized) {
+        keywords.add(partNormalized);
+      }
+    });
+  });
+  return Array.from(keywords);
+}
 
 export function buildOptions(genes: GeneDef[]): Option[] {
   const opts: Option[] = [];
-  for (const g of genes) {
-    const base = [g.name, ...(g.aliases || []), ...(g.searchAliases || [])].map((s) => s.toLowerCase());
-    if (g.type === 'recessive') {
+
+  for (const gene of genes) {
+    if (gene.type === 'recessive') {
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'het',
-        label: `het ${g.name}`,
-        keywords: ['het', ...base],
-        group: 'rezessiv'
+        label: `het ${gene.name}`,
+        keywords: collectKeywords(gene, ['het']),
+        group: 'recessive'
       });
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'expressed',
-        label: g.name,
-        keywords: [...base],
-        group: 'rezessiv'
+        label: gene.name,
+        keywords: collectKeywords(gene),
+        group: 'recessive'
       });
-    } else if (g.type === 'incomplete_dominant') {
+      continue;
+    }
+
+    if (gene.type === 'incomplete_dominant') {
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'expressed',
-        label: g.name,
-        keywords: [...base],
-        group: 'inkomplett dominant'
+        label: gene.name,
+        keywords: collectKeywords(gene),
+        group: 'id'
       });
-      const superLabel = g.superLabel || `Super ${g.name}`;
+      const superLabel = gene.superLabel || `Super ${gene.name}`;
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'super',
         label: superLabel,
-        keywords: ['super', ...base],
-        group: 'inkomplett dominant'
+        keywords: collectKeywords(gene, ['super', superLabel]),
+        group: 'id'
       });
-    } else if (g.type === 'dominant') {
+      continue;
+    }
+
+    if (gene.type === 'dominant') {
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'present',
-        label: g.name,
-        keywords: [...base],
+        label: gene.name,
+        keywords: collectKeywords(gene),
         group: 'dominant'
       });
-    } else if (g.type === 'polygenic' && g.visible !== false) {
+      continue;
+    }
+
+    if (gene.type === 'polygenic' && gene.visible !== false) {
+      const label = `Linie ${gene.name}`;
       opts.push({
-        geneKey: g.key,
+        geneKey: gene.key,
         state: 'poly',
-        label: `Linie ${g.name}`,
-        keywords: ['linie', ...base],
-        group: 'polygen'
+        label,
+        keywords: collectKeywords(gene, ['linie', label]),
+        group: 'poly'
       });
+      continue;
     }
   }
+
   return opts;
 }

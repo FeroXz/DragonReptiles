@@ -1,0 +1,10 @@
+{
+  "hognose": [
+    { "name": "Toxic", "genes": ["axanthic", "toffee"] },
+    { "name": "Stormcloud", "genes": ["axanthic", "conda"] },
+    { "name": "Moonstone", "genes": ["lavender", "axanthic"] }
+  ],
+  "pogona": [
+    { "name": "Wero", "genes": ["zero", "witblits"] }
+  ]
+}

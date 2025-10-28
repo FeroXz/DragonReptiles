@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { GenotypeSearch } from '@components/genetics/GenotypeSearch.js';
@@ -37,12 +37,14 @@ describe('GenotypeSearch', () => {
       await user.type(input, 'alb');
     });
 
-    const groupHeading = await screen.findByText('Rezessiv', { selector: '.genotype-search__group-label' });
-    const group = groupHeading.closest('.genotype-search__group');
+    const groupHeading = await screen.findByText('Rezessiv', { selector: '.mm-group-label' });
+    const group = groupHeading.closest('.mm-group');
     expect(group).not.toBeNull();
 
+    await waitFor(() => {
+      expect(within(group as HTMLElement).getAllByRole('option')).toHaveLength(2);
+    });
     const options = within(group as HTMLElement).getAllByRole('option');
-    expect(options).toHaveLength(2);
     expect(options[0]).toHaveTextContent('Albino');
     expect(options[1]).toHaveTextContent('het Albino');
   });

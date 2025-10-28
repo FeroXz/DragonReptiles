@@ -5,14 +5,48 @@ function normalizeToken(token: string): string {
   return token.trim();
 }
 
-function valueToZygosity(entry: Zygosity | { state: Zygosity } | undefined): Zygosity | null {
+interface NormalizedEntry {
+  state: Zygosity;
+  posHet?: number;
+}
+
+function normalizeEntry(entry: Zygosity | { state: Zygosity; posHet?: number } | undefined): NormalizedEntry | null {
   if (!entry) {
     return null;
   }
   if (typeof entry === 'string') {
-    return entry;
+    return { state: entry };
   }
-  return entry.state;
+  return { state: entry.state, posHet: entry.posHet };
+}
+
+function hasPosHet(entry: NormalizedEntry | null): entry is NormalizedEntry & { posHet: number } {
+  return Boolean(entry && typeof entry.posHet === 'number' && entry.posHet > 0 && entry.posHet < 100);
+}
+
+function normalizePosHet(value: number): number {
+  if (value >= 95) {
+    return 100;
+  }
+  if (value <= 5) {
+    return 0;
+  }
+  const anchors = [33, 50, 66];
+  let closest = anchors[0];
+  let diff = Math.abs(value - closest);
+  for (let i = 1; i < anchors.length; i += 1) {
+    const currentDiff = Math.abs(value - anchors[i]);
+    if (currentDiff < diff) {
+      diff = currentDiff;
+      closest = anchors[i];
+    }
+  }
+  return closest;
+}
+
+function formatPosHetLabel(gene: GeneDef, value: number): string {
+  const rounded = normalizePosHet(value);
+  return `${rounded}% Het ${gene.name}`;
 }
 
 function mapStateToOptionState(gene: GeneDef, state: Zygosity): Option['state'] | null {
@@ -58,10 +92,10 @@ function getPriority(option: Option): number {
   if (option.state === 'super') {
     return 0;
   }
-  if (option.group === 'inkomplett dominant') {
+  if (option.group === 'id') {
     return 1;
   }
-  if (option.group === 'rezessiv' && option.state === 'expressed') {
+  if (option.group === 'recessive' && option.state === 'expressed') {
     return 2;
   }
   if (option.state === 'het') {
@@ -70,7 +104,7 @@ function getPriority(option: Option): number {
   if (option.group === 'dominant') {
     return 4;
   }
-  if (option.group === 'polygen') {
+  if (option.group === 'poly') {
     return 5;
   }
   return 6;
@@ -81,7 +115,7 @@ export interface PhenotypeOptions {
 }
 
 export function buildPhenotypeTokens(
-  genotype: Record<string, Zygosity>,
+  genotype: Record<string, Zygosity | { state: Zygosity; posHet?: number }>,
   genes: GeneDef[],
   options: PhenotypeOptions = {}
 ): string[] {
@@ -90,8 +124,16 @@ export function buildPhenotypeTokens(
   const tokens: Array<{ label: string; priority: number }> = [];
 
   for (const gene of genes) {
-    const state = valueToZygosity(genotype[gene.key]);
-    if (!state || state === 'normal') {
+    const entry = normalizeEntry(genotype[gene.key]);
+    if (!entry) {
+      continue;
+    }
+    if (hasPosHet(entry)) {
+      tokens.push({ label: formatPosHetLabel(gene, entry.posHet), priority: 3.5 });
+      continue;
+    }
+    const state = entry.state;
+    if (state === 'normal') {
       continue;
     }
     const optionState = mapStateToOptionState(gene, state);
@@ -135,15 +177,29 @@ export function formatPhenotype(tokens: string[]): string {
   return unique.join(' ');
 }
 
-export function formatGenotypeCompact(genotype: Record<string, Zygosity>, genes: GeneDef[]): string {
+export function formatGenotypeCompact(
+  genotype: Record<string, Zygosity | { state: Zygosity; posHet?: number }>,
+  genes: GeneDef[]
+): string {
   const optionIndex = buildOptionIndex(genes);
   const segments: string[] = [];
 
   genes.forEach((gene) => {
-    const state = valueToZygosity(genotype[gene.key]) ?? 'normal';
+    const entry = normalizeEntry(genotype[gene.key]);
+    if (!entry) {
+      return;
+    }
+    if (hasPosHet(entry)) {
+      const label = formatPosHetLabel(gene, entry.posHet);
+      segments.push(label);
+      return;
+    }
+    const state = entry.state;
+    if (state === 'normal') {
+      return;
+    }
     const optionState = mapStateToOptionState(gene, state);
     if (!optionState) {
-      segments.push(`${gene.name}/normal`);
       return;
     }
     const option = optionIndex.get(`${gene.key}:${optionState}`);
@@ -152,7 +208,7 @@ export function formatGenotypeCompact(genotype: Record<string, Zygosity>, genes:
       return;
     }
 
-    if (option.group === 'rezessiv') {
+    if (option.group === 'recessive') {
       if (option.state === 'het') {
         segments.push(`${gene.name}/het`);
       } else {
@@ -161,7 +217,7 @@ export function formatGenotypeCompact(genotype: Record<string, Zygosity>, genes:
       return;
     }
 
-    if (option.group === 'inkomplett dominant') {
+    if (option.group === 'id') {
       if (option.state === 'super') {
         segments.push(`${gene.name}/${option.label}`);
       } else {
@@ -175,7 +231,7 @@ export function formatGenotypeCompact(genotype: Record<string, Zygosity>, genes:
       return;
     }
 
-    if (option.group === 'polygen') {
+    if (option.group === 'poly') {
       segments.push(option.label);
       return;
     }
