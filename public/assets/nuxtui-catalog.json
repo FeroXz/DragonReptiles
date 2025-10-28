@@ -1,0 +1,122 @@
+[
+  {
+    "name": "UButton",
+    "category": "Button",
+    "description": "Primärer Button mit gläserner Horizon-Oberfläche.",
+    "snippet": "<button class=\"nui-button nui-button--primary\">Aktion</button>"
+  },
+  {
+    "name": "UButton Ghost",
+    "category": "Button",
+    "description": "Sekundärer Ghost-Button für dezente Aktionen.",
+    "snippet": "<button class=\"nui-button nui-button--ghost\">Mehr erfahren</button>"
+  },
+  {
+    "name": "UCard",
+    "category": "Card",
+    "description": "Panel mit Titel, Text und Fußbereich.",
+    "snippet": "<section class=\"nui-card space-y-3\">\n  <header class=\"flex items-center justify-between gap-2\">\n    <h3 class=\"nui-heading text-xl\">Bereichstitel</h3>\n    <span class=\"badge badge-pattern\">Nuxt UI</span>\n  </header>\n  <p class=\"nui-muted text-sm\">Kurzer Beschreibungstext, der den Inhalt zusammenfasst.</p>\n  <footer class=\"flex items-center justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n    <button class=\"nui-button nui-button--primary\">Speichern</button>\n  </footer>\n</section>"
+  },
+  {
+    "name": "UAlert",
+    "category": "Feedback",
+    "description": "Hinweisbox mit Icon und Call-to-Action.",
+    "snippet": "<div class=\"nui-alert nui-alert--info\">\n  <div class=\"nui-alert__content\">\n    <strong class=\"nui-alert__title\">Info</strong>\n    <p class=\"nui-muted text-sm\">Dieser Abschnitt enthält wichtige Hinweise für Besucher.</p>\n  </div>\n  <button class=\"nui-button nui-button--ghost\">Details</button>\n</div>"
+  },
+  {
+    "name": "UBadge",
+    "category": "Label",
+    "description": "Akzentuierte Pill-Badge für Status.",
+    "snippet": "<span class=\"badge badge-pattern\">Neu</span>"
+  },
+  {
+    "name": "UAccordion",
+    "category": "Disclosures",
+    "description": "Akordeon mit zwei aufklappbaren Sektionen.",
+    "snippet": "<div class=\"nui-accordion\">\n  <details open>\n    <summary>Bereich 1</summary>\n    <div class=\"nui-muted text-sm\">Ausführliche Beschreibung zum ersten Themenblock.</div>\n  </details>\n  <details>\n    <summary>Bereich 2</summary>\n    <div class=\"nui-muted text-sm\">Weitere Informationen, die bei Bedarf eingeblendet werden.</div>\n  </details>\n</div>"
+  },
+  {
+    "name": "UTable",
+    "category": "Daten",
+    "description": "Responsive Tabelle mit schwebendem Rahmen.",
+    "snippet": "<div class=\"nui-table-wrapper\">\n  <table class=\"nui-table\">\n    <thead>\n      <tr><th>Art</th><th>Status</th><th>Aktualisiert</th></tr>\n    </thead>\n    <tbody>\n      <tr><td>Königspython</td><td><span class=\"badge\">aktiv</span></td><td>02.04.2024</td></tr>\n      <tr><td>Kornnatter</td><td><span class=\"badge badge-muted\">in Pflege</span></td><td>28.03.2024</td></tr>\n    </tbody>\n  </table>\n</div>"
+  },
+  {
+    "name": "UForm",
+    "category": "Formulare",
+    "description": "Zweispaltiges Formular mit Nuxt UI Inputs.",
+    "snippet": "<form class=\"nui-grid gap-4 md:grid-cols-2\">\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">Name</span>\n    <input class=\"nui-input\" type=\"text\" placeholder=\"Dein Name\">\n  </label>\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">E-Mail</span>\n    <input class=\"nui-input\" type=\"email\" placeholder=\"mail@example.com\">\n  </label>\n  <label class=\"nui-field md:col-span-2\">\n    <span class=\"nui-field__label\">Nachricht</span>\n    <textarea class=\"nui-textarea\" rows=\"4\"></textarea>\n  </label>\n  <div class=\"md:col-span-2 flex justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Zurücksetzen</button>\n    <button class=\"nui-button nui-button--primary\">Senden</button>\n  </div>\n</form>"
+  },
+  {
+    "name": "UInput",
+    "category": "Formulare",
+    "description": "Textfeld mit Label und Hilfehinweis.",
+    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Titel</span>\n  <input class=\"nui-input\" type=\"text\" placeholder=\"Sektionstitel\">\n  <span class=\"nui-field__hint\">Kurzer, prägnanter Titel für den Abschnitt.</span>\n</label>"
+  },
+  {
+    "name": "UTextarea",
+    "category": "Formulare",
+    "description": "Textarea mit Nuxt UI Styling.",
+    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Beschreibung</span>\n  <textarea class=\"nui-textarea\" rows=\"5\" placeholder=\"Freitext\"></textarea>\n</label>"
+  },
+  {
+    "name": "USelect",
+    "category": "Formulare",
+    "description": "Dropdown-Auswahl mit Badge für Status.",
+    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Status</span>\n  <select class=\"nui-select\">\n    <option value=\"aktiv\">Aktiv</option>\n    <option value=\"archiv\">Archiviert</option>\n  </select>\n</label>"
+  },
+  {
+    "name": "UModal",
+    "category": "Overlay",
+    "description": "Dialog mit Titel, Inhalt und Aktionsleiste.",
+    "snippet": "<div class=\"nui-modal nui-modal--open\">\n  <div class=\"nui-modal__dialog space-y-4\">\n    <header class=\"flex items-center justify-between\">\n      <h3 class=\"nui-heading text-xl\">Modaltitel</h3>\n      <button class=\"nui-button nui-button--ghost\" aria-label=\"Schließen\">×</button>\n    </header>\n    <p class=\"nui-muted text-sm\">Kurzer erklärender Text zur Aktion innerhalb des Modals.</p>\n    <footer class=\"flex justify-end gap-2\">\n      <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n      <button class=\"nui-button nui-button--primary\">Bestätigen</button>\n    </footer>\n  </div>\n</div>"
+  },
+  {
+    "name": "UTabs",
+    "category": "Navigation",
+    "description": "Registerkarten mit zugehörigen Inhalten.",
+    "snippet": "<div class=\"nui-tabs\">\n  <nav class=\"nui-tabs__list\">\n    <button class=\"nui-tabs__trigger is-active\">Allgemein</button>\n    <button class=\"nui-tabs__trigger\">Details</button>\n    <button class=\"nui-tabs__trigger\">Historie</button>\n  </nav>\n  <div class=\"nui-tabs__content\">\n    <p class=\"nui-muted text-sm\">Hier stehen die Inhalte des aktiven Tabs.</p>\n  </div>\n</div>"
+  },
+  {
+    "name": "UAvatar",
+    "category": "Media",
+    "description": "Avatar mit Initialen und Statuspunkt.",
+    "snippet": "<div class=\"nui-avatar\">\n  <span class=\"nui-avatar__circle\">DR</span>\n  <span class=\"nui-avatar__status nui-avatar__status--online\" aria-hidden=\"true\"></span>\n</div>"
+  },
+  {
+    "name": "UProgress",
+    "category": "Feedback",
+    "description": "Fortschrittsanzeige mit Prozentwert.",
+    "snippet": "<div class=\"nui-progress\">\n  <div class=\"nui-progress__bar\" style=\"width: 66%;\"></div>\n  <span class=\"nui-progress__label\">66 % abgeschlossen</span>\n</div>"
+  },
+  {
+    "name": "UTooltip",
+    "category": "Overlay",
+    "description": "Tooltip mit Icon-Trigger.",
+    "snippet": "<span class=\"nui-tooltip\">\n  <button class=\"nui-button nui-button--icon\" aria-describedby=\"tip-1\">?</button>\n  <span id=\"tip-1\" role=\"tooltip\">Weitere Hinweise zu diesem Feld.</span>\n</span>"
+  },
+  {
+    "name": "UDropdown",
+    "category": "Navigation",
+    "description": "Kontextmenü mit Aktionen.",
+    "snippet": "<div class=\"nui-dropdown\">\n  <button class=\"nui-button nui-button--ghost\">Aktion</button>\n  <div class=\"nui-dropdown__menu\">\n    <button type=\"button\">Bearbeiten</button>\n    <button type=\"button\">Duplizieren</button>\n    <button type=\"button\" class=\"danger\">Löschen</button>\n  </div>\n</div>"
+  },
+  {
+    "name": "UTimeline",
+    "category": "Daten",
+    "description": "Timeline mit drei Stationen.",
+    "snippet": "<ul class=\"nui-timeline\">\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Check-in</strong>\n      <p class=\"nui-muted text-xs\">01.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Pflegeupdate</strong>\n      <p class=\"nui-muted text-xs\">05.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Release</strong>\n      <p class=\"nui-muted text-xs\">12.04.2024</p>\n    </div>\n  </li>\n</ul>"
+  },
+  {
+    "name": "UCarousel",
+    "category": "Media",
+    "description": "Slider mit drei Bilderkarten.",
+    "snippet": "<div class=\"nui-carousel\">\n  <div class=\"nui-carousel__track\">\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?1\" alt=\"Bild 1\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?2\" alt=\"Bild 2\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?3\" alt=\"Bild 3\"></figure>\n  </div>\n</div>"
+  },
+  {
+    "name": "UToast",
+    "category": "Feedback",
+    "description": "Toast-Platzhalter für Statusmeldungen.",
+    "snippet": "<div class=\"nui-toast nui-toast--success\">\n  <strong>Erfolgreich gespeichert</strong>\n  <p class=\"nui-muted text-xs\">Alle Angaben wurden aktualisiert.</p>\n</div>"
+  }
+]

@@ -718,6 +718,20 @@ switch ($route) {
         view('admin/content', compact('settings', 'contentGroups', 'flashSuccess'));
         break;
 
+    case 'admin/menu':
+        require_login();
+        if (!is_authorized('can_manage_settings')) {
+            flash('error', 'Keine Berechtigung.');
+            redirect('admin/dashboard');
+        }
+        $settings = get_all_settings($pdo);
+        $menuItems = get_all_menu_items($pdo);
+        $flashSuccess = flash('success');
+        $flashError = flash('error');
+        $csrfToken = csrf_token();
+        view('admin/menu', compact('settings', 'menuItems', 'flashSuccess', 'flashError', 'csrfToken'));
+        break;
+
     case 'admin/pages':
         require_login();
         if (!is_authorized('can_manage_settings')) {
