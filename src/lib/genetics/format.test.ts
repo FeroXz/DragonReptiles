@@ -40,7 +40,7 @@ describe('genetics format helpers', () => {
       'Arctic',
       'Dunner',
       'Albino',
-      'het Hypo',
+      'Het Hypo',
       'Red Line'
     ]);
   });
@@ -71,5 +71,11 @@ describe('genetics format helpers', () => {
     const tokens = buildPhenotypeTokens({ albino: 'expressed' }, genes);
     const formatted = formatPhenotype([...tokens, ...tokens]);
     expect(formatted).toBe('Albino');
+  });
+
+  it('formats pos het percentages with canonical rounding', () => {
+    const genes = [geneByKey(hognose, 'albino')];
+    const tokens = buildPhenotypeTokens({ albino: { state: 'het', posHet: 65.8 } }, genes);
+    expect(tokens).toEqual(['66% Het Albino']);
   });
 });

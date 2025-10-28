@@ -38,7 +38,7 @@ describe('predictPairing', () => {
     const homoTokens = results.find((result) => result.genotype.albino === 'expressed')?.phenotypeTokens ?? [];
     expect(homoTokens).toEqual(['Albino']);
     const hetTokens = results.find((result) => result.genotype.albino === 'het')?.phenotypeTokens ?? [];
-    expect(hetTokens).toEqual(['het Albino']);
+    expect(hetTokens).toEqual(['Het Albino']);
   });
 
   it('labels incomplete dominant super forms', () => {

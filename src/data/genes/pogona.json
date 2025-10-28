@@ -1,11 +1,1 @@
-[
-  {"key":"hypo","name":"Hypo","type":"recessive","species":["pogona"]},
-  {"key":"trans","name":"Translucent","type":"recessive","species":["pogona"]},
-  {"key":"zero","name":"Zero","type":"recessive","species":["pogona"]},
-  {"key":"witblits","name":"Witblits","type":"recessive","species":["pogona"]},
-  {"key":"gstripe","name":"Genetic Stripe","type":"recessive","species":["pogona"]},
-  {"key":"leatherback","name":"Leatherback","type":"incomplete_dominant","species":["pogona"],"notes":"Homozygote Anzeige als 'Silkback'"},
-  {"key":"dunner","name":"Dunner","type":"dominant","species":["pogona"]},
-  {"key":"color_red","name":"Red Line","type":"polygenic","species":["pogona"],"visible":true},
-  {"key":"color_yellow","name":"Yellow Line","type":"polygenic","species":["pogona"],"visible":true}
-]
+[{"key":"hypo","name":"Hypo","type":"recessive","species":["pogona"]},{"key":"trans","name":"Translucent","type":"recessive","species":["pogona"]},{"key":"zero","name":"Zero","type":"recessive","species":["pogona"]},{"key":"witblits","name":"Witblits","type":"recessive","species":["pogona"]},{"key":"gstripe","name":"Genetic Stripe","type":"recessive","species":["pogona"]},{"key":"leatherback","name":"Leatherback","type":"incomplete_dominant","species":["pogona"],"notes":"Homozygote Anzeige als 'Silkback'","superLabel":"Silkback"},{"key":"dunner","name":"Dunner","type":"dominant","species":["pogona"]},{"key":"color_red","name":"Red Line","type":"polygenic","species":["pogona"],"visible":true},{"key":"color_yellow","name":"Yellow Line","type":"polygenic","species":["pogona"],"visible":true}]

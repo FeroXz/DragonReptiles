@@ -1,114 +1,88 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { ParentPicker } from '@components/genetics/ParentPicker.js';
-import type { ParentGenotype } from '@lib/genetics/types.js';
-import hognoseGenes from '@data/genes/hognose.json';
-import pogonaGenes from '@data/genes/pogona.json';
-import translationsDe from '@i18n/genetics.de.json';
+import { GenotypeSearch } from '@components/genetics/GenotypeSearch.js';
+import type { ParentGenotype, SpeciesKey } from '@lib/genetics/types.js';
 
-const translation = translationsDe as typeof translationsDe;
-
-const baseMessages = {
-  normal: translation.normal,
-  het: translation.het,
-  expressed: translation.expressed,
-  super: translation.super,
-  present: translation.present,
-  posHet: translation.posHet,
-  polygenicHint: translation.polygenicHint,
-  warningIncompatible: translation.warningIncompatible,
-  sectionTitles: translation.sectionTitles
-};
-
-type SpeciesKey = 'hognose' | 'pogona';
-
-function getGenes(species: SpeciesKey) {
-  return (species === 'hognose' ? hognoseGenes : pogonaGenes) as typeof hognoseGenes;
-}
-
-function renderParentPicker(species: SpeciesKey = 'hognose') {
-  const updates: ParentGenotype[] = [];
-  const user = userEvent.setup();
-
-  function Wrapper() {
+describe('GenotypeSearch', () => {
+  function Wrapper({ species = 'hognose' as SpeciesKey }) {
     const [value, setValue] = useState<ParentGenotype>({});
-    return (
-      <ParentPicker
-        label="Test"
-        genes={getGenes(species)}
-        value={value}
-        onChange={(next) => {
-          updates.push(next);
-          setValue(next);
-        }}
-        messages={baseMessages}
-      />
-    );
+    return <GenotypeSearch species={species} value={value} onChange={setValue} />;
   }
 
-  const view = render(<Wrapper />);
-  return { user, updates, ...view };
-}
-
-describe('ParentPicker', () => {
-  it('toggles recessive states and pos het slider', async () => {
-    const { user, updates } = renderParentPicker();
-    const albinoCard = await screen.findByText('Albino');
-    const card = albinoCard.closest('.gene-card');
-    expect(card).not.toBeNull();
-    const hetButton = within(card as HTMLElement).getByRole('button', { name: translation.het });
-    const expressedButton = within(card as HTMLElement).getByRole('button', { name: translation.expressed });
-
-    await act(async () => {
-      await user.click(hetButton);
-    });
-    expect(updates[updates.length - 1].albino).toBe('het');
-
-    const posHetToggle = within(card as HTMLElement).getByRole('checkbox');
-    await act(async () => {
-      await user.click(posHetToggle);
-    });
-    const latest = updates[updates.length - 1].albino as { posHet: number };
-    expect(typeof latest.posHet).toBe('number');
-
-    await act(async () => {
-      await user.click(expressedButton);
-    });
-    expect(updates[updates.length - 1].albino).toBe('expressed');
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  it('promotes incomplete dominant genes to super', async () => {
-    const { user, updates } = renderParentPicker();
-    const anacondaCard = await screen.findByText('Anaconda');
-    const card = anacondaCard.closest('.gene-card');
-    expect(card).not.toBeNull();
+  it('filters options by query and toggles het/expressed states', async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<Wrapper />);
 
-    const expressedButton = within(card as HTMLElement).getByRole('button', { name: translation.expressed });
-    const superButton = within(card as HTMLElement).getByRole('button', { name: translation.super });
+    const input = screen.getByRole('textbox');
+    await act(async () => {
+      await user.type(input, 'axan');
+    });
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+
+    const hetOption = await screen.findByRole('button', { name: 'Het Axanthic' });
+    await act(async () => {
+      await user.click(hetOption);
+    });
+
+    expect(screen.getByText('Het Axanthic')).toBeInTheDocument();
 
     await act(async () => {
-      await user.click(expressedButton);
+      await user.type(input, 'axan');
     });
-    expect(updates[updates.length - 1].anaconda).toBe('expressed');
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
 
+    const expressedOption = await screen.findByRole('button', { name: 'Axanthic' });
     await act(async () => {
-      await user.click(superButton);
+      await user.click(expressedOption);
     });
-    expect(updates[updates.length - 1].anaconda).toBe('super');
+
+    expect(screen.queryByText('Het Axanthic')).not.toBeInTheDocument();
+    expect(screen.getByText('Axanthic')).toBeInTheDocument();
   });
 
-  it('sets dominant genes to expressed', async () => {
-    const { user, updates } = renderParentPicker('pogona');
-    const dunnerCard = await screen.findByText('Dunner');
-    const card = dunnerCard.closest('.gene-card');
-    expect(card).not.toBeNull();
+  it('promotes incomplete dominant genes to super labels', async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<Wrapper />);
 
-    const presentButton = within(card as HTMLElement).getByRole('button', { name: translation.present });
+    const input = screen.getByRole('textbox');
+    await act(async () => {
+      await user.type(input, 'anac');
+    });
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+
+    const expressedOption = await screen.findByRole('button', { name: 'Anaconda' });
+    await act(async () => {
+      await user.click(expressedOption);
+    });
+
+    expect(screen.getByText('Anaconda')).toBeInTheDocument();
 
     await act(async () => {
-      await user.click(presentButton);
+      await user.type(input, 'super');
     });
-    expect(updates[updates.length - 1].dunner).toBe('expressed');
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+
+    const superOption = await screen.findByRole('button', { name: 'Superconda' });
+    await act(async () => {
+      await user.click(superOption);
+    });
+
+    expect(screen.queryByText('Anaconda')).not.toBeInTheDocument();
+    expect(screen.getByText('Superconda')).toBeInTheDocument();
   });
 });
