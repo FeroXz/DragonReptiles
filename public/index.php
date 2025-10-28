@@ -1,5 +1,17 @@
 <?php
 session_start();
+
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+$routeParam = $_GET['route'] ?? '';
+$isAdminRequest = str_starts_with($uri, '/admin') || (is_string($routeParam) && str_starts_with($routeParam, 'admin/'));
+if (!$isAdminRequest && file_exists(__DIR__ . '/../storage/maintenance.flag')) {
+    http_response_code(503);
+    header('Retry-After: 120');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>Wartungsmodus</title></head><body><main style="max-width:42rem;margin:5rem auto;padding:0 1.5rem;font-family:system-ui,\"Segoe UI\",Roboto,sans-serif;text-align:center;color:#0f172a;"><h1 style="font-size:2.25rem;margin-bottom:1rem;">Wir aktualisieren gerade</h1><p style="font-size:1.05rem;line-height:1.6;color:#475569;">Das Dragon Reptiles CMS wird im Moment gewartet. Bitte versuche es in ein paar Minuten erneut. Administrator*innen können sich weiterhin über <code>/admin</code> anmelden.</p></main></body></html>';
+    exit;
+}
+
 require_once __DIR__ . '/../app/bootstrap.php';
 
 $route = $_GET['route'] ?? 'home';
@@ -644,7 +656,13 @@ switch ($route) {
         ));
         $flashSuccess = flash('success');
         $flashError = flash('error');
-        view('admin/update', compact('settings', 'currentVersion', 'availablePackages', 'flashSuccess', 'flashError'));
+        $deployConfigPath = __DIR__ . '/../config/deploy.php';
+        $deployConfig = is_file($deployConfigPath) ? include $deployConfigPath : [];
+        if (!is_array($deployConfig)) {
+            $deployConfig = [];
+        }
+        $defaultDeployDryRun = (bool) ($deployConfig['default_dry_run'] ?? false);
+        view('admin/update', compact('settings', 'currentVersion', 'availablePackages', 'flashSuccess', 'flashError', 'defaultDeployDryRun'));
         break;
 
     case 'admin/settings':
