@@ -51,7 +51,7 @@ if [[ -z "${GITHUB_OWNER}" || -z "${GITHUB_REPO}" ]]; then
   error_exit "GITHUB_OWNER und GITHUB_REPO müssen gesetzt sein."
 fi
 
-REQUIRED_CMDS=(git curl jq npm)
+REQUIRED_CMDS=(git curl node npm)
 if [[ "${DRY_RUN_MODE}" -eq 0 ]]; then
   REQUIRED_CMDS+=(lftp)
 fi
@@ -120,8 +120,26 @@ else
     AUTH_HEADER=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
   fi
   response="$(curl -fsSL -H "Accept: application/vnd.github+json" "${AUTH_HEADER[@]}" "${API_URL}")" || error_exit "GitHub API Anfrage fehlgeschlagen."
-  pr_number="$(printf '%s' "${response}" | jq '.[0].number // empty')"
-  pr_title="$(printf '%s' "${response}" | jq -r '.[0].title // empty')"
+  mapfile -t pr_data < <(printf '%s' "${response}" | node -e '
+const chunks = [];
+process.stdin.on("data", (chunk) => chunks.push(chunk));
+process.stdin.on("end", () => {
+  const raw = chunks.join("");
+  let parsed;
+  try {
+    parsed = JSON.parse(raw || "[]");
+  } catch (err) {
+    console.error(`Ungültige JSON-Antwort der GitHub API: ${err.message}`);
+    process.exit(1);
+  }
+  const pr = Array.isArray(parsed) ? (parsed[0] || {}) : {};
+  const number = pr && typeof pr.number !== "undefined" ? String(pr.number) : "";
+  const title = pr && typeof pr.title !== "undefined" ? String(pr.title) : "";
+  process.stdout.write(`${number}\n${title}`);
+});
+')
+  pr_number="${pr_data[0]:-}"
+  pr_title="${pr_data[1]:-}"
   if [[ -z "${pr_number}" ]]; then
     error_exit "Keine offenen Pull Requests gefunden."
   fi
