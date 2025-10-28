@@ -133,9 +133,9 @@ function ensure_sample_content(PDO $pdo): void
             'Vorinstallierter Beispielcontent zeigt Tiere, Adoption und Galerie mit funktionierenden Bildern.',
         ],
         APP_VERSION => [
-            'Startseiten-Studio mit konfigurierbaren Standardsektionen inklusive Mengensteuerung pro Bereich.',
-            'Eigene Nuxt UI Custom-Sektionen lassen sich erstellen, bearbeiten und im Layout aktivieren.',
-            'Genetikbibliothek ergänzt Swiss-Chocolate-Linie samt Alias und Referenzkarte.',
+            'MorphMarket-inspirierter Genetik-Rechner mit Dark-Theme, Segment-Chips und pos. het-Schiebereglern.',
+            'Aktualisierte Gen-Daten für Heterodon nasicus und Pogona vitticeps inklusive Alias-Normalisierung.',
+            'Punnett-Engine mit korrekten Gen-Typen, Superformen-Labels und Wahrscheinlichkeitsausgabe pro Kombination.',
         ],
     ];
     foreach ($releaseHighlights as $version => $highlights) {
