@@ -1,0 +1,20 @@
+{
+  "required": [
+    "01_menu_items.sql",
+    "02_pages.sql",
+    "03_news.sql",
+    "04_wiki.sql",
+    "05_species.sql",
+    "06_morphs.sql",
+    "07_animals.sql"
+  ],
+  "order": [
+    "01_menu_items.sql",
+    "02_pages.sql",
+    "04_wiki.sql",
+    "03_news.sql",
+    "05_species.sql",
+    "06_morphs.sql",
+    "07_animals.sql"
+  ]
+}
