@@ -19,6 +19,6 @@
       "@i18n/*": ["src/i18n/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "exclude": ["node_modules", "public"]
 }

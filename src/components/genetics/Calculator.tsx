@@ -4,7 +4,7 @@ import { predictPairing } from '@lib/genetics/engine.js';
 import { GeneDef, ParentGenotype, PairingResult } from '@lib/genetics/types.js';
 import hognoseGenes from '@data/genes/hognose.json';
 import pogonaGenes from '@data/genes/pogona.json';
-import { ParentPicker, ParentPickerTranslations } from './ParentPicker.js';
+import { GenotypeSearch } from './GenotypeSearch.js';
 import { ResultFilters, ResultList, ResultListTranslations } from './ResultList.js';
 import translationsDe from '@i18n/genetics.de.json';
 
@@ -64,19 +64,6 @@ const SPECIES: SpeciesOption[] = [
   }
 ];
 
-const parentTranslations: ParentPickerTranslations = {
-  normal: messages.normal,
-  het: messages.het,
-  expressed: messages.expressed,
-  super: messages.super,
-  present: messages.present,
-  posHet: messages.posHet,
-  posHetHelper: messages.posHetHelper,
-  warningIncompatible: messages.warningIncompatible,
-  sectionTitles: messages.sectionTitles,
-  polygenicHint: messages.polygenicHint
-};
-
 const resultTranslations: ResultListTranslations = {
   heading: messages.headingResults,
   filterSuper: messages.filterSuper,
@@ -120,14 +107,6 @@ export function Calculator() {
     setRemainderProbability(0);
     setCalculated(false);
   }, [activeSpeciesKey]);
-
-  const handleParentUpdate = (parent: 'A' | 'B') => (genotype: ParentGenotype) => {
-    if (parent === 'A') {
-      setParentA(genotype);
-    } else {
-      setParentB(genotype);
-    }
-  };
 
   const handleCalculate = () => {
     if (!activeSpecies.genes.length) {
@@ -186,20 +165,18 @@ export function Calculator() {
         <p className="genetics-calculator__empty">{generalText.noGenes}</p>
       ) : (
         <div className="genetics-calculator__grid">
-          <ParentPicker
-            title={generalText.parentA}
-            genes={activeSpecies.genes}
-            value={parentA}
-            onChange={handleParentUpdate('A')}
-            translations={parentTranslations}
-          />
-          <ParentPicker
-            title={generalText.parentB}
-            genes={activeSpecies.genes}
-            value={parentB}
-            onChange={handleParentUpdate('B')}
-            translations={parentTranslations}
-          />
+          <div className="genotype-panel">
+            <header>
+              <h2>{generalText.parentA}</h2>
+            </header>
+            <GenotypeSearch species={activeSpecies.key} value={parentA} onChange={setParentA} />
+          </div>
+          <div className="genotype-panel">
+            <header>
+              <h2>{generalText.parentB}</h2>
+            </header>
+            <GenotypeSearch species={activeSpecies.key} value={parentB} onChange={setParentB} />
+          </div>
         </div>
       )}
 

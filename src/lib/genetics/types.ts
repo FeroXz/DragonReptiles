@@ -10,6 +10,8 @@ export interface GeneDef {
   notes?: string;
   incompatibleWith?: string[];
   visible?: boolean;
+  superLabel?: string;
+  searchAliases?: string[];
 }
 
 export interface ParentGenotype {
