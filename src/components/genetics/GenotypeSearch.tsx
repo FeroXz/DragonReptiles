@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
+import clsx from 'clsx';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
 import { buildOptions, Option, OptionGroup } from '@lib/genetics/options.js';
 import { getGenesForSpecies } from '@lib/genetics/species.js';
 import { getSearchPresets, SearchPreset } from '@lib/genetics/presets.js';
@@ -103,6 +104,7 @@ function hasActiveState(entry: ParentGenotype[string]): boolean {
 export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputId = useId();
   const genes = useMemo(() => getGenesForSpecies(species), [species]);
   const geneOptions = useMemo(() => buildOptions(genes), [genes]);
   const presetList = useMemo(() => presets ?? getSearchPresets(species), [presets, species]);
@@ -322,7 +324,12 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     }
     const next: ParentGenotype = { ...value };
     const state = optionStateToZygosity(option, gene);
-    next[option.geneKey] = state;
+    const current = normalizeState(next[option.geneKey]);
+    if (current === state) {
+      delete next[option.geneKey];
+    } else {
+      next[option.geneKey] = state;
+    }
     const conflict = checkConflicts(next);
     if (conflict) {
       setError(conflict);
@@ -330,7 +337,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     }
     setError(null);
     setQuery('');
-    setOpen(false);
+    setOpen(true);
     onChange(next);
     window.requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -383,50 +390,96 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
   }, [flattened, highlightIndex]);
 
   return (
-    <div className="genotype-search" ref={containerRef}>
-      <div className="mm-chips">
+    <div className="genotype-search nui-surface" ref={containerRef}>
+      <div className="nui-chip-tray" aria-live="polite">
+        {selectedChips.length === 0 && (
+          <div className="nui-chip-placeholder">Keine Traits ausgewählt</div>
+        )}
         {selectedChips.map((chip) => (
           <button
             key={chip.gene.key}
             type="button"
-            className="mm-chip"
+            className="nui-chip"
+            aria-label={`Trait ${chip.option.label} entfernen`}
             onClick={() => handleRemove(chip.gene.key)}
           >
-            {chip.option.label}
-            <span className="chip-remove" aria-hidden="true">
-              ×
+            <span className="nui-chip__label" aria-hidden="true">
+              {chip.option.label}
             </span>
+            <span className="nui-chip__remove" aria-hidden="true">×</span>
+            <span className="sr-only">Trait {chip.option.label} entfernen</span>
           </button>
         ))}
       </div>
-      <div className="search-field">
-        <input
-          ref={inputRef}
-          className="mm-input"
-          type="text"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            if (!open) {
-              setOpen(true);
-            }
-            if (error) {
-              setError(null);
-            }
-          }}
-          onFocus={handleInputFocus}
-          onKeyDown={handleKeyDown}
-          placeholder="Suche nach Traits"
-          aria-expanded={open}
-        />
+      <div className="nui-field">
+        <label className="nui-field__label" htmlFor={searchInputId}>
+          Traits durchsuchen
+        </label>
+        <div className={query ? 'nui-input-wrap has-value' : 'nui-input-wrap'}>
+          <span className="nui-input-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" focusable="false" role="presentation">
+              <path
+                d="M8.5 2a6.5 6.5 0 0 1 5.195 10.406l3.449 3.45a1 1 0 0 1-1.414 1.414l-3.45-3.449A6.5 6.5 0 1 1 8.5 2Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <input
+            id={searchInputId}
+            ref={inputRef}
+            className="nui-input"
+            type="text"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              if (!open) {
+                setOpen(true);
+              }
+              if (error) {
+                setError(null);
+              }
+            }}
+            onFocus={handleInputFocus}
+            onKeyDown={handleKeyDown}
+            placeholder="Suche nach Traits"
+            aria-expanded={open}
+            aria-controls={`${searchInputId}-dropdown`}
+            role="combobox"
+            aria-autocomplete="list"
+          />
+          {query && (
+            <button
+              type="button"
+              className="nui-input-clear"
+              onClick={() => {
+                setQuery('');
+                inputRef.current?.focus();
+              }}
+              aria-label="Suche leeren"
+            >
+              <svg viewBox="0 0 20 20" focusable="false" role="presentation">
+                <path
+                  d="m5.707 5.707 9 9a1 1 0 0 1-1.414 1.414l-9-9A1 1 0 0 1 5.707 5.707Zm9 0a1 1 0 0 1 0 1.414l-9 9A1 1 0 0 1 4.293 14.293l9-9a1 1 0 0 1 1.414 0Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+        <p className="nui-field__hint">Mehrfachauswahl möglich – ausgewählte Traits bleiben markiert.</p>
       </div>
-      {error && <div className="search-error" role="alert">{error}</div>}
+      {error && <div className="nui-alert" role="alert">{error}</div>}
       {open && (
-        <div className="options-dropdown" role="listbox">
-          {grouped.length === 0 && <div className="dropdown-empty">Keine Treffer</div>}
+        <div
+          className="nui-dropdown"
+          id={`${searchInputId}-dropdown`}
+          role="listbox"
+          aria-multiselectable="true"
+        >
+          {grouped.length === 0 && <div className="nui-dropdown__empty">Keine Treffer</div>}
           {grouped.map((entry) => (
-            <div key={entry.group} className="options-group">
-              <div className="options-group__label">{GROUP_LABELS[entry.group]}</div>
+            <div key={entry.group} className="nui-dropdown__group">
+              <div className="nui-dropdown__group-label">{GROUP_LABELS[entry.group]}</div>
               <ul>
                 {entry.options.map((option) => {
                   const index = indexMap.get(option) ?? 0;
@@ -435,16 +488,60 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
                     ? `${option.option.geneKey}-${option.option.state}`
                     : `preset-${option.label}`;
                   const label = option.kind === 'gene' ? option.option.label : option.label;
+                  const accessibleLabel = label;
+                  const gene = option.kind === 'gene' ? geneMap.get(option.option.geneKey) : null;
+                  const expectedState = option.kind === 'gene' && gene
+                    ? optionStateToZygosity(option.option, gene)
+                    : null;
+                  const currentState = option.kind === 'gene'
+                    ? normalizeState(value[option.option.geneKey])
+                    : null;
+                  const isSelected = option.kind === 'gene' && expectedState === currentState;
+                  const metaLabel = option.kind === 'gene' && gene
+                    ? gene.type === 'dominant'
+                      ? 'Dominant'
+                      : gene.type === 'recessive'
+                        ? 'Rezessiv'
+                        : gene.type === 'incomplete_dominant'
+                          ? 'Inkomplett dominant'
+                          : gene.type === 'polygenic'
+                            ? 'Polygen'
+                            : null
+                    : option.kind === 'preset'
+                      ? 'Kombination'
+                      : null;
+                  const ariaSelected = option.kind === 'gene' ? isSelected : isActive;
                   return (
                     <li key={key}>
                       <button
                         type="button"
-                        className={isActive ? 'dropdown-option is-active' : 'dropdown-option'}
+                        className={clsx('nui-option', {
+                          'is-active': isActive,
+                          'is-selected': isSelected
+                        })}
+                        aria-label={accessibleLabel}
                         onMouseEnter={() => setHighlightIndex(index)}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => handleSelect(option)}
+                        role="option"
+                        aria-selected={ariaSelected}
                       >
-                        {label}
+                        <span className="nui-option__label">{label}</span>
+                        {metaLabel && (
+                          <span className="nui-option__meta" aria-hidden="true">
+                            {metaLabel}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <span className="nui-option__check" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" focusable="false" role="presentation">
+                              <path
+                                d="M16.707 6.293a1 1 0 0 1 0 1.414l-6.364 6.364a1 1 0 0 1-1.414 0l-3.536-3.536a1 1 0 0 1 1.414-1.414L9.64 11.64l5.657-5.647a1 1 0 0 1 1.414 0Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </span>
+                        )}
                       </button>
                     </li>
                   );

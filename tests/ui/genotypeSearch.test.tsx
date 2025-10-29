@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { GenotypeSearch } from '@components/genetics/GenotypeSearch.js';
@@ -19,7 +19,7 @@ describe('GenotypeSearch', () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<Wrapper />);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox', { name: 'Traits durchsuchen' });
     await act(async () => {
       await user.type(input, 'axan');
     });
@@ -27,12 +27,14 @@ describe('GenotypeSearch', () => {
       jest.advanceTimersByTime(200);
     });
 
-    const hetOption = await screen.findByRole('button', { name: 'Het Axanthic' });
+
+    const listbox = await screen.findByRole('listbox');
+    const hetOption = await within(listbox).findByRole('option', { name: 'Het Axanthic' });
     await act(async () => {
       await user.click(hetOption);
     });
 
-    expect(screen.getByText('Het Axanthic')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trait Het Axanthic entfernen' })).toBeInTheDocument();
 
     await act(async () => {
       await user.type(input, 'axan');
@@ -41,13 +43,15 @@ describe('GenotypeSearch', () => {
       jest.advanceTimersByTime(200);
     });
 
-    const expressedOption = await screen.findByRole('button', { name: 'Axanthic' });
+
+    const listboxAfterHet = await screen.findByRole('listbox');
+    const expressedOption = await within(listboxAfterHet).findByRole('option', { name: 'Axanthic' });
     await act(async () => {
       await user.click(expressedOption);
     });
 
-    expect(screen.queryByText('Het Axanthic')).not.toBeInTheDocument();
-    expect(screen.getByText('Axanthic')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Trait Het Axanthic entfernen' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trait Axanthic entfernen' })).toBeInTheDocument();
   });
 
   it('promotes incomplete dominant genes to super labels', async () => {
@@ -55,7 +59,7 @@ describe('GenotypeSearch', () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<Wrapper />);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox', { name: 'Traits durchsuchen' });
     await act(async () => {
       await user.type(input, 'anac');
     });
@@ -63,12 +67,13 @@ describe('GenotypeSearch', () => {
       jest.advanceTimersByTime(200);
     });
 
-    const expressedOption = await screen.findByRole('button', { name: 'Anaconda' });
+    const listbox = await screen.findByRole('listbox');
+    const expressedOption = await within(listbox).findByRole('option', { name: 'Anaconda' });
     await act(async () => {
       await user.click(expressedOption);
     });
 
-    expect(screen.getByText('Anaconda')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trait Anaconda entfernen' })).toBeInTheDocument();
 
     await act(async () => {
       await user.type(input, 'super');
@@ -77,12 +82,13 @@ describe('GenotypeSearch', () => {
       jest.advanceTimersByTime(200);
     });
 
-    const superOption = await screen.findByRole('button', { name: 'Superconda' });
+    const listboxAfterExpressed = await screen.findByRole('listbox');
+    const superOption = await within(listboxAfterExpressed).findByRole('option', { name: 'Superconda' });
     await act(async () => {
       await user.click(superOption);
     });
 
-    expect(screen.queryByText('Anaconda')).not.toBeInTheDocument();
-    expect(screen.getByText('Superconda')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Trait Anaconda entfernen' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trait Superconda entfernen' })).toBeInTheDocument();
   });
 });
