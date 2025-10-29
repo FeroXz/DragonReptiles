@@ -1,1 +1,55 @@
-[{"key":"albino","name":"Albino","type":"recessive","species":["hognose"],"aliases":[]},{"key":"axanthic","name":"Axanthic","type":"recessive","species":["hognose"]},{"key":"toffee","name":"Toffee Belly","type":"recessive","species":["hognose"],"aliases":["toffeebelly"],"searchAliases":["Toffee Glow","Toffeconda"]},{"key":"lavender","name":"Lavender","type":"recessive","species":["hognose"]},{"key":"hypo","name":"Hypo","type":"recessive","species":["hognose"]},{"key":"arctic","name":"Arctic","type":"incomplete_dominant","species":["hognose"],"aliases":[]},{"key":"anaconda","name":"Anaconda","type":"incomplete_dominant","species":["hognose"],"aliases":["conda"],"notes":"Homozygote Anzeige als 'Superconda'","superLabel":"Superconda"}]
+[
+  { "key": "albino", "name": "Albino", "type": "recessive", "species": ["hognose"] },
+  { "key": "axanthic", "name": "Axanthic", "type": "recessive", "species": ["hognose"] },
+  { "key": "caramel", "name": "Caramel", "type": "recessive", "species": ["hognose"] },
+  {
+    "key": "hypo",
+    "name": "Hypo",
+    "type": "recessive",
+    "species": ["hognose"],
+    "aliases": ["Evans Hypo"]
+  },
+  { "key": "lavender", "name": "Lavender", "type": "recessive", "species": ["hognose"] },
+  {
+    "key": "pastel",
+    "name": "Pastel",
+    "type": "incomplete_dominant",
+    "species": ["hognose"],
+    "superLabel": "Super Pastel"
+  },
+  {
+    "key": "pistacchio",
+    "name": "Pistacchio",
+    "type": "incomplete_dominant",
+    "species": ["hognose"],
+    "superLabel": "Super Pistacchio"
+  },
+  { "key": "sable", "name": "Sable", "type": "recessive", "species": ["hognose"] },
+  { "key": "savannah", "name": "Savannah", "type": "recessive", "species": ["hognose"] },
+  { "key": "skullface", "name": "Skullface", "type": "dominant", "species": ["hognose"] },
+  { "key": "toffee", "name": "Toffee", "type": "recessive", "species": ["hognose"] },
+  {
+    "key": "toffee_belly",
+    "name": "Toffee Belly",
+    "type": "incomplete_dominant",
+    "species": ["hognose"],
+    "aliases": ["Toffeebelly"],
+    "searchAliases": ["Toffee Glow", "Toffeconda"]
+  },
+  {
+    "key": "swiss_chocolate",
+    "name": "Swiss Chocolate",
+    "type": "recessive",
+    "species": ["hognose"]
+  },
+  { "key": "arctic", "name": "Arctic", "type": "incomplete_dominant", "species": ["hognose"] },
+  {
+    "key": "anaconda",
+    "name": "Anaconda",
+    "type": "incomplete_dominant",
+    "species": ["hognose"],
+    "aliases": ["Conda"],
+    "notes": "Homozygote Anzeige als 'Superconda'",
+    "superLabel": "Superconda"
+  }
+]

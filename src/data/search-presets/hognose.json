@@ -1,0 +1,93 @@
+[
+  {
+    "label": "Albino het Swiss Chocolate",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "swiss_chocolate", "state": "het" }
+    ]
+  },
+  {
+    "label": "Albino het Toffee",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "toffee", "state": "het" }
+    ]
+  },
+  {
+    "label": "Albino het Caramel",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "caramel", "state": "het" }
+    ]
+  },
+  {
+    "label": "Albino het Hypo",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "hypo", "state": "het" }
+    ]
+  },
+  {
+    "label": "Pink Pastel Albino",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "pastel", "state": "expressed" }
+    ]
+  },
+  {
+    "label": "Pink Pastel Albino Anaconda",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "pastel", "state": "expressed" },
+      { "key": "anaconda", "state": "expressed" }
+    ]
+  },
+  {
+    "label": "Pink Pastel Albino Superconda",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "pastel", "state": "expressed" },
+      { "key": "anaconda", "state": "super" }
+    ]
+  },
+  {
+    "label": "Snow (Albino Axanthic)",
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "axanthic", "state": "expressed" }
+    ]
+  },
+  {
+    "label": "Yeti (Snow Anaconda)",
+    "keywords": ["Albino", "Snow"],
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "axanthic", "state": "expressed" },
+      { "key": "anaconda", "state": "expressed" }
+    ]
+  },
+  {
+    "label": "Super Yeti",
+    "keywords": ["Albino", "Snow", "Superconda"],
+    "genes": [
+      { "key": "albino", "state": "expressed" },
+      { "key": "axanthic", "state": "expressed" },
+      { "key": "anaconda", "state": "super" }
+    ]
+  },
+  {
+    "label": "Toxic",
+    "genes": [
+      { "key": "axanthic", "state": "expressed" },
+      { "key": "toffee", "state": "expressed" }
+    ]
+  },
+  {
+    "label": "Toxic het Swiss Chocolate",
+    "genes": [
+      { "key": "axanthic", "state": "expressed" },
+      { "key": "toffee", "state": "expressed" },
+      { "key": "swiss_chocolate", "state": "het" }
+    ]
+  }
+]
