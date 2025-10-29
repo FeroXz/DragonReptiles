@@ -1,0 +1,373 @@
+/* src/styles/genetics.css */
+.genetics-calculator {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--mm-text, #f1f5f9);
+}
+.genetics-calculator__species {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+.genetics-calculator__species h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.genetics-calculator__species p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.95rem;
+}
+.genetics-calculator__species-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.chip-button {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(94, 234, 212, 0.25);
+  background: rgba(15, 23, 42, 0.65);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+.chip-button:hover,
+.chip-button:focus-visible {
+  border-color: rgba(94, 234, 212, 0.6);
+  transform: translateY(-1px);
+}
+.chip-button.is-active {
+  border-color: rgba(94, 234, 212, 0.8);
+  background: rgba(45, 212, 191, 0.2);
+}
+.chip-button__label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.chip-button__subtitle {
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.75);
+}
+.genetics-calculator__inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.search-panel {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+.panel-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(226, 232, 240, 0.9);
+}
+.genotype-search {
+  position: relative;
+  display: grid;
+  gap: 12px;
+}
+.mm-input {
+  height: 44px;
+  border-radius: 10px;
+  padding: 0 14px;
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.7);
+  color: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.mm-input:focus {
+  outline: none;
+  border-color: rgba(94, 234, 212, 0.7);
+  box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.25);
+}
+.mm-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mm-chip {
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-weight: 600;
+  background: rgba(94, 234, 212, 0.18);
+  color: rgba(236, 252, 255, 0.95);
+  border: 1px solid rgba(94, 234, 212, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.mm-chip:hover,
+.mm-chip:focus-visible {
+  border-color: rgba(94, 234, 212, 0.75);
+}
+.chip-remove {
+  font-weight: 700;
+}
+.search-field {
+  position: relative;
+}
+.options-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.45);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 20;
+  padding: 10px 0;
+}
+.dropdown-empty {
+  padding: 12px 16px;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.9rem;
+}
+.options-group {
+  padding: 8px 0;
+}
+.options-group__label {
+  padding: 0 16px 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.85);
+}
+.options-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dropdown-option {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 16px;
+  color: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.dropdown-option:hover,
+.dropdown-option.is-active {
+  background: rgba(94, 234, 212, 0.18);
+}
+.genetics-calculator__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.action-primary,
+.action-secondary {
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+}
+.action-secondary {
+  background: rgba(51, 65, 85, 0.6);
+  color: rgba(226, 232, 240, 0.9);
+}
+.action-secondary:hover,
+.action-secondary:focus-visible {
+  background: rgba(71, 85, 105, 0.8);
+}
+.action-primary {
+  background: rgba(124, 58, 237, 0.8);
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.35);
+}
+.action-primary:hover,
+.action-primary:focus-visible {
+  background: rgba(124, 58, 237, 0.95);
+}
+.results-table-wrapper {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 18px;
+  overflow-x: auto;
+}
+.tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
+.tbl th {
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.85);
+  padding: 0 12px;
+}
+.tbl td {
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 14px;
+}
+.tbl tr {
+  transition: transform 0.2s ease;
+}
+.tbl tr:hover {
+  transform: translateY(-2px);
+}
+.prob {
+  min-width: 120px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(226, 232, 240, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.prob-value {
+  font-weight: 600;
+}
+.prob-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.18);
+  overflow: hidden;
+  display: inline-flex;
+}
+.prob-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(45, 212, 191, 0.9),
+      rgba(124, 58, 237, 0.85));
+  transition: width 0.25s ease;
+}
+.badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mm-badge {
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge-id {
+  background: #6c4ccf;
+  color: #fff;
+}
+.badge-id-super {
+  background: #4b2fb0;
+  color: #fff;
+}
+.badge-rec {
+  background: #b23a4a;
+  color: #fff;
+}
+.badge-dom {
+  background: #2a78c2;
+  color: #fff;
+}
+.badge-het {
+  background: #666;
+  color: #fff;
+}
+.badge-het-pct {
+  background: #e2a600;
+  color: #000;
+}
+.badge-poly {
+  background: #3d3d3d;
+  color: #fff;
+}
+.morph-name {
+  color: rgba(226, 232, 240, 0.92);
+  font-weight: 600;
+}
+.results-empty {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  padding: 24px;
+  color: rgba(148, 163, 184, 0.9);
+  text-align: center;
+}
+.search-error {
+  font-size: 0.85rem;
+  color: #f97316;
+  background: rgba(255, 159, 64, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+@media (max-width: 640px) {
+  .genetics-calculator__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .options-dropdown {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    max-height: 50vh;
+  }
+  .tbl {
+    border-spacing: 0 16px;
+  }
+  .tbl thead {
+    display: none;
+  }
+  .tbl tr {
+    display: grid;
+    gap: 8px;
+  }
+  .tbl td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tbl td.prob {
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .tbl td:nth-child(2) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tbl td:nth-child(3) {
+    font-size: 1rem;
+  }
+}
+/*# sourceMappingURL=genetics.css.map */

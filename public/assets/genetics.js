@@ -7886,128 +7886,1127 @@
   }
   var clsx_default = clsx;
 
-  // src/lib/genetics/format.ts
-  var SUPER_NAME_OVERRIDES = {
-    anaconda: "Superconda",
-    leatherback: "Silkback"
+  // src/components/genetics/GenotypeSearch.tsx
+  var import_react = __toESM(require_react(), 1);
+
+  // src/lib/genetics/options.ts
+  var GROUP_MAP = {
+    recessive: "recessive",
+    incomplete_dominant: "id",
+    dominant: "dominant",
+    polygenic: "poly"
   };
-  function normalizeToken(token) {
-    return token.trim();
+  function buildKeywords(gene, base, extras = []) {
+    var _a, _b;
+    const names = [gene.name, ...(_a = gene.aliases) != null ? _a : [], ...(_b = gene.searchAliases) != null ? _b : []];
+    const tokens = [base, ...names, ...extras];
+    return Array.from(
+      new Set(
+        tokens.flatMap((token) => token.split(/[\s/-]+/)).map((token) => token.trim().toLowerCase()).filter(Boolean)
+      )
+    );
   }
-  function getSuperName(gene) {
-    var _a;
-    return (_a = SUPER_NAME_OVERRIDES[gene.key]) != null ? _a : `Super ${gene.name}`;
+  function buildOptions(genes) {
+    const options = [];
+    genes.forEach((gene) => {
+      var _a;
+      const group = GROUP_MAP[gene.type];
+      if (!group) {
+        return;
+      }
+      switch (gene.type) {
+        case "recessive": {
+          const hetLabel = `Het ${gene.name}`;
+          options.push({
+            geneKey: gene.key,
+            state: "het",
+            label: hetLabel,
+            keywords: buildKeywords(gene, hetLabel, ["het"]),
+            group
+          });
+          const expressedLabel = gene.name;
+          options.push({
+            geneKey: gene.key,
+            state: "expressed",
+            label: expressedLabel,
+            keywords: buildKeywords(gene, expressedLabel),
+            group
+          });
+          break;
+        }
+        case "incomplete_dominant": {
+          const expressedLabel = gene.name;
+          options.push({
+            geneKey: gene.key,
+            state: "expressed",
+            label: expressedLabel,
+            keywords: buildKeywords(gene, expressedLabel),
+            group
+          });
+          const superLabel = (_a = gene.superLabel) != null ? _a : `Super ${gene.name}`;
+          options.push({
+            geneKey: gene.key,
+            state: "super",
+            label: superLabel,
+            keywords: buildKeywords(gene, superLabel, ["super"]),
+            group
+          });
+          break;
+        }
+        case "dominant": {
+          const label = gene.name;
+          options.push({
+            geneKey: gene.key,
+            state: "present",
+            label,
+            keywords: buildKeywords(gene, label),
+            group
+          });
+          break;
+        }
+        case "polygenic": {
+          if (gene.visible === false) {
+            break;
+          }
+          const label = `Linie ${gene.name}`;
+          options.push({
+            geneKey: gene.key,
+            state: "poly",
+            label,
+            keywords: buildKeywords(gene, label, ["line", "linie"]),
+            group
+          });
+          break;
+        }
+        default:
+          break;
+      }
+    });
+    return options;
   }
-  function describeGeneState(gene, state, options = {}) {
+
+  // src/data/genes/hognose.json
+  var hognose_default = [
+    { key: "albino", name: "Albino", type: "recessive", species: ["hognose"] },
+    { key: "axanthic", name: "Axanthic", type: "recessive", species: ["hognose"] },
+    {
+      key: "caramel",
+      name: "Caramel",
+      type: "recessive",
+      species: ["hognose"],
+      incompatibleWith: ["toffee", "swiss_chocolate"]
+    },
+    {
+      key: "hypo",
+      name: "Hypo",
+      type: "recessive",
+      species: ["hognose"],
+      aliases: ["Evans Hypo"]
+    },
+    { key: "lavender", name: "Lavender", type: "recessive", species: ["hognose"] },
+    {
+      key: "pastel",
+      name: "Pastel",
+      type: "incomplete_dominant",
+      species: ["hognose"],
+      superLabel: "Super Pastel"
+    },
+    {
+      key: "pistacchio",
+      name: "Pistacchio",
+      type: "incomplete_dominant",
+      species: ["hognose"],
+      superLabel: "Super Pistacchio"
+    },
+    { key: "sable", name: "Sable", type: "recessive", species: ["hognose"] },
+    { key: "savannah", name: "Savannah", type: "recessive", species: ["hognose"] },
+    { key: "skullface", name: "Skullface", type: "dominant", species: ["hognose"] },
+    {
+      key: "toffee",
+      name: "Toffee",
+      type: "recessive",
+      species: ["hognose"],
+      incompatibleWith: ["caramel", "swiss_chocolate"]
+    },
+    {
+      key: "toffee_belly",
+      name: "Toffee Belly",
+      type: "incomplete_dominant",
+      species: ["hognose"],
+      aliases: ["Toffeebelly"],
+      searchAliases: ["Toffee Glow", "Toffeconda"]
+    },
+    {
+      key: "swiss_chocolate",
+      name: "Swiss Chocolate",
+      type: "recessive",
+      species: ["hognose"],
+      incompatibleWith: ["caramel", "toffee"]
+    },
+    { key: "arctic", name: "Arctic", type: "incomplete_dominant", species: ["hognose"] },
+    {
+      key: "anaconda",
+      name: "Anaconda",
+      type: "incomplete_dominant",
+      species: ["hognose"],
+      aliases: ["Conda"],
+      notes: "Homozygote Anzeige als 'Superconda'",
+      superLabel: "Superconda"
+    }
+  ];
+
+  // src/data/genes/pogona.json
+  var pogona_default = [{ key: "hypo", name: "Hypo", type: "recessive", species: ["pogona"] }, { key: "trans", name: "Translucent", type: "recessive", species: ["pogona"] }, { key: "zero", name: "Zero", type: "recessive", species: ["pogona"] }, { key: "witblits", name: "Witblits", type: "recessive", species: ["pogona"] }, { key: "gstripe", name: "Genetic Stripe", type: "recessive", species: ["pogona"] }, { key: "leatherback", name: "Leatherback", type: "incomplete_dominant", species: ["pogona"], notes: "Homozygote Anzeige als 'Silkback'", superLabel: "Silkback" }, { key: "dunner", name: "Dunner", type: "dominant", species: ["pogona"] }, { key: "color_red", name: "Red Line", type: "polygenic", species: ["pogona"], visible: true }, { key: "color_yellow", name: "Yellow Line", type: "polygenic", species: ["pogona"], visible: true }];
+
+  // src/lib/genetics/species.ts
+  var RAW_SPECIES_GENES = {
+    hognose: hognose_default.map((gene) => ({ ...gene })),
+    pogona: pogona_default.map((gene) => ({ ...gene }))
+  };
+  function getGenesForSpecies(species) {
     var _a;
-    const includeHet = (_a = options.includeHet) != null ? _a : true;
-    if (gene.type === "polygenic") {
-      if (state === "expressed") {
-        return { token: gene.name, priority: 2 };
-      }
-      return null;
+    return (_a = RAW_SPECIES_GENES[species]) != null ? _a : [];
+  }
+
+  // src/data/search-presets/hognose.json
+  var hognose_default2 = [
+    {
+      label: "Albino het Swiss Chocolate",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "swiss_chocolate", state: "het" }
+      ]
+    },
+    {
+      label: "Albino het Toffee",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "toffee", state: "het" }
+      ]
+    },
+    {
+      label: "Albino het Caramel",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "caramel", state: "het" }
+      ]
+    },
+    {
+      label: "Albino het Hypo",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "hypo", state: "het" }
+      ]
+    },
+    {
+      label: "Pink Pastel Albino",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "pastel", state: "expressed" }
+      ]
+    },
+    {
+      label: "Pink Pastel Albino Anaconda",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "pastel", state: "expressed" },
+        { key: "anaconda", state: "expressed" }
+      ]
+    },
+    {
+      label: "Pink Pastel Albino Superconda",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "pastel", state: "expressed" },
+        { key: "anaconda", state: "super" }
+      ]
+    },
+    {
+      label: "Snow (Albino Axanthic)",
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "axanthic", state: "expressed" }
+      ]
+    },
+    {
+      label: "Yeti (Snow Anaconda)",
+      keywords: ["Albino", "Snow"],
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "axanthic", state: "expressed" },
+        { key: "anaconda", state: "expressed" }
+      ]
+    },
+    {
+      label: "Super Yeti",
+      keywords: ["Albino", "Snow", "Superconda"],
+      genes: [
+        { key: "albino", state: "expressed" },
+        { key: "axanthic", state: "expressed" },
+        { key: "anaconda", state: "super" }
+      ]
+    },
+    {
+      label: "Toxic",
+      genes: [
+        { key: "axanthic", state: "expressed" },
+        { key: "toffee", state: "expressed" }
+      ]
+    },
+    {
+      label: "Toxic het Swiss Chocolate",
+      genes: [
+        { key: "axanthic", state: "expressed" },
+        { key: "toffee", state: "expressed" },
+        { key: "swiss_chocolate", state: "het" }
+      ]
     }
-    if (gene.type === "recessive") {
-      if (state === "expressed") {
-        return { token: gene.name, priority: 2 };
-      }
-      if (state === "het" && includeHet) {
-        return { token: `het ${gene.name}`.trim(), priority: 3 };
-      }
-      return null;
+  ];
+
+  // src/data/search-presets/pogona.json
+  var pogona_default2 = [];
+
+  // src/lib/genetics/presets.ts
+  var RAW_PRESETS = {
+    hognose: hognose_default2.map((preset) => ({ ...preset })),
+    pogona: pogona_default2.map((preset) => ({ ...preset }))
+  };
+  function getSearchPresets(species) {
+    var _a;
+    return (_a = RAW_PRESETS[species]) != null ? _a : [];
+  }
+
+  // src/components/genetics/GenotypeSearch.tsx
+  var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+  var GROUP_LABELS = {
+    id: "Inkomplett Dominant",
+    recessive: "Rezessiv",
+    dominant: "Dominant",
+    poly: "Polygen",
+    preset: "Morph-Kombinationen"
+  };
+  var GROUP_ORDER = ["preset", "id", "recessive", "dominant", "poly"];
+  function normalizeState(entry) {
+    if (!entry) {
+      return "normal";
     }
-    if (gene.type === "incomplete_dominant") {
-      if (state === "super") {
-        return { token: getSuperName(gene), priority: 0 };
-      }
-      if (state === "expressed") {
-        return { token: gene.name, priority: 1 };
-      }
+    if (typeof entry === "string") {
+      return entry;
+    }
+    return entry.state;
+  }
+  function mapStateForOption(gene, state) {
+    if (state === "normal") {
       return null;
     }
     if (gene.type === "dominant") {
-      if (state === "expressed") {
-        return { token: gene.name, priority: 1 };
+      return "present";
+    }
+    if (gene.type === "polygenic") {
+      return "poly";
+    }
+    if (state === "het") {
+      return "het";
+    }
+    if (state === "super") {
+      return "super";
+    }
+    return "expressed";
+  }
+  function optionStateToZygosity(option, gene) {
+    switch (option.state) {
+      case "het":
+        return "het";
+      case "super":
+        return "super";
+      case "present":
+        return "expressed";
+      case "poly":
+        return "expressed";
+      case "expressed":
+      default:
+        if (gene.type === "dominant") {
+          return "expressed";
+        }
+        return "expressed";
+    }
+  }
+  function useDebouncedValue(value, delay = 160) {
+    const [debounced, setDebounced] = (0, import_react.useState)(value);
+    (0, import_react.useEffect)(() => {
+      const timeout = window.setTimeout(() => setDebounced(value), delay);
+      return () => window.clearTimeout(timeout);
+    }, [value, delay]);
+    return debounced;
+  }
+  function hasActiveState(entry) {
+    if (!entry) {
+      return false;
+    }
+    if (typeof entry === "string") {
+      return entry !== "normal";
+    }
+    return entry.state !== "normal" || entry.posHet !== void 0;
+  }
+  function GenotypeSearch({ species, value, onChange, presets }) {
+    const containerRef = (0, import_react.useRef)(null);
+    const inputRef = (0, import_react.useRef)(null);
+    const genes = (0, import_react.useMemo)(() => getGenesForSpecies(species), [species]);
+    const geneOptions = (0, import_react.useMemo)(() => buildOptions(genes), [genes]);
+    const presetList = (0, import_react.useMemo)(() => presets != null ? presets : getSearchPresets(species), [presets, species]);
+    const [query, setQuery] = (0, import_react.useState)("");
+    const debouncedQuery = useDebouncedValue(query.trim().toLowerCase());
+    const [open, setOpen] = (0, import_react.useState)(false);
+    const [highlightIndex, setHighlightIndex] = (0, import_react.useState)(0);
+    const [error, setError] = (0, import_react.useState)(null);
+    const geneMap = (0, import_react.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      genes.forEach((gene) => map.set(gene.key, gene));
+      return map;
+    }, [genes]);
+    const geneOptionEntries = (0, import_react.useMemo)(
+      () => geneOptions.map((option) => ({ kind: "gene", option })),
+      [geneOptions]
+    );
+    const presetOptions = (0, import_react.useMemo)(() => {
+      if (!presetList.length) {
+        return [];
       }
-      return null;
+      const geneMap2 = /* @__PURE__ */ new Map();
+      genes.forEach((gene) => geneMap2.set(gene.key, gene));
+      return presetList.map((preset) => {
+        var _a;
+        if (!preset.genes.every((entry) => geneMap2.has(entry.key))) {
+          return null;
+        }
+        const keywords = /* @__PURE__ */ new Set();
+        const addTokens = (value2) => {
+          value2.split(/[\s/-]+/).map((token) => token.trim().toLowerCase()).filter(Boolean).forEach((token) => keywords.add(token));
+        };
+        addTokens(preset.label);
+        ((_a = preset.keywords) != null ? _a : []).forEach(addTokens);
+        preset.genes.forEach((entry) => {
+          var _a2, _b;
+          const gene = geneMap2.get(entry.key);
+          if (!gene) {
+            return;
+          }
+          addTokens(gene.name);
+          ((_a2 = gene.aliases) != null ? _a2 : []).forEach(addTokens);
+          ((_b = gene.searchAliases) != null ? _b : []).forEach(addTokens);
+        });
+        return {
+          kind: "preset",
+          label: preset.label,
+          keywords: Array.from(keywords),
+          preset
+        };
+      }).filter((entry) => Boolean(entry));
+    }, [genes, presetList]);
+    const allOptions = (0, import_react.useMemo)(() => [...presetOptions, ...geneOptionEntries], [presetOptions, geneOptionEntries]);
+    const optionMap = (0, import_react.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      geneOptionEntries.forEach(({ option }) => {
+        let entry = map.get(option.geneKey);
+        if (!entry) {
+          entry = /* @__PURE__ */ new Map();
+          map.set(option.geneKey, entry);
+        }
+        entry.set(option.state, option);
+      });
+      return map;
+    }, [geneOptionEntries]);
+    const filtered = (0, import_react.useMemo)(() => {
+      if (!debouncedQuery) {
+        return allOptions;
+      }
+      return allOptions.filter((entry) => {
+        if (entry.kind === "gene") {
+          return entry.option.keywords.some((keyword) => keyword.includes(debouncedQuery));
+        }
+        return entry.keywords.some((keyword) => keyword.includes(debouncedQuery));
+      });
+    }, [allOptions, debouncedQuery]);
+    const grouped = (0, import_react.useMemo)(() => {
+      return GROUP_ORDER.map((group) => {
+        const optionsForGroup = filtered.filter((entry) => {
+          if (entry.kind === "gene") {
+            return entry.option.group === group;
+          }
+          return group === "preset";
+        });
+        return {
+          group,
+          label: GROUP_LABELS[group],
+          options: optionsForGroup
+        };
+      }).filter((entry) => entry.options.length > 0);
+    }, [filtered]);
+    const flattened = (0, import_react.useMemo)(() => grouped.flatMap((entry) => entry.options), [grouped]);
+    const indexMap = (0, import_react.useMemo)(() => {
+      const map = /* @__PURE__ */ new Map();
+      flattened.forEach((option, index) => {
+        map.set(option, index);
+      });
+      return map;
+    }, [flattened]);
+    const checkConflicts = (0, import_react.useCallback)(
+      (next) => {
+        var _a, _b;
+        for (const gene of genes) {
+          if (!hasActiveState(next[gene.key])) {
+            continue;
+          }
+          const conflicts = (_a = gene.incompatibleWith) != null ? _a : [];
+          for (const conflictKey of conflicts) {
+            if (!hasActiveState(next[conflictKey])) {
+              continue;
+            }
+            const conflictGene = geneMap.get(conflictKey);
+            const conflictName = (_b = conflictGene == null ? void 0 : conflictGene.name) != null ? _b : conflictKey;
+            return `${gene.name} kollidiert mit ${conflictName}`;
+          }
+        }
+        return null;
+      },
+      [genes, geneMap]
+    );
+    (0, import_react.useEffect)(() => {
+      if (!error) {
+        return;
+      }
+      if (!checkConflicts(value)) {
+        setError(null);
+      }
+    }, [value, error, checkConflicts]);
+    (0, import_react.useEffect)(() => {
+      setHighlightIndex(0);
+    }, [debouncedQuery, grouped.length]);
+    (0, import_react.useEffect)(() => {
+      const handleClick = (event) => {
+        if (!containerRef.current) {
+          return;
+        }
+        if (!containerRef.current.contains(event.target)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+    const selectedChips = (0, import_react.useMemo)(() => {
+      return genes.map((gene) => {
+        var _a;
+        const state = normalizeState(value[gene.key]);
+        if (state === "normal") {
+          return null;
+        }
+        const optionState = mapStateForOption(gene, state);
+        if (!optionState) {
+          return null;
+        }
+        const option = (_a = optionMap.get(gene.key)) == null ? void 0 : _a.get(optionState);
+        if (!option) {
+          return null;
+        }
+        return {
+          gene,
+          option
+        };
+      }).filter((entry) => Boolean(entry));
+    }, [genes, optionMap, value]);
+    const handleSelect = (entry) => {
+      if (entry.kind === "preset") {
+        const next2 = { ...value };
+        entry.preset.genes.forEach((geneEntry) => {
+          const gene2 = genes.find((item) => item.key === geneEntry.key);
+          if (!gene2) {
+            return;
+          }
+          if (geneEntry.posHet !== void 0) {
+            next2[geneEntry.key] = { state: geneEntry.state, posHet: geneEntry.posHet };
+          } else {
+            next2[geneEntry.key] = geneEntry.state;
+          }
+        });
+        const conflict2 = checkConflicts(next2);
+        if (conflict2) {
+          setError(conflict2);
+          return;
+        }
+        setError(null);
+        setQuery("");
+        setOpen(false);
+        onChange(next2);
+        window.requestAnimationFrame(() => {
+          var _a;
+          (_a = inputRef.current) == null ? void 0 : _a.focus();
+        });
+        return;
+      }
+      const option = entry.option;
+      const gene = genes.find((item) => item.key === option.geneKey);
+      if (!gene) {
+        return;
+      }
+      const next = { ...value };
+      const state = optionStateToZygosity(option, gene);
+      next[option.geneKey] = state;
+      const conflict = checkConflicts(next);
+      if (conflict) {
+        setError(conflict);
+        return;
+      }
+      setError(null);
+      setQuery("");
+      setOpen(false);
+      onChange(next);
+      window.requestAnimationFrame(() => {
+        var _a;
+        (_a = inputRef.current) == null ? void 0 : _a.focus();
+      });
+    };
+    const handleRemove = (geneKey) => {
+      const next = { ...value };
+      delete next[geneKey];
+      onChange(next);
+      setError(null);
+    };
+    const handleInputFocus = () => {
+      setOpen(true);
+    };
+    const handleKeyDown = (event) => {
+      if (!flattened.length) {
+        if (event.key === "Escape") {
+          setOpen(false);
+        }
+        return;
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setOpen(true);
+        setHighlightIndex((prev) => (prev + 1) % flattened.length);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setOpen(true);
+        setHighlightIndex((prev) => (prev - 1 + flattened.length) % flattened.length);
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        const option = flattened[highlightIndex];
+        if (option) {
+          handleSelect(option);
+        }
+      } else if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    (0, import_react.useEffect)(() => {
+      if (!flattened.length) {
+        setHighlightIndex(0);
+      } else if (highlightIndex >= flattened.length) {
+        setHighlightIndex(0);
+      }
+    }, [flattened, highlightIndex]);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "genotype-search", ref: containerRef, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mm-chips", children: selectedChips.map((chip) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        "button",
+        {
+          type: "button",
+          className: "mm-chip",
+          onClick: () => handleRemove(chip.gene.key),
+          children: [
+            chip.option.label,
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "chip-remove", "aria-hidden": "true", children: "\xD7" })
+          ]
+        },
+        chip.gene.key
+      )) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "search-field", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        "input",
+        {
+          ref: inputRef,
+          className: "mm-input",
+          type: "text",
+          value: query,
+          onChange: (event) => {
+            setQuery(event.target.value);
+            if (!open) {
+              setOpen(true);
+            }
+            if (error) {
+              setError(null);
+            }
+          },
+          onFocus: handleInputFocus,
+          onKeyDown: handleKeyDown,
+          placeholder: "Suche nach Traits",
+          "aria-expanded": open
+        }
+      ) }),
+      error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "search-error", role: "alert", children: error }),
+      open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "options-dropdown", role: "listbox", children: [
+        grouped.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dropdown-empty", children: "Keine Treffer" }),
+        grouped.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "options-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "options-group__label", children: GROUP_LABELS[entry.group] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: entry.options.map((option) => {
+            var _a;
+            const index = (_a = indexMap.get(option)) != null ? _a : 0;
+            const isActive = index === highlightIndex;
+            const key = option.kind === "gene" ? `${option.option.geneKey}-${option.option.state}` : `preset-${option.label}`;
+            const label = option.kind === "gene" ? option.option.label : option.label;
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                type: "button",
+                className: isActive ? "dropdown-option is-active" : "dropdown-option",
+                onMouseEnter: () => setHighlightIndex(index),
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => handleSelect(option),
+                children: label
+              }
+            ) }, key);
+          }) })
+        ] }, entry.group))
+      ] })
+    ] });
+  }
+
+  // src/components/genetics/ResultTable.tsx
+  var import_react2 = __toESM(require_react(), 1);
+  var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+  var BADGE_CLASS = {
+    id: "badge-id",
+    idSuper: "badge-id-super",
+    rec: "badge-rec",
+    dom: "badge-dom",
+    het: "badge-het",
+    hetPct: "badge-het-pct",
+    poly: "badge-poly"
+  };
+  function normalizeGeneState(entry) {
+    if (!entry) {
+      return { state: "normal" };
+    }
+    if (typeof entry === "string") {
+      return { state: entry };
+    }
+    return { state: entry.state, posHet: entry.posHet };
+  }
+  function superLabelForGene(gene) {
+    var _a;
+    return (_a = gene.superLabel) != null ? _a : `Super ${gene.name}`;
+  }
+  function normalizePercent(value) {
+    if (value === void 0) {
+      return void 0;
+    }
+    const canonical = [33, 50, 66];
+    const rounded = Math.round(value);
+    for (const target of canonical) {
+      if (Math.abs(rounded - target) <= 3) {
+        return target;
+      }
+    }
+    return rounded;
+  }
+  function fractionForProbability(probability) {
+    const epsilon = 1e-6;
+    for (let exponent = 0; exponent <= 6; exponent += 1) {
+      const denominator = 2 ** exponent;
+      const numerator = Math.round(probability * denominator);
+      if (numerator === 0) {
+        continue;
+      }
+      const diff = Math.abs(probability - numerator / denominator);
+      if (diff < epsilon) {
+        return `${numerator}/${denominator}`;
+      }
     }
     return null;
   }
-  function buildPhenotypeTokens(genotype, genes, options = {}) {
-    const tokens = genes.map((gene) => {
-      const state = genotype[gene.key];
-      if (!state || state === "normal") {
-        return null;
+  function formatProbability(probability) {
+    const percent = Math.round(probability * 100);
+    const fraction = fractionForProbability(probability);
+    if (fraction) {
+      return `${fraction} (${percent}%)`;
+    }
+    return `${percent}%`;
+  }
+  function resolveAliasKeys(entries, genes) {
+    const geneMap = /* @__PURE__ */ new Map();
+    genes.forEach((gene) => geneMap.set(gene.key, gene));
+    const aliasList = [];
+    const resolveToken = (token) => {
+      if (geneMap.has(token)) {
+        return token;
       }
-      return describeGeneState(gene, state, options);
-    }).filter((entry) => Boolean(entry));
-    const deduped = /* @__PURE__ */ new Map();
-    for (const entry of tokens) {
-      const normalized = normalizeToken(entry.token);
-      if (!normalized) {
-        continue;
+      const match = genes.find((gene) => {
+        var _a, _b;
+        const aliases = [...(_a = gene.aliases) != null ? _a : [], ...(_b = gene.searchAliases) != null ? _b : []];
+        return aliases.some((entry) => entry.toLowerCase() === token.toLowerCase());
+      });
+      return match ? match.key : null;
+    };
+    entries.forEach((alias) => {
+      const keys = [];
+      alias.genes.forEach((token) => {
+        const key = resolveToken(token);
+        if (key) {
+          keys.push(key);
+        }
+      });
+      if (keys.length === alias.genes.length) {
+        let states;
+        if (alias.states) {
+          const mappedStates = {};
+          const entries2 = Object.entries(alias.states);
+          for (const [token, state] of entries2) {
+            const key = resolveToken(token);
+            if (!key || !keys.includes(key)) {
+              return;
+            }
+            mappedStates[key] = state;
+          }
+          states = mappedStates;
+        }
+        aliasList.push(states ? { name: alias.name, keys, states } : { name: alias.name, keys });
       }
-      if (!deduped.has(normalized)) {
-        deduped.set(normalized, entry);
-      } else {
-        const existing = deduped.get(normalized);
-        if (entry.priority < existing.priority) {
-          deduped.set(normalized, entry);
+    });
+    return aliasList;
+  }
+  function buildBadges(result, genes) {
+    const badges = [];
+    const aliasEligible = /* @__PURE__ */ new Map();
+    genes.forEach((gene) => {
+      const entry = normalizeGeneState(result.genotype[gene.key]);
+      const { state, posHet } = entry;
+      if (state === "normal" && posHet === void 0) {
+        return;
+      }
+      if (gene.type === "recessive") {
+        if (state === "expressed") {
+          badges.push({
+            key: `${gene.key}-rec`,
+            label: gene.name,
+            className: BADGE_CLASS.rec,
+            order: 2,
+            geneKey: gene.key,
+            baseLabel: gene.name,
+            contributesToAlias: true
+          });
+          aliasEligible.set(gene.key, "expressed");
+        } else if (state === "het") {
+          const percent = normalizePercent(posHet);
+          if (percent !== void 0) {
+            badges.push({
+              key: `${gene.key}-hetpct`,
+              label: `${percent}% Het ${gene.name}`,
+              className: BADGE_CLASS.hetPct,
+              order: 5,
+              geneKey: gene.key,
+              baseLabel: `Het ${gene.name}`,
+              contributesToAlias: false
+            });
+          } else {
+            badges.push({
+              key: `${gene.key}-het`,
+              label: `Het ${gene.name}`,
+              className: BADGE_CLASS.het,
+              order: 4,
+              geneKey: gene.key,
+              baseLabel: `Het ${gene.name}`,
+              contributesToAlias: false
+            });
+          }
+        } else if (state === "normal" && posHet !== void 0) {
+          const percent = normalizePercent(posHet);
+          if (percent !== void 0) {
+            badges.push({
+              key: `${gene.key}-poshet`,
+              label: `${percent}% Het ${gene.name}`,
+              className: BADGE_CLASS.hetPct,
+              order: 5,
+              geneKey: gene.key,
+              baseLabel: `Het ${gene.name}`,
+              contributesToAlias: false
+            });
+          }
+        }
+        return;
+      }
+      if (gene.type === "incomplete_dominant") {
+        if (state === "super") {
+          const label = superLabelForGene(gene);
+          badges.push({
+            key: `${gene.key}-super`,
+            label,
+            className: BADGE_CLASS.idSuper,
+            order: 0,
+            geneKey: gene.key,
+            baseLabel: label,
+            contributesToAlias: true
+          });
+          aliasEligible.set(gene.key, "super");
+          return;
+        }
+        if (state === "expressed") {
+          badges.push({
+            key: `${gene.key}-id`,
+            label: gene.name,
+            className: BADGE_CLASS.id,
+            order: 1,
+            geneKey: gene.key,
+            baseLabel: gene.name,
+            contributesToAlias: true
+          });
+          aliasEligible.set(gene.key, "expressed");
+          return;
+        }
+        return;
+      }
+      if (gene.type === "dominant") {
+        if (state === "expressed") {
+          badges.push({
+            key: `${gene.key}-dom`,
+            label: gene.name,
+            className: BADGE_CLASS.dom,
+            order: 3,
+            geneKey: gene.key,
+            baseLabel: gene.name,
+            contributesToAlias: true
+          });
+          aliasEligible.set(gene.key, "expressed");
+        }
+        return;
+      }
+      if (gene.type === "polygenic") {
+        if (state === "expressed") {
+          const label = gene.name.startsWith("Linie ") ? gene.name : `${gene.name}`;
+          badges.push({
+            key: `${gene.key}-poly`,
+            label,
+            className: BADGE_CLASS.poly,
+            order: 6,
+            geneKey: gene.key,
+            baseLabel: label,
+            contributesToAlias: false
+          });
         }
       }
+    });
+    const sorted = badges.sort((a, b) => {
+      if (a.order !== b.order) {
+        return a.order - b.order;
+      }
+      return a.label.localeCompare(b.label, "de");
+    });
+    return { badges: sorted, aliasStates: aliasEligible };
+  }
+  function stripPercentPrefix(label) {
+    return label.replace(/^\d+%\s+/, "").replace(/^Linie\s+/i, "").trim();
+  }
+  function buildMorphName(badges, aliasStates, aliases) {
+    const remaining = new Map(aliasStates);
+    const tokens = [];
+    aliases.forEach((alias) => {
+      const matches = alias.keys.every((key) => {
+        if (!remaining.has(key)) {
+          return false;
+        }
+        if (!alias.states) {
+          return true;
+        }
+        const required = alias.states[key];
+        if (!required) {
+          return true;
+        }
+        return remaining.get(key) === required;
+      });
+      if (matches) {
+        tokens.push(alias.name);
+        alias.keys.forEach((key) => remaining.delete(key));
+      }
+    });
+    badges.forEach((badge) => {
+      if (badge.contributesToAlias && remaining.has(badge.geneKey)) {
+        tokens.push(stripPercentPrefix(badge.baseLabel));
+        remaining.delete(badge.geneKey);
+      } else if (!badge.contributesToAlias) {
+        tokens.push(stripPercentPrefix(badge.baseLabel));
+      }
+    });
+    const unique = Array.from(new Set(tokens.filter(Boolean)));
+    return unique.join(" ");
+  }
+  function ResultTable({ results, genes, species, aliases }) {
+    const aliasDefinitions = (0, import_react2.useMemo)(
+      () => {
+        var _a;
+        return resolveAliasKeys((_a = aliases[species]) != null ? _a : [], genes);
+      },
+      [aliases, species, genes]
+    );
+    if (!results.length) {
+      return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-empty", children: "Starte eine Berechnung, um Ergebnisse zu sehen." });
     }
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-table-wrapper", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("table", { className: "tbl", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("tr", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("th", { className: "prob", children: "Prob" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("th", { children: "Traits" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("th", { children: "Morph-Name" })
+      ] }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("tbody", { children: results.map((result, index) => {
+        const { badges, aliasStates } = buildBadges(result, genes);
+        const morphName = buildMorphName(badges, aliasStates, aliasDefinitions);
+        const percent = Math.max(Math.min(result.probability * 100, 100), 0);
+        return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("tr", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("td", { className: "prob", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "prob-value", children: formatProbability(result.probability) }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "prob-bar", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "prob-bar__fill", style: { width: `${Math.max(percent, 2)}%` } }) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "badge-list", children: badges.map((badge) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: `mm-badge ${badge.className}`, children: badge.label }, badge.key)) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("td", { className: "morph-name", children: morphName || "\u2014" })
+        ] }, `${index}-${result.probability}`);
+      }) })
+    ] }) });
+  }
+
+  // src/lib/genetics/format.ts
+  function normalizeEntry(entry) {
+    if (!entry) {
+      return null;
+    }
+    if (typeof entry === "string") {
+      return { state: entry };
+    }
+    return { state: entry.state, posHet: entry.posHet };
+  }
+  function normalizeToken(token) {
+    return token.trim();
+  }
+  function superLabelForGene2(gene) {
+    var _a;
+    return (_a = gene.superLabel) != null ? _a : `Super ${gene.name}`;
+  }
+  function normalizePercent2(value) {
+    if (value === void 0) {
+      return void 0;
+    }
+    const rounded = Math.round(value);
+    const canonical = [33, 50, 66];
+    for (const target of canonical) {
+      if (Math.abs(rounded - target) <= 3) {
+        return target;
+      }
+    }
+    return rounded;
+  }
+  function tokenForState(gene, entry) {
+    const { state, posHet } = entry;
+    switch (gene.type) {
+      case "recessive":
+        if (state === "expressed") {
+          return gene.name;
+        }
+        if (state === "het") {
+          const percent = normalizePercent2(posHet);
+          if (percent !== void 0) {
+            return `${percent}% Het ${gene.name}`;
+          }
+          return `Het ${gene.name}`;
+        }
+        if (state === "normal" && posHet !== void 0) {
+          const percent = normalizePercent2(posHet);
+          if (percent !== void 0) {
+            return `${percent}% Het ${gene.name}`;
+          }
+        }
+        return null;
+      case "incomplete_dominant":
+        if (state === "super") {
+          return superLabelForGene2(gene);
+        }
+        if (state === "expressed") {
+          return gene.name;
+        }
+        return null;
+      case "dominant":
+        if (state === "expressed") {
+          return gene.name;
+        }
+        return null;
+      case "polygenic":
+        if (state === "expressed" && gene.visible !== false) {
+          return gene.name;
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+  function priorityForToken(gene, entry) {
+    const { state, posHet } = entry;
+    if (state === "super") {
+      return 0;
+    }
+    if (gene.type === "incomplete_dominant" || gene.type === "dominant") {
+      return 1;
+    }
+    if (gene.type === "recessive" && state === "expressed") {
+      return 2;
+    }
+    if (gene.type === "recessive" && state === "het" && posHet === void 0) {
+      return 3;
+    }
+    if (gene.type === "recessive" && (state === "het" || state === "normal") && posHet !== void 0) {
+      return 4;
+    }
+    if (gene.type === "polygenic") {
+      return 5;
+    }
+    return 6;
+  }
+  function buildPhenotypeTokens(genotype, genes, options = {}) {
+    var _a;
+    const includeHet = (_a = options.includeHet) != null ? _a : true;
+    const tokens = [];
+    genes.forEach((gene) => {
+      const entry = normalizeEntry(genotype[gene.key]);
+      if (!entry) {
+        return;
+      }
+      if (!includeHet && gene.type === "recessive" && entry.state === "het") {
+        return;
+      }
+      const label = tokenForState(gene, entry);
+      if (!label) {
+        return;
+      }
+      tokens.push({ label, priority: priorityForToken(gene, entry) });
+    });
+    const deduped = /* @__PURE__ */ new Map();
+    tokens.forEach((entry) => {
+      const normalized = normalizeToken(entry.label);
+      if (!normalized) {
+        return;
+      }
+      const existing = deduped.get(normalized);
+      if (!existing || entry.priority < existing.priority) {
+        deduped.set(normalized, entry);
+      }
+    });
     return Array.from(deduped.values()).sort((a, b) => {
       if (a.priority !== b.priority) {
         return a.priority - b.priority;
       }
-      return a.token.localeCompare(b.token, "de");
-    }).map((entry) => entry.token);
-  }
-  function formatPhenotype(tokens) {
-    const unique = Array.from(new Set(tokens.map((token) => normalizeToken(token)).filter(Boolean)));
-    return unique.join(" ");
-  }
-  function formatGenotypeCompact(genotype, genes) {
-    const segments = [];
-    genes.forEach((gene) => {
-      var _a;
-      const state = (_a = genotype[gene.key]) != null ? _a : "normal";
-      let label = "normal";
-      switch (gene.type) {
-        case "recessive":
-          if (state === "expressed") {
-            label = gene.name.toLowerCase();
-          } else if (state === "het") {
-            label = "het";
-          }
-          break;
-        case "incomplete_dominant":
-          if (state === "super") {
-            label = "super";
-          } else if (state === "expressed") {
-            label = "expressed";
-          }
-          break;
-        case "dominant":
-          if (state === "expressed") {
-            label = "expressed";
-          }
-          break;
-        case "polygenic":
-          if (state === "expressed") {
-            label = "line";
-          }
-          break;
-      }
-      segments.push(`${gene.name}/${label}`);
-    });
-    return segments.join("; ");
+      return a.label.localeCompare(b.label, "de");
+    }).map((entry) => entry.label);
   }
 
   // src/lib/genetics/engine.ts
   var EPSILON = 1e-9;
   function clampProbability(value) {
-    if (Number.isNaN(value) || !Number.isFinite(value)) {
+    if (!Number.isFinite(value) || Number.isNaN(value)) {
       return 0;
     }
     if (value < 0) {
@@ -8018,7 +9017,7 @@
     }
     return value;
   }
-  function normalizeEntry(value) {
+  function normalizeEntry2(value) {
     if (!value) {
       return { state: "normal" };
     }
@@ -8027,36 +9026,37 @@
     }
     return { state: value.state, posHet: value.posHet };
   }
+  function posHetFraction(entry) {
+    if (entry.posHet === void 0) {
+      return 1;
+    }
+    return clampProbability(entry.posHet / 100);
+  }
   function mutatedAlleleProbability(gene, entry) {
-    const { state, posHet } = entry;
-    const posFraction = posHet !== void 0 ? clampProbability(posHet / 100) : void 0;
     switch (gene.type) {
       case "recessive": {
-        if (state === "expressed") {
+        if (entry.state === "expressed") {
           return 1;
         }
-        if (state === "het") {
-          if (posFraction !== void 0) {
-            return 0.5 * posFraction;
-          }
-          return 0.5;
+        if (entry.state === "het") {
+          return 0.5 * posHetFraction(entry);
         }
-        if (posFraction !== void 0) {
-          return 0.5 * posFraction;
+        if (entry.state === "normal" && entry.posHet !== void 0) {
+          return 0.5 * posHetFraction(entry);
         }
         return 0;
       }
       case "incomplete_dominant": {
-        if (state === "super") {
+        if (entry.state === "super") {
           return 1;
         }
-        if (state === "expressed") {
+        if (entry.state === "expressed") {
           return 0.5;
         }
         return 0;
       }
       case "dominant": {
-        if (state === "expressed") {
+        if (entry.state === "expressed") {
           return 0.5;
         }
         return 0;
@@ -8067,10 +9067,7 @@
   }
   function geneStateProbabilities(gene, parentA, parentB) {
     if (gene.type === "polygenic") {
-      const expressed = parentA.state === "expressed" || parentB.state === "expressed";
-      return [
-        { state: expressed ? "expressed" : "normal", probability: 1 }
-      ];
+      return [{ state: parentA.state === "expressed" || parentB.state === "expressed" ? "expressed" : "normal", probability: 1 }];
     }
     const mutatedA = mutatedAlleleProbability(gene, parentA);
     const mutatedB = mutatedAlleleProbability(gene, parentB);
@@ -8101,17 +9098,27 @@
         return [{ state: "normal", probability: 1 }];
     }
   }
+  function buildPolygenicGenotype(parentA, parentB, polyGenes) {
+    const genotype = {};
+    polyGenes.forEach((gene) => {
+      const entryA = normalizeEntry2(parentA[gene.key]);
+      const entryB = normalizeEntry2(parentB[gene.key]);
+      genotype[gene.key] = entryA.state === "expressed" || entryB.state === "expressed" ? "expressed" : "normal";
+    });
+    return genotype;
+  }
   function predictPairing(parentA, parentB, genes) {
-    const relevantGenes = genes.slice();
-    if (!relevantGenes.length) {
+    if (!genes.length) {
       return [];
     }
+    const polyGenes = genes.filter((gene) => gene.type === "polygenic");
+    const standardGenes = genes.filter((gene) => gene.type !== "polygenic");
     let combinations = [
       { probability: 1, genotype: {}, key: "" }
     ];
-    relevantGenes.forEach((gene) => {
-      const entryA = normalizeEntry(parentA[gene.key]);
-      const entryB = normalizeEntry(parentB[gene.key]);
+    standardGenes.forEach((gene) => {
+      const entryA = normalizeEntry2(parentA[gene.key]);
+      const entryB = normalizeEntry2(parentB[gene.key]);
       const states = geneStateProbabilities(gene, entryA, entryB).filter((item) => item.probability > EPSILON);
       const next = /* @__PURE__ */ new Map();
       combinations.forEach((combo) => {
@@ -8132,13 +9139,14 @@
       });
       combinations = Array.from(next.entries()).map(([key, value]) => ({ key, ...value }));
     });
+    const polyGenotype = buildPolygenicGenotype(parentA, parentB, polyGenes);
     const results = combinations.map((combo) => {
-      const genotype = {};
-      relevantGenes.forEach((gene) => {
+      const genotype = { ...polyGenotype };
+      standardGenes.forEach((gene) => {
         var _a;
         genotype[gene.key] = (_a = combo.genotype[gene.key]) != null ? _a : "normal";
       });
-      const phenotypeTokens = buildPhenotypeTokens(genotype, relevantGenes);
+      const phenotypeTokens = buildPhenotypeTokens(genotype, genes);
       return {
         probability: combo.probability,
         genotype,
@@ -8146,384 +9154,6 @@
       };
     }).filter((result) => result.probability > EPSILON).sort((a, b) => b.probability - a.probability);
     return results;
-  }
-
-  // src/data/genes/hognose.json
-  var hognose_default = [
-    { key: "albino", name: "Albino", type: "recessive", species: ["hognose"], aliases: [] },
-    { key: "axanthic", name: "Axanthic", type: "recessive", species: ["hognose"] },
-    { key: "toffee", name: "Toffee", type: "recessive", species: ["hognose"], aliases: ["toffeebelly"] },
-    { key: "lavender", name: "Lavender", type: "recessive", species: ["hognose"] },
-    { key: "hypo", name: "Hypo", type: "recessive", species: ["hognose"] },
-    { key: "arctic", name: "Arctic", type: "incomplete_dominant", species: ["hognose"], aliases: [] },
-    { key: "anaconda", name: "Anaconda", type: "incomplete_dominant", species: ["hognose"], aliases: ["conda"], notes: "Homozygote Anzeige als 'Superconda'" }
-  ];
-
-  // src/data/genes/pogona.json
-  var pogona_default = [
-    { key: "hypo", name: "Hypo", type: "recessive", species: ["pogona"] },
-    { key: "trans", name: "Translucent", type: "recessive", species: ["pogona"] },
-    { key: "zero", name: "Zero", type: "recessive", species: ["pogona"] },
-    { key: "witblits", name: "Witblits", type: "recessive", species: ["pogona"] },
-    { key: "gstripe", name: "Genetic Stripe", type: "recessive", species: ["pogona"] },
-    { key: "leatherback", name: "Leatherback", type: "incomplete_dominant", species: ["pogona"], notes: "Homozygote Anzeige als 'Silkback'" },
-    { key: "dunner", name: "Dunner", type: "dominant", species: ["pogona"] },
-    { key: "color_red", name: "Red Line", type: "polygenic", species: ["pogona"], visible: true },
-    { key: "color_yellow", name: "Yellow Line", type: "polygenic", species: ["pogona"], visible: true }
-  ];
-
-  // src/components/genetics/ParentPicker.tsx
-  var import_react = __toESM(require_react(), 1);
-  var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
-  var TYPE_ORDER = [
-    "incomplete_dominant",
-    "dominant",
-    "recessive",
-    "polygenic"
-  ];
-  function formatTemplate(template, params) {
-    return template.replace(/\{(\w+)}/g, (_, key) => {
-      var _a;
-      return (_a = params[key]) != null ? _a : "";
-    });
-  }
-  function parseEntry(value) {
-    if (!value) {
-      return { state: "normal" };
-    }
-    if (typeof value === "string") {
-      return { state: value };
-    }
-    return { state: value.state, posHet: value.posHet };
-  }
-  function isSuperForm(gene, state) {
-    if (gene.type === "recessive") {
-      return state === "expressed";
-    }
-    if (gene.type === "incomplete_dominant") {
-      return state === "super";
-    }
-    return false;
-  }
-  function nextStateAfterClick(gene, target) {
-    if (gene.type === "dominant" && target === "super") {
-      return "expressed";
-    }
-    if (gene.type === "incomplete_dominant" && target === "het") {
-      return "expressed";
-    }
-    return target;
-  }
-  function SegmentedControl({
-    gene,
-    current,
-    onSelect,
-    translations
-  }) {
-    const options = [];
-    if (gene.type === "recessive") {
-      options.push({ value: "normal", label: translations.normal });
-      options.push({ value: "het", label: translations.het });
-      options.push({ value: "expressed", label: translations.expressed });
-    } else if (gene.type === "incomplete_dominant") {
-      options.push({ value: "normal", label: translations.normal });
-      options.push({ value: "expressed", label: translations.expressed });
-      options.push({ value: "super", label: translations.super });
-    } else if (gene.type === "dominant") {
-      options.push({ value: "normal", label: translations.normal });
-      options.push({ value: "expressed", label: translations.present });
-    } else {
-      return null;
-    }
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "segmented-control", role: "group", "aria-label": gene.name, children: options.filter(Boolean).map((option) => {
-      if (!option)
-        return null;
-      const isActive = current.state === option.value;
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-        "button",
-        {
-          type: "button",
-          className: clsx_default("segmented-control__option", { "is-active": isActive }),
-          "aria-pressed": isActive,
-          onClick: () => onSelect(nextStateAfterClick(gene, option.value)),
-          children: option.label
-        },
-        option.value
-      );
-    }) });
-  }
-  function ParentPicker({ title, genes, value, onChange, translations }) {
-    const [warning, setWarning] = (0, import_react.useState)(null);
-    const geneMap = (0, import_react.useMemo)(() => new Map(genes.map((gene) => [gene.key, gene])), [genes]);
-    const groups = (0, import_react.useMemo)(() => {
-      const entries = [];
-      TYPE_ORDER.forEach((type) => {
-        const list = genes.filter((gene) => gene.type === type && gene.visible !== false);
-        if (list.length) {
-          entries.push({ type, genes: list });
-        }
-      });
-      return entries;
-    }, [genes]);
-    const updateGene = (gene, nextState, posHet) => {
-      const next = { ...value };
-      if (gene.type === "polygenic") {
-        if (nextState === "expressed") {
-          next[gene.key] = "expressed";
-        } else {
-          delete next[gene.key];
-        }
-        onChange(next);
-        return;
-      }
-      if (nextState === "normal" && (posHet === void 0 || posHet <= 0)) {
-        delete next[gene.key];
-      } else if (gene.type === "recessive" && posHet !== void 0 && posHet > 0) {
-        next[gene.key] = { state: nextState, posHet };
-      } else {
-        next[gene.key] = nextState;
-      }
-      onChange(next);
-    };
-    const handleStateChange = (gene, state) => {
-      const entry = parseEntry(value[gene.key]);
-      if (entry.state === state && !(gene.type === "recessive" && state === "normal" && entry.posHet)) {
-        return;
-      }
-      if (isSuperForm(gene, state) && Array.isArray(gene.incompatibleWith) && gene.incompatibleWith.length) {
-        const conflict = gene.incompatibleWith.map((key) => geneMap.get(key)).filter(Boolean).find((otherGene) => {
-          if (!otherGene) {
-            return false;
-          }
-          const otherEntry = parseEntry(value[otherGene.key]);
-          return isSuperForm(otherGene, otherEntry.state);
-        });
-        if (conflict) {
-          setWarning(formatTemplate(translations.warningIncompatible, { gene: gene.name, conflict: conflict.name }));
-          return;
-        }
-      }
-      setWarning(null);
-      if (gene.type === "recessive" && entry.posHet !== void 0) {
-        updateGene(gene, state, entry.posHet);
-      } else {
-        updateGene(gene, state);
-      }
-    };
-    const handlePolygenicToggle = (gene, checked) => {
-      updateGene(gene, checked ? "expressed" : "normal");
-    };
-    const handlePosHetToggle = (gene, enabled) => {
-      var _a, _b;
-      const entry = parseEntry(value[gene.key]);
-      const baseState = (_a = entry.state) != null ? _a : "normal";
-      if (!enabled) {
-        if (baseState === "normal") {
-          updateGene(gene, "normal");
-        } else {
-          updateGene(gene, baseState);
-        }
-        return;
-      }
-      const initial = (_b = entry.posHet) != null ? _b : 50;
-      updateGene(gene, baseState, initial);
-    };
-    const handlePosHetChange = (gene, percent) => {
-      var _a;
-      const entry = parseEntry(value[gene.key]);
-      const nextState = (_a = entry.state) != null ? _a : "normal";
-      const nextPercent = Math.max(0, Math.min(100, Math.round(percent)));
-      if (nextPercent <= 0) {
-        if (nextState === "normal") {
-          updateGene(gene, "normal");
-        } else {
-          updateGene(gene, nextState);
-        }
-        return;
-      }
-      updateGene(gene, nextState, nextPercent);
-    };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "parent-picker", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "parent-picker__header", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: title }),
-        warning && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "parent-picker__warning", role: "alert", children: warning })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "parent-picker__sections", children: groups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "parent-picker__section", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { className: "parent-picker__section-title", children: translations.sectionTitles[group.type] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "parent-picker__genes", children: group.genes.map((gene) => {
-          var _a, _b;
-          const entry = parseEntry(value[gene.key]);
-          const posHetActive = gene.type === "recessive" && entry.posHet !== void 0;
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "parent-picker__gene", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "parent-picker__gene-header", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "parent-picker__gene-name", children: gene.name }),
-              gene.notes && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "parent-picker__gene-notes", children: gene.notes })
-            ] }) }),
-            gene.type === "polygenic" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "parent-picker__polygenic", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "input",
-                {
-                  type: "checkbox",
-                  checked: entry.state === "expressed",
-                  onChange: (event) => handlePolygenicToggle(gene, event.target.checked)
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: translations.polygenicHint })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                SegmentedControl,
-                {
-                  gene,
-                  current: entry,
-                  onSelect: (state) => handleStateChange(gene, state),
-                  translations
-                }
-              ),
-              gene.type === "recessive" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "parent-picker__poshet", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "parent-picker__poshet-toggle", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "checkbox",
-                      checked: posHetActive,
-                      onChange: (event) => handlePosHetToggle(gene, event.target.checked)
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: translations.posHet })
-                ] }),
-                posHetActive && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "parent-picker__poshet-slider", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "range",
-                      min: 0,
-                      max: 100,
-                      step: 1,
-                      value: (_a = entry.posHet) != null ? _a : 0,
-                      onChange: (event) => handlePosHetChange(gene, Number(event.target.value))
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "parent-picker__poshet-value", children: [
-                    (_b = entry.posHet) != null ? _b : 0,
-                    "%"
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "parent-picker__poshet-hint", children: translations.posHetHelper })
-                ] })
-              ] })
-            ] })
-          ] }, gene.key);
-        }) })
-      ] }, group.type)) })
-    ] });
-  }
-
-  // src/components/genetics/ResultList.tsx
-  var import_react2 = __toESM(require_react(), 1);
-  var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
-  function formatTemplate2(template, params) {
-    return template.replace(/\{(\w+)}/g, (_, key) => {
-      var _a;
-      return (_a = params[key]) != null ? _a : "";
-    });
-  }
-  function hasSuperForm(result, geneMap) {
-    return Object.entries(result.genotype).some(([key, state]) => {
-      const gene = geneMap.get(key);
-      if (!gene) {
-        return false;
-      }
-      return gene.type === "incomplete_dominant" && state === "super";
-    });
-  }
-  var percentFormatter = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  function ResultList({
-    results,
-    genes,
-    filters,
-    onToggleFilter,
-    remainderProbability,
-    calculated,
-    translations
-  }) {
-    const geneMap = (0, import_react2.useMemo)(() => new Map(genes.map((gene) => [gene.key, gene])), [genes]);
-    const prepared = (0, import_react2.useMemo)(() => {
-      return results.filter((result) => {
-        if (filters.superOnly && !hasSuperForm(result, geneMap)) {
-          return false;
-        }
-        if (filters.topProbability && result.probability < 0.25) {
-          return false;
-        }
-        return true;
-      }).map((result) => {
-        const tokens = buildPhenotypeTokens(result.genotype, genes, { includeHet: filters.showHet });
-        const phenotype = formatPhenotype(tokens);
-        const genotypeLabel = formatGenotypeCompact(result.genotype, genes);
-        return { ...result, tokens, phenotype, genotypeLabel };
-      });
-    }, [results, filters, genes, geneMap]);
-    const remainderText = remainderProbability > 0 ? percentFormatter.format(remainderProbability * 100) : null;
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "result-list", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("header", { className: "result-list__header", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { children: translations.heading }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "result-list__filters", role: "group", "aria-label": "Filter", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            "button",
-            {
-              type: "button",
-              className: clsx_default("filter-chip", { "is-active": filters.superOnly }),
-              onClick: () => onToggleFilter("superOnly"),
-              children: translations.filterSuper
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            "button",
-            {
-              type: "button",
-              className: clsx_default("filter-chip", { "is-active": filters.topProbability }),
-              onClick: () => onToggleFilter("topProbability"),
-              children: translations.filterHighProbability
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            "button",
-            {
-              type: "button",
-              className: clsx_default("filter-chip", { "is-active": filters.showHet }),
-              onClick: () => onToggleFilter("showHet"),
-              children: translations.filterShowHet
-            }
-          )
-        ] })
-      ] }),
-      !calculated ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "result-list__hint", children: translations.notCalculated }) : prepared.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "result-list__hint", children: translations.empty }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "result-list__items", children: [
-        prepared.map((result) => {
-          const percentage = result.probability * 100;
-          const formattedPercent = percentFormatter.format(percentage);
-          const primaryLabel = result.phenotype || translations.normalForm;
-          return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("article", { className: "result-card", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "result-card__bar", "aria-hidden": "true", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-                "div",
-                {
-                  className: "result-card__bar-fill",
-                  style: { width: `${Math.max(4, Math.min(100, percentage))}%` }
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "result-card__bar-value", children: [
-                formattedPercent,
-                "%"
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "result-card__body", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { className: "result-card__title", children: primaryLabel }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "result-card__genotype", children: result.genotypeLabel })
-            ] })
-          ] }, result.phenotypeTokens.join("|") + percentage.toFixed(5));
-        }),
-        remainderText && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "result-card result-card--remainder", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: formatTemplate2(translations.remainder, { percent: remainderText }) }) })
-      ] })
-    ] });
   }
 
   // src/i18n/genetics.de.json
@@ -8538,20 +9168,9 @@
     super: "Super",
     present: "Vorhanden",
     posHet: "pos. het",
-    posHetHelper: "Wahrscheinlichkeit in %",
-    warningIncompatible: "{gene} kollidiert mit {conflict} in Super-Form.",
-    sectionTitles: {
-      incomplete_dominant: "Inkomplett dominant",
-      dominant: "Dominant",
-      recessive: "Rezessiv",
-      polygenic: "Polygen (Linien)"
-    },
     polygenicHint: "Linie vorhanden",
-    speciesHeading: "Art w\xE4hlen",
-    speciesHint: "Auswahl legt verf\xFCgbare Gene fest.",
-    noGenes: "F\xFCr diese Art sind keine Gene hinterlegt.",
-    actionHint: "Aktionen",
-    headingResults: "Ergebnisliste",
+    warningIncompatible: "{gene} kollidiert mit {conflict} in Super-Form.",
+    filterLabel: "Filter",
     filterSuper: "nur Superformen",
     filterHighProbability: "nur 25\u2013100 %",
     filterShowHet: "zeige Het-Texte",
@@ -8559,6 +9178,14 @@
     empty: "Keine Kombinationen gefunden. Passe die Eltern-Genetik an.",
     remainder: "weitere {percent} %",
     normalForm: "Normalform",
+    speciesHeading: "Art w\xE4hlen",
+    speciesHint: "Auswahl legt verf\xFCgbare Gene fest.",
+    sectionTitles: {
+      incomplete_dominant: "Inkomplett dominant",
+      dominant: "Dominant",
+      recessive: "Rezessiv",
+      polygenic: "Polygen (Linien)"
+    },
     species: {
       hognose: {
         label: "Hakennasennatter",
@@ -8571,6 +9198,28 @@
     }
   };
 
+  // src/data/morph-aliases.json
+  var morph_aliases_default = {
+    hognose: [
+      { name: "Pink Pastel Albino Superconda", genes: ["albino", "pastel", "anaconda"], states: { anaconda: "super" } },
+      { name: "Pink Pastel Albino Anaconda", genes: ["albino", "pastel", "anaconda"], states: { anaconda: "expressed" } },
+      { name: "Pink Pastel Albino", genes: ["albino", "pastel"] },
+      { name: "Super Yeti", genes: ["albino", "axanthic", "anaconda"], states: { anaconda: "super" } },
+      { name: "Yeti", genes: ["albino", "axanthic", "anaconda"], states: { anaconda: "expressed" } },
+      { name: "Snow Ghost Anaconda", genes: ["albino", "axanthic", "hypo", "anaconda"], states: { anaconda: "expressed" } },
+      { name: "Snow Ghost", genes: ["albino", "axanthic", "hypo"] },
+      { name: "Snow", genes: ["albino", "axanthic"] },
+      { name: "Toxic", genes: ["axanthic", "toffee"] },
+      { name: "Albino Swiss Chocolate", genes: ["albino", "swiss_chocolate"] },
+      { name: "Albino Toffee", genes: ["albino", "toffee"] },
+      { name: "Albino Caramel", genes: ["albino", "caramel"] },
+      { name: "Albino Hypo", genes: ["albino", "hypo"] }
+    ],
+    pogona: [
+      { name: "Wero", genes: ["zero", "witblits"] }
+    ]
+  };
+
   // src/components/genetics/Calculator.tsx
   var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
   var messages = genetics_de_default;
@@ -8578,163 +9227,163 @@
     {
       key: "hognose",
       label: messages.species.hognose.label,
-      subtitle: messages.species.hognose.subtitle,
-      genes: hognose_default.map((gene) => ({ ...gene }))
+      subtitle: messages.species.hognose.subtitle
     },
     {
       key: "pogona",
       label: messages.species.pogona.label,
-      subtitle: messages.species.pogona.subtitle,
-      genes: pogona_default.map((gene) => ({ ...gene }))
+      subtitle: messages.species.pogona.subtitle
     }
   ];
-  var parentTranslations = {
-    normal: messages.normal,
-    het: messages.het,
-    expressed: messages.expressed,
-    super: messages.super,
-    present: messages.present,
-    posHet: messages.posHet,
-    posHetHelper: messages.posHetHelper,
-    warningIncompatible: messages.warningIncompatible,
-    sectionTitles: messages.sectionTitles,
-    polygenicHint: messages.polygenicHint
-  };
-  var resultTranslations = {
-    heading: messages.headingResults,
-    filterSuper: messages.filterSuper,
-    filterHighProbability: messages.filterHighProbability,
-    filterShowHet: messages.filterShowHet,
-    notCalculated: messages.notCalculated,
-    empty: messages.empty,
-    remainder: messages.remainder,
-    normalForm: messages.normalForm
-  };
-  var generalText = {
-    speciesHeading: messages.speciesHeading,
-    speciesHint: messages.speciesHint,
-    parentA: messages.parentA,
-    parentB: messages.parentB,
-    calculate: messages.calculate,
-    reset: messages.reset,
-    noGenes: messages.noGenes,
-    actionHint: messages.actionHint
-  };
-  function Calculator() {
-    const [activeSpeciesKey, setActiveSpeciesKey] = (0, import_react3.useState)(SPECIES[0].key);
-    const [parentA, setParentA] = (0, import_react3.useState)({});
-    const [parentB, setParentB] = (0, import_react3.useState)({});
-    const [results, setResults] = (0, import_react3.useState)([]);
-    const [remainderProbability, setRemainderProbability] = (0, import_react3.useState)(0);
-    const [calculated, setCalculated] = (0, import_react3.useState)(false);
-    const [filters, setFilters] = (0, import_react3.useState)({ superOnly: false, topProbability: false, showHet: true });
-    const activeSpecies = (0, import_react3.useMemo)(
-      () => {
-        var _a;
-        return (_a = SPECIES.find((species) => species.key === activeSpeciesKey)) != null ? _a : SPECIES[0];
-      },
-      [activeSpeciesKey]
-    );
-    (0, import_react3.useEffect)(() => {
-      setParentA({});
-      setParentB({});
-      setResults([]);
-      setRemainderProbability(0);
-      setCalculated(false);
-    }, [activeSpeciesKey]);
-    const handleParentUpdate = (parent) => (genotype) => {
-      if (parent === "A") {
-        setParentA(genotype);
-      } else {
-        setParentB(genotype);
-      }
-    };
-    const handleCalculate = () => {
-      if (!activeSpecies.genes.length) {
-        setResults([]);
-        setRemainderProbability(0);
-        setCalculated(true);
+  function normalizeState2(value) {
+    if (!value) {
+      return void 0;
+    }
+    if (typeof value === "string") {
+      return value === "normal" ? void 0 : value;
+    }
+    if (value.state === "normal") {
+      return void 0;
+    }
+    return { state: value.state };
+  }
+  function parseParent(query, allowed) {
+    if (!query) {
+      return {};
+    }
+    const entries = query.split(";");
+    const result = {};
+    entries.forEach((entry) => {
+      const [geneKey, state] = entry.split(",");
+      if (!geneKey || !state || !allowed.has(geneKey)) {
         return;
       }
-      const prediction = predictPairing(parentA, parentB, activeSpecies.genes);
-      const sorted = [...prediction].sort((a, b) => b.probability - a.probability);
-      const topTwelve = sorted.slice(0, 12);
-      const remainder = sorted.slice(12).reduce((sum, entry) => sum + entry.probability, 0);
-      setResults(topTwelve);
-      setRemainderProbability(remainder);
-      setCalculated(true);
+      if (state === "het" || state === "expressed" || state === "super") {
+        result[geneKey] = state;
+      }
+    });
+    return result;
+  }
+  function encodeParent(parent, allowed) {
+    const parts = [];
+    allowed.forEach((geneKey) => {
+      const entry = normalizeState2(parent[geneKey]);
+      if (!entry) {
+        return;
+      }
+      if (typeof entry === "string") {
+        parts.push(`${geneKey},${entry}`);
+      } else if (entry.state !== "normal") {
+        parts.push(`${geneKey},${entry.state}`);
+      }
+    });
+    return parts.join(";");
+  }
+  function Calculator() {
+    const [speciesKey, setSpeciesKey] = (0, import_react3.useState)("hognose");
+    const [parentA, setParentA] = (0, import_react3.useState)({});
+    const [parentB, setParentB] = (0, import_react3.useState)({});
+    const [results, setResults] = (0, import_react3.useState)(null);
+    const [hydrated, setHydrated] = (0, import_react3.useState)(false);
+    const genes = (0, import_react3.useMemo)(() => getGenesForSpecies(speciesKey), [speciesKey]);
+    const allowedKeys = (0, import_react3.useMemo)(() => new Set(genes.map((gene) => gene.key)), [genes]);
+    (0, import_react3.useEffect)(() => {
+      const params = new URLSearchParams(window.location.search);
+      const speciesParam = params.get("s");
+      const initialSpecies = speciesParam === "pogona" ? "pogona" : "hognose";
+      if (initialSpecies !== speciesKey) {
+        setSpeciesKey(initialSpecies);
+      }
+      const initialGenes = getGenesForSpecies(initialSpecies);
+      const initialSet = new Set(initialGenes.map((gene) => gene.key));
+      const parsedA = parseParent(params.get("a"), initialSet);
+      const parsedB = parseParent(params.get("b"), initialSet);
+      if (Object.keys(parsedA).length > 0) {
+        setParentA(parsedA);
+      }
+      if (Object.keys(parsedB).length > 0) {
+        setParentB(parsedB);
+      }
+      setHydrated(true);
+    }, []);
+    (0, import_react3.useEffect)(() => {
+      if (!hydrated) {
+        return;
+      }
+      const params = new URLSearchParams();
+      params.set("s", speciesKey);
+      const encodedA = encodeParent(parentA, allowedKeys);
+      const encodedB = encodeParent(parentB, allowedKeys);
+      if (encodedA) {
+        params.set("a", encodedA);
+      }
+      if (encodedB) {
+        params.set("b", encodedB);
+      }
+      const queryString = params.toString();
+      const base = window.location.pathname;
+      const nextUrl = queryString ? `${base}?${queryString}` : base;
+      window.history.replaceState(null, "", nextUrl);
+    }, [speciesKey, parentA, parentB, allowedKeys, hydrated]);
+    const handleSpeciesChange = (key) => {
+      setSpeciesKey(key);
+      setParentA({});
+      setParentB({});
+      setResults(null);
+    };
+    const handleCalculate = () => {
+      const prediction = predictPairing(parentA, parentB, genes).slice(0, 50);
+      setResults(prediction);
     };
     const handleReset = () => {
       setParentA({});
       setParentB({});
-      setResults([]);
-      setRemainderProbability(0);
-      setCalculated(false);
+      setResults(null);
     };
-    const toggleFilter = (filterKey) => {
-      setFilters((prev) => ({
-        ...prev,
-        [filterKey]: !prev[filterKey]
-      }));
-    };
+    const activeResults = results != null ? results : [];
     return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "genetics-calculator", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__species", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("header", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { children: generalText.speciesHeading }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { children: generalText.speciesHint })
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { children: messages.speciesHeading }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { children: messages.speciesHint })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "species-selector", role: "group", "aria-label": generalText.speciesHeading, children: SPECIES.map((species) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "genetics-calculator__species-list", children: SPECIES.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
           "button",
           {
             type: "button",
-            className: clsx_default("species-chip", { "is-active": species.key === activeSpecies.key }),
-            onClick: () => setActiveSpeciesKey(species.key),
+            className: clsx_default("chip-button", { "is-active": entry.key === speciesKey }),
+            onClick: () => handleSpeciesChange(entry.key),
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "species-chip__label", children: species.label }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "species-chip__subtitle", children: species.subtitle })
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "chip-button__label", children: entry.label }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "chip-button__subtitle", children: entry.subtitle })
             ]
           },
-          species.key
+          entry.key
         )) })
       ] }),
-      !activeSpecies.genes.length ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "genetics-calculator__empty", children: generalText.noGenes }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "genetics-calculator__grid", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-          ParentPicker,
-          {
-            title: generalText.parentA,
-            genes: activeSpecies.genes,
-            value: parentA,
-            onChange: handleParentUpdate("A"),
-            translations: parentTranslations
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-          ParentPicker,
-          {
-            title: generalText.parentB,
-            genes: activeSpecies.genes,
-            value: parentB,
-            onChange: handleParentUpdate("B"),
-            translations: parentTranslations
-          }
-        )
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__inputs", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentA }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(GenotypeSearch, { species: speciesKey, value: parentA, onChange: setParentA })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentB }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(GenotypeSearch, { species: speciesKey, value: parentB, onChange: setParentB })
+        ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "genetics-actionbar", "aria-label": generalText.actionHint, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "btn-secondary", onClick: handleReset, children: generalText.reset }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "btn", onClick: handleCalculate, disabled: !activeSpecies.genes.length, children: generalText.calculate })
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__actions", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-secondary", onClick: handleReset, children: messages.reset }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-primary", onClick: handleCalculate, children: messages.calculate })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-        ResultList,
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("section", { className: "genetics-calculator__results", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+        ResultTable,
         {
-          results,
-          genes: activeSpecies.genes,
-          filters,
-          onToggleFilter: toggleFilter,
-          remainderProbability,
-          calculated,
-          translations: resultTranslations
+          results: activeResults,
+          genes,
+          species: speciesKey,
+          aliases: morph_aliases_default
         }
-      )
+      ) })
     ] });
   }
 
