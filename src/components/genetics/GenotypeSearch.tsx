@@ -1,22 +1,37 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
 import { buildOptions, Option, OptionGroup } from '@lib/genetics/options.js';
 import { getGenesForSpecies } from '@lib/genetics/species.js';
+import { getSearchPresets, SearchPreset } from '@lib/genetics/presets.js';
 import { GeneDef, ParentGenotype, SpeciesKey, Zygosity } from '@lib/genetics/types.js';
 
 interface GenotypeSearchProps {
   species: SpeciesKey;
   value: ParentGenotype;
   onChange: (next: ParentGenotype) => void;
+  presets?: SearchPreset[];
 }
 
-const GROUP_LABELS: Record<OptionGroup, string> = {
+type SearchOptionGroup = OptionGroup | 'preset';
+
+const GROUP_LABELS: Record<SearchOptionGroup, string> = {
   id: 'Inkomplett Dominant',
   recessive: 'Rezessiv',
   dominant: 'Dominant',
-  poly: 'Polygen'
+  poly: 'Polygen',
+  preset: 'Morph-Kombinationen'
 };
 
-const GROUP_ORDER: OptionGroup[] = ['id', 'recessive', 'dominant', 'poly'];
+const GROUP_ORDER: SearchOptionGroup[] = ['preset', 'id', 'recessive', 'dominant', 'poly'];
+
+type GeneOptionEntry = { kind: 'gene'; option: Option };
+type PresetOptionEntry = {
+  kind: 'preset';
+  label: string;
+  keywords: string[];
+  preset: SearchPreset;
+};
+
+type SearchOption = GeneOptionEntry | PresetOptionEntry;
 
 function normalizeState(entry: ParentGenotype[string]): Zygosity {
   if (!entry) {
@@ -75,19 +90,69 @@ function useDebouncedValue<T>(value: T, delay = 160): T {
   return debounced;
 }
 
-export function GenotypeSearch({ species, value, onChange }: GenotypeSearchProps) {
+export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const genes = useMemo(() => getGenesForSpecies(species), [species]);
-  const options = useMemo(() => buildOptions(genes), [genes]);
+  const geneOptions = useMemo(() => buildOptions(genes), [genes]);
+  const presetList = useMemo(() => presets ?? getSearchPresets(species), [presets, species]);
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim().toLowerCase());
   const [open, setOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
 
+  const geneOptionEntries = useMemo<GeneOptionEntry[]>(
+    () => geneOptions.map((option) => ({ kind: 'gene', option })),
+    [geneOptions]
+  );
+
+  const presetOptions = useMemo<PresetOptionEntry[]>(() => {
+    if (!presetList.length) {
+      return [];
+    }
+    const geneMap = new Map<string, GeneDef>();
+    genes.forEach((gene) => geneMap.set(gene.key, gene));
+
+    return presetList
+      .map((preset) => {
+        if (!preset.genes.every((entry) => geneMap.has(entry.key))) {
+          return null;
+        }
+        const keywords = new Set<string>();
+        const addTokens = (value: string) => {
+          value
+            .split(/[\s/-]+/)
+            .map((token) => token.trim().toLowerCase())
+            .filter(Boolean)
+            .forEach((token) => keywords.add(token));
+        };
+        addTokens(preset.label);
+        (preset.keywords ?? []).forEach(addTokens);
+        preset.genes.forEach((entry) => {
+          const gene = geneMap.get(entry.key);
+          if (!gene) {
+            return;
+          }
+          addTokens(gene.name);
+          (gene.aliases ?? []).forEach(addTokens);
+          (gene.searchAliases ?? []).forEach(addTokens);
+        });
+
+        return {
+          kind: 'preset' as const,
+          label: preset.label,
+          keywords: Array.from(keywords),
+          preset
+        };
+      })
+      .filter((entry): entry is PresetOptionEntry => Boolean(entry));
+  }, [genes, presetList]);
+
+  const allOptions = useMemo<SearchOption[]>(() => [...presetOptions, ...geneOptionEntries], [presetOptions, geneOptionEntries]);
+
   const optionMap = useMemo(() => {
     const map = new Map<string, Map<Option['state'], Option>>();
-    options.forEach((option) => {
+    geneOptionEntries.forEach(({ option }) => {
       let entry = map.get(option.geneKey);
       if (!entry) {
         entry = new Map();
@@ -96,27 +161,39 @@ export function GenotypeSearch({ species, value, onChange }: GenotypeSearchProps
       entry.set(option.state, option);
     });
     return map;
-  }, [options]);
+  }, [geneOptionEntries]);
 
   const filtered = useMemo(() => {
     if (!debouncedQuery) {
-      return options;
+      return allOptions;
     }
-    return options.filter((option) => option.keywords.some((keyword) => keyword.includes(debouncedQuery)));
-  }, [options, debouncedQuery]);
+    return allOptions.filter((entry) => {
+      if (entry.kind === 'gene') {
+        return entry.option.keywords.some((keyword) => keyword.includes(debouncedQuery));
+      }
+      return entry.keywords.some((keyword) => keyword.includes(debouncedQuery));
+    });
+  }, [allOptions, debouncedQuery]);
 
   const grouped = useMemo(() => {
-    const list = GROUP_ORDER.map((group) => ({
-      group,
-      label: GROUP_LABELS[group],
-      options: filtered.filter((option) => option.group === group)
-    })).filter((entry) => entry.options.length > 0);
-    return list;
+    return GROUP_ORDER.map((group) => {
+      const optionsForGroup = filtered.filter((entry) => {
+        if (entry.kind === 'gene') {
+          return entry.option.group === group;
+        }
+        return group === 'preset';
+      });
+      return {
+        group,
+        label: GROUP_LABELS[group],
+        options: optionsForGroup
+      };
+    }).filter((entry) => entry.options.length > 0);
   }, [filtered]);
 
   const flattened = useMemo(() => grouped.flatMap((entry) => entry.options), [grouped]);
   const indexMap = useMemo(() => {
-    const map = new Map<Option, number>();
+    const map = new Map<SearchOption, number>();
     flattened.forEach((option, index) => {
       map.set(option, index);
     });
@@ -163,7 +240,29 @@ export function GenotypeSearch({ species, value, onChange }: GenotypeSearchProps
       .filter((entry): entry is { gene: GeneDef; option: Option } => Boolean(entry));
   }, [genes, optionMap, value]);
 
-  const handleSelect = (option: Option) => {
+  const handleSelect = (entry: SearchOption) => {
+    if (entry.kind === 'preset') {
+      const next: ParentGenotype = { ...value };
+      entry.preset.genes.forEach((geneEntry) => {
+        const gene = genes.find((item) => item.key === geneEntry.key);
+        if (!gene) {
+          return;
+        }
+        if (geneEntry.posHet !== undefined) {
+          next[geneEntry.key] = { state: geneEntry.state, posHet: geneEntry.posHet };
+        } else {
+          next[geneEntry.key] = geneEntry.state;
+        }
+      });
+      setQuery('');
+      setOpen(false);
+      onChange(next);
+      window.requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+      return;
+    }
+    const option = entry.option;
     const gene = genes.find((item) => item.key === option.geneKey);
     if (!gene) {
       return;
@@ -268,8 +367,12 @@ export function GenotypeSearch({ species, value, onChange }: GenotypeSearchProps
                 {entry.options.map((option) => {
                   const index = indexMap.get(option) ?? 0;
                   const isActive = index === highlightIndex;
+                  const key = option.kind === 'gene'
+                    ? `${option.option.geneKey}-${option.option.state}`
+                    : `preset-${option.label}`;
+                  const label = option.kind === 'gene' ? option.option.label : option.label;
                   return (
-                    <li key={`${option.geneKey}-${option.state}`}>
+                    <li key={key}>
                       <button
                         type="button"
                         className={isActive ? 'dropdown-option is-active' : 'dropdown-option'}
@@ -277,7 +380,7 @@ export function GenotypeSearch({ species, value, onChange }: GenotypeSearchProps
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => handleSelect(option)}
                       >
-                        {option.label}
+                        {label}
                       </button>
                     </li>
                   );

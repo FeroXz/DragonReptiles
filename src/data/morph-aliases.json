@@ -1,8 +1,18 @@
 {
   "hognose": [
+    { "name": "Pink Pastel Albino Superconda", "genes": ["albino", "pastel", "anaconda"], "states": { "anaconda": "super" } },
+    { "name": "Pink Pastel Albino Anaconda", "genes": ["albino", "pastel", "anaconda"], "states": { "anaconda": "expressed" } },
+    { "name": "Pink Pastel Albino", "genes": ["albino", "pastel"] },
+    { "name": "Super Yeti", "genes": ["albino", "axanthic", "anaconda"], "states": { "anaconda": "super" } },
+    { "name": "Yeti", "genes": ["albino", "axanthic", "anaconda"], "states": { "anaconda": "expressed" } },
+    { "name": "Snow Ghost Anaconda", "genes": ["albino", "axanthic", "hypo", "anaconda"], "states": { "anaconda": "expressed" } },
+    { "name": "Snow Ghost", "genes": ["albino", "axanthic", "hypo"] },
+    { "name": "Snow", "genes": ["albino", "axanthic"] },
     { "name": "Toxic", "genes": ["axanthic", "toffee"] },
-    { "name": "Stormcloud", "genes": ["axanthic", "conda"] },
-    { "name": "Moonstone", "genes": ["lavender", "axanthic"] }
+    { "name": "Albino Swiss Chocolate", "genes": ["albino", "swiss_chocolate"] },
+    { "name": "Albino Toffee", "genes": ["albino", "toffee"] },
+    { "name": "Albino Caramel", "genes": ["albino", "caramel"] },
+    { "name": "Albino Hypo", "genes": ["albino", "hypo"] }
   ],
   "pogona": [
     { "name": "Wero", "genes": ["zero", "witblits"] }

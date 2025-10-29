@@ -4,6 +4,7 @@ import type { GeneDef, PairingResult, SpeciesKey, Zygosity } from '@lib/genetics
 interface MorphAliasEntry {
   name: string;
   genes: string[];
+  states?: Record<string, Zygosity>;
 }
 
 interface ResultTableProps {
@@ -91,38 +92,58 @@ function formatProbability(probability: number): string {
   return `${percent}%`;
 }
 
-function resolveAliasKeys(entries: MorphAliasEntry[], genes: GeneDef[]): Array<{ name: string; keys: string[] }> {
+function resolveAliasKeys(
+  entries: MorphAliasEntry[],
+  genes: GeneDef[]
+): Array<{ name: string; keys: string[]; states?: Record<string, Zygosity> }> {
   const geneMap = new Map<string, GeneDef>();
   genes.forEach((gene) => geneMap.set(gene.key, gene));
 
-  const aliasList: Array<{ name: string; keys: string[] }> = [];
+  const aliasList: Array<{ name: string; keys: string[]; states?: Record<string, Zygosity> }> = [];
+
+  const resolveToken = (token: string): string | null => {
+    if (geneMap.has(token)) {
+      return token;
+    }
+    const match = genes.find((gene) => {
+      const aliases = [...(gene.aliases ?? []), ...(gene.searchAliases ?? [])];
+      return aliases.some((entry) => entry.toLowerCase() === token.toLowerCase());
+    });
+    return match ? match.key : null;
+  };
 
   entries.forEach((alias) => {
     const keys: string[] = [];
     alias.genes.forEach((token) => {
-      if (geneMap.has(token)) {
-        keys.push(token);
-        return;
-      }
-      const match = genes.find((gene) => {
-        const aliases = [...(gene.aliases ?? []), ...(gene.searchAliases ?? [])];
-        return aliases.some((entry) => entry.toLowerCase() === token.toLowerCase());
-      });
-      if (match) {
-        keys.push(match.key);
+      const key = resolveToken(token);
+      if (key) {
+        keys.push(key);
       }
     });
     if (keys.length === alias.genes.length) {
-      aliasList.push({ name: alias.name, keys });
+      let states: Record<string, Zygosity> | undefined;
+      if (alias.states) {
+        const mappedStates: Record<string, Zygosity> = {};
+        const entries = Object.entries(alias.states);
+        for (const [token, state] of entries) {
+          const key = resolveToken(token);
+          if (!key || !keys.includes(key)) {
+            return;
+          }
+          mappedStates[key] = state;
+        }
+        states = mappedStates;
+      }
+      aliasList.push(states ? { name: alias.name, keys, states } : { name: alias.name, keys });
     }
   });
 
   return aliasList;
 }
 
-function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEntry[]; aliasKeys: Set<string> } {
+function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEntry[]; aliasStates: Map<string, Zygosity> } {
   const badges: BadgeEntry[] = [];
-  const aliasEligible = new Set<string>();
+  const aliasEligible = new Map<string, Zygosity>();
 
   genes.forEach((gene) => {
     const entry = normalizeGeneState(result.genotype[gene.key]);
@@ -142,7 +163,7 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
           baseLabel: gene.name,
           contributesToAlias: true
         });
-        aliasEligible.add(gene.key);
+        aliasEligible.set(gene.key, 'expressed');
       } else if (state === 'het') {
         const percent = normalizePercent(posHet);
         if (percent !== undefined) {
@@ -156,15 +177,15 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
             contributesToAlias: false
           });
         } else {
-          badges.push({
-            key: `${gene.key}-het`,
-            label: `Het ${gene.name}`,
-            className: BADGE_CLASS.het,
-            order: 4,
-            geneKey: gene.key,
-            baseLabel: `Het ${gene.name}`,
-            contributesToAlias: false
-          });
+        badges.push({
+          key: `${gene.key}-het`,
+          label: `Het ${gene.name}`,
+          className: BADGE_CLASS.het,
+          order: 4,
+          geneKey: gene.key,
+          baseLabel: `Het ${gene.name}`,
+          contributesToAlias: false
+        });
         }
       } else if (state === 'normal' && posHet !== undefined) {
         const percent = normalizePercent(posHet);
@@ -195,7 +216,7 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
           baseLabel: label,
           contributesToAlias: true
         });
-        aliasEligible.add(gene.key);
+        aliasEligible.set(gene.key, 'super');
         return;
       }
       if (state === 'expressed') {
@@ -208,7 +229,7 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
           baseLabel: gene.name,
           contributesToAlias: true
         });
-        aliasEligible.add(gene.key);
+        aliasEligible.set(gene.key, 'expressed');
         return;
       }
       return;
@@ -225,7 +246,7 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
           baseLabel: gene.name,
           contributesToAlias: true
         });
-        aliasEligible.add(gene.key);
+        aliasEligible.set(gene.key, 'expressed');
       }
       return;
     }
@@ -255,7 +276,7 @@ function buildBadges(result: PairingResult, genes: GeneDef[]): { badges: BadgeEn
     return a.label.localeCompare(b.label, 'de');
   });
 
-  return { badges: sorted, aliasKeys: aliasEligible };
+  return { badges: sorted, aliasStates: aliasEligible };
 }
 
 function stripPercentPrefix(label: string): string {
@@ -264,14 +285,28 @@ function stripPercentPrefix(label: string): string {
 
 function buildMorphName(
   badges: BadgeEntry[],
-  aliasKeys: Set<string>,
-  aliases: Array<{ name: string; keys: string[] }>
+  aliasStates: Map<string, Zygosity>,
+  aliases: Array<{ name: string; keys: string[]; states?: Record<string, Zygosity> }>
 ): string {
-  const remaining = new Set(aliasKeys);
+  const remaining = new Map(aliasStates);
   const tokens: string[] = [];
 
   aliases.forEach((alias) => {
-    if (alias.keys.every((key) => remaining.has(key))) {
+    const matches = alias.keys.every((key) => {
+      if (!remaining.has(key)) {
+        return false;
+      }
+      if (!alias.states) {
+        return true;
+      }
+      const required = alias.states[key];
+      if (!required) {
+        return true;
+      }
+      return remaining.get(key) === required;
+    });
+
+    if (matches) {
       tokens.push(alias.name);
       alias.keys.forEach((key) => remaining.delete(key));
     }
@@ -291,7 +326,10 @@ function buildMorphName(
 }
 
 export function ResultTable({ results, genes, species, aliases }: ResultTableProps) {
-  const aliasDefinitions = useMemo(() => resolveAliasKeys(aliases[species] ?? [], genes), [aliases, species, genes]);
+  const aliasDefinitions = useMemo(
+    () => resolveAliasKeys(aliases[species] ?? [], genes),
+    [aliases, species, genes]
+  );
 
   if (!results.length) {
     return <div className="results-empty">Starte eine Berechnung, um Ergebnisse zu sehen.</div>;
@@ -309,8 +347,8 @@ export function ResultTable({ results, genes, species, aliases }: ResultTablePro
         </thead>
         <tbody>
           {results.map((result, index) => {
-            const { badges, aliasKeys } = buildBadges(result, genes);
-            const morphName = buildMorphName(badges, aliasKeys, aliasDefinitions);
+            const { badges, aliasStates } = buildBadges(result, genes);
+            const morphName = buildMorphName(badges, aliasStates, aliasDefinitions);
             return (
               <tr key={`${index}-${result.probability}`}>
                 <td className="prob">{formatProbability(result.probability)}</td>
