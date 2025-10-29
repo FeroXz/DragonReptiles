@@ -349,9 +349,15 @@ export function ResultTable({ results, genes, species, aliases }: ResultTablePro
           {results.map((result, index) => {
             const { badges, aliasStates } = buildBadges(result, genes);
             const morphName = buildMorphName(badges, aliasStates, aliasDefinitions);
+            const percent = Math.max(Math.min(result.probability * 100, 100), 0);
             return (
               <tr key={`${index}-${result.probability}`}>
-                <td className="prob">{formatProbability(result.probability)}</td>
+                <td className="prob">
+                  <span className="prob-value">{formatProbability(result.probability)}</span>
+                  <span className="prob-bar" aria-hidden="true">
+                    <span className="prob-bar__fill" style={{ width: `${Math.max(percent, 2)}%` }} />
+                  </span>
+                </td>
                 <td>
                   <div className="badge-list">
                     {badges.map((badge) => (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
 import { buildOptions, Option, OptionGroup } from '@lib/genetics/options.js';
 import { getGenesForSpecies } from '@lib/genetics/species.js';
 import { getSearchPresets, SearchPreset } from '@lib/genetics/presets.js';
@@ -90,6 +90,16 @@ function useDebouncedValue<T>(value: T, delay = 160): T {
   return debounced;
 }
 
+function hasActiveState(entry: ParentGenotype[string]): boolean {
+  if (!entry) {
+    return false;
+  }
+  if (typeof entry === 'string') {
+    return entry !== 'normal';
+  }
+  return entry.state !== 'normal' || entry.posHet !== undefined;
+}
+
 export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +110,13 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
   const debouncedQuery = useDebouncedValue(query.trim().toLowerCase());
   const [open, setOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const geneMap = useMemo(() => {
+    const map = new Map<string, GeneDef>();
+    genes.forEach((gene) => map.set(gene.key, gene));
+    return map;
+  }, [genes]);
 
   const geneOptionEntries = useMemo<GeneOptionEntry[]>(
     () => geneOptions.map((option) => ({ kind: 'gene', option })),
@@ -200,6 +217,36 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     return map;
   }, [flattened]);
 
+  const checkConflicts = useCallback(
+    (next: ParentGenotype): string | null => {
+      for (const gene of genes) {
+        if (!hasActiveState(next[gene.key])) {
+          continue;
+        }
+        const conflicts = gene.incompatibleWith ?? [];
+        for (const conflictKey of conflicts) {
+          if (!hasActiveState(next[conflictKey])) {
+            continue;
+          }
+          const conflictGene = geneMap.get(conflictKey);
+          const conflictName = conflictGene?.name ?? conflictKey;
+          return `${gene.name} kollidiert mit ${conflictName}`;
+        }
+      }
+      return null;
+    },
+    [genes, geneMap]
+  );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    if (!checkConflicts(value)) {
+      setError(null);
+    }
+  }, [value, error, checkConflicts]);
+
   useEffect(() => {
     setHighlightIndex(0);
   }, [debouncedQuery, grouped.length]);
@@ -254,6 +301,12 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
           next[geneEntry.key] = geneEntry.state;
         }
       });
+      const conflict = checkConflicts(next);
+      if (conflict) {
+        setError(conflict);
+        return;
+      }
+      setError(null);
       setQuery('');
       setOpen(false);
       onChange(next);
@@ -270,6 +323,12 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     const next: ParentGenotype = { ...value };
     const state = optionStateToZygosity(option, gene);
     next[option.geneKey] = state;
+    const conflict = checkConflicts(next);
+    if (conflict) {
+      setError(conflict);
+      return;
+    }
+    setError(null);
     setQuery('');
     setOpen(false);
     onChange(next);
@@ -282,6 +341,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     const next: ParentGenotype = { ...value };
     delete next[geneKey];
     onChange(next);
+    setError(null);
   };
 
   const handleInputFocus = () => {
@@ -350,6 +410,9 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
             if (!open) {
               setOpen(true);
             }
+            if (error) {
+              setError(null);
+            }
           }}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
@@ -357,6 +420,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
           aria-expanded={open}
         />
       </div>
+      {error && <div className="search-error" role="alert">{error}</div>}
       {open && (
         <div className="options-dropdown" role="listbox">
           {grouped.length === 0 && <div className="dropdown-empty">Keine Treffer</div>}
