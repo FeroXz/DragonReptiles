@@ -133,9 +133,9 @@ function ensure_sample_content(PDO $pdo): void
             'Vorinstallierter Beispielcontent zeigt Tiere, Adoption und Galerie mit funktionierenden Bildern.',
         ],
         APP_VERSION => [
-            'MorphMarket-inspirierter Genetik-Rechner mit Dark-Theme, Segment-Chips und pos. het-Schiebereglern.',
-            'Aktualisierte Gen-Daten für Heterodon nasicus und Pogona vitticeps inklusive Alias-Normalisierung.',
-            'Punnett-Engine mit korrekten Gen-Typen, Superformen-Labels und Wahrscheinlichkeitsausgabe pro Kombination.',
+            'MorphMarket-konforme Genetik-Suche mit Autocomplete, Chip-Auswahl pro Elternteil und teilbarem URL-State.',
+            'Morph-Presets, Alias-abhängige Morphnamen und ein erweiterter Heterodon-Genpool beschleunigen die Planung.',
+            'Allelenkonflikte werden geblockt und Ergebnislisten zeigen Wahrscheinlichkeitsbalken für jede Kombination.',
         ],
     ];
     foreach ($releaseHighlights as $version => $highlights) {
