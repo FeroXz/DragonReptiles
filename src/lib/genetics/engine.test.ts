@@ -18,7 +18,9 @@ function geneByKey(list: GeneDef[], key: string): GeneDef {
 
 function probabilityMap(results: ReturnType<typeof predictPairing>, geneKey: string): ProbabilityIndex {
   return results.reduce<ProbabilityIndex>((acc, result) => {
-    acc[result.genotype[geneKey]] = (acc[result.genotype[geneKey]] ?? 0) + result.probability;
+    const value = result.genotype[geneKey];
+    const key = typeof value === 'string' ? value : value?.state ?? 'normal';
+    acc[key] = (acc[key] ?? 0) + result.probability;
     return acc;
   }, {});
 }
