@@ -275,9 +275,34 @@
 }
 
 .prob {
-  min-width: 86px;
+  min-width: 120px;
   font-variant-numeric: tabular-nums;
   color: rgba(226, 232, 240, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.prob-value {
+  font-weight: 600;
+}
+
+.prob-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.18);
+  overflow: hidden;
+  display: inline-flex;
+}
+
+.prob-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.9), rgba(124, 58, 237, 0.85));
+  transition: width 0.25s ease;
 }
 
 .badge-list {
@@ -344,6 +369,15 @@
   text-align: center;
 }
 
+.search-error {
+  font-size: 0.85rem;
+  color: #f97316;
+  background: rgba(255, 159, 64, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
 @media (max-width: 640px) {
   .genetics-calculator__actions {
     flex-direction: column;
@@ -380,6 +414,7 @@
 
   .tbl td.prob {
     justify-content: flex-start;
+    align-items: stretch;
   }
 
   .tbl td:nth-child(2) {

@@ -1,7 +1,13 @@
 [
   { "key": "albino", "name": "Albino", "type": "recessive", "species": ["hognose"] },
   { "key": "axanthic", "name": "Axanthic", "type": "recessive", "species": ["hognose"] },
-  { "key": "caramel", "name": "Caramel", "type": "recessive", "species": ["hognose"] },
+  {
+    "key": "caramel",
+    "name": "Caramel",
+    "type": "recessive",
+    "species": ["hognose"],
+    "incompatibleWith": ["toffee", "swiss_chocolate"]
+  },
   {
     "key": "hypo",
     "name": "Hypo",
@@ -27,7 +33,13 @@
   { "key": "sable", "name": "Sable", "type": "recessive", "species": ["hognose"] },
   { "key": "savannah", "name": "Savannah", "type": "recessive", "species": ["hognose"] },
   { "key": "skullface", "name": "Skullface", "type": "dominant", "species": ["hognose"] },
-  { "key": "toffee", "name": "Toffee", "type": "recessive", "species": ["hognose"] },
+  {
+    "key": "toffee",
+    "name": "Toffee",
+    "type": "recessive",
+    "species": ["hognose"],
+    "incompatibleWith": ["caramel", "swiss_chocolate"]
+  },
   {
     "key": "toffee_belly",
     "name": "Toffee Belly",
@@ -40,7 +52,8 @@
     "key": "swiss_chocolate",
     "name": "Swiss Chocolate",
     "type": "recessive",
-    "species": ["hognose"]
+    "species": ["hognose"],
+    "incompatibleWith": ["caramel", "toffee"]
   },
   { "key": "arctic", "name": "Arctic", "type": "incomplete_dominant", "species": ["hognose"] },
   {
