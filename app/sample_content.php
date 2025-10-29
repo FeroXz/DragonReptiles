@@ -133,9 +133,9 @@ function ensure_sample_content(PDO $pdo): void
             'Vorinstallierter Beispielcontent zeigt Tiere, Adoption und Galerie mit funktionierenden Bildern.',
         ],
         APP_VERSION => [
-            'MorphMarket-konforme Genetik-Suche mit Autocomplete, Chip-Auswahl pro Elternteil und teilbarem URL-State.',
-            'Morph-Presets, Alias-abhängige Morphnamen und ein erweiterter Heterodon-Genpool beschleunigen die Planung.',
-            'Allelenkonflikte werden geblockt und Ergebnislisten zeigen Wahrscheinlichkeitsbalken für jede Kombination.',
+            'Aktualisiertes Frontend-Bundle liefert die MorphMarket-Suche inklusive Chip-Auswahl und geteiltem URL-State.',
+            'Vordefinierte Morph-Presets, Alias-abhängige Morphnamen und erweiterter Genpool stehen sofort zur Verfügung.',
+            'Konfliktprüfungen und Wahrscheinlichkeitsbalken werden direkt im Produktionsbuild des Genetik-Rechners angezeigt.',
         ],
     ];
     foreach ($releaseHighlights as $version => $highlights) {
