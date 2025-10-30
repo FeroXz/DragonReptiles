@@ -3,7 +3,7 @@
 function get_preserved_update_paths(): array
 {
     return [
-        'uploads',
+        'public/uploads',
         'storage/database.sqlite',
         'storage/initial_admin_credentials.json',
         'storage/updates',
