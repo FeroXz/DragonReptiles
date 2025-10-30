@@ -83,15 +83,6 @@ function fractionForProbability(probability: number): string | null {
   return null;
 }
 
-function formatProbability(probability: number): string {
-  const percent = Math.round(probability * 100);
-  const fraction = fractionForProbability(probability);
-  if (fraction) {
-    return `${fraction} (${percent}%)`;
-  }
-  return `${percent}%`;
-}
-
 function resolveAliasKeys(
   entries: MorphAliasEntry[],
   genes: GeneDef[]
@@ -333,50 +324,51 @@ export function ResultTable({ results, genes, species, aliases }: ResultTablePro
 
   if (!results.length) {
     return (
-      <div className="results-table-wrapper nui-card nui-card--glass">
+      <div className="results-table-wrapper nui-card">
         <div className="results-empty">Starte eine Berechnung, um Ergebnisse zu sehen.</div>
       </div>
     );
   }
 
   return (
-    <div className="results-table-wrapper nui-card nui-card--glass">
-      <table className="tbl">
-        <thead>
-          <tr>
-            <th className="prob">Prob</th>
-            <th>Traits</th>
-            <th>Morph-Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.map((result, index) => {
-            const { badges, aliasStates } = buildBadges(result, genes);
-            const morphName = buildMorphName(badges, aliasStates, aliasDefinitions);
-            const percent = Math.max(Math.min(result.probability * 100, 100), 0);
-            return (
-              <tr key={`${index}-${result.probability}`}>
-                <td className="prob">
-                  <span className="prob-value">{formatProbability(result.probability)}</span>
-                  <span className="prob-bar" aria-hidden="true">
-                    <span className="prob-bar__fill" style={{ width: `${Math.max(percent, 2)}%` }} />
-                  </span>
-                </td>
-                <td>
-                  <div className="badge-list">
-                    {badges.map((badge) => (
-                      <span key={badge.key} className={`mm-badge ${badge.className}`}>
-                        {badge.label}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="morph-name">{morphName || '—'}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="results-table-wrapper nui-card">
+      <div className="result-list" role="list">
+        {results.map((result, index) => {
+          const { badges, aliasStates } = buildBadges(result, genes);
+          const morphName = buildMorphName(badges, aliasStates, aliasDefinitions);
+          const percentValue = Math.max(Math.min(result.probability * 100, 100), 0);
+          const fraction = fractionForProbability(result.probability);
+          const percentLabel = `${Math.round(result.probability * 100)}%`;
+          return (
+            <article key={`${index}-${result.probability}`} className="result-card" role="listitem">
+              <div className="result-card__header">
+                <div className="result-card__prob" aria-label={`Wahrscheinlichkeit ${percentLabel}`}>
+                  <span className="result-card__fraction">{fraction ?? percentLabel}</span>
+                  <span className="result-card__percent">{fraction ? percentLabel : 'Erwartet'}</span>
+                </div>
+                <div className="result-card__meta">
+                  <span className="result-card__label">Morph Name</span>
+                  <span className="result-card__name">{morphName || '—'}</span>
+                </div>
+              </div>
+              <div className="result-card__progress" aria-hidden="true">
+                <div className="result-card__progress-fill" style={{ width: `${Math.max(percentValue, 2)}%` }} />
+              </div>
+              <div className="result-card__traits">
+                <span className="result-card__label">Traits</span>
+                <div className="badge-list">
+                  {badges.map((badge) => (
+                    <span key={badge.key} className={`mm-badge ${badge.className}`}>
+                      {badge.label}
+                    </span>
+                  ))}
+                  {badges.length === 0 && <span className="result-card__placeholder">Normal</span>}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

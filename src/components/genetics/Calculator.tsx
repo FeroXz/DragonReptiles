@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { GenotypeSearch } from './GenotypeSearch.js';
 import { ResultTable } from './ResultTable.js';
@@ -93,6 +93,8 @@ export function Calculator() {
   const [parentB, setParentB] = useState<ParentGenotype>({});
   const [results, setResults] = useState<PairingResult[] | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [sharePending, setSharePending] = useState(false);
 
   const genes = useMemo(() => getGenesForSpecies(speciesKey), [speciesKey]);
   const allowedKeys = useMemo(() => new Set(genes.map((gene) => gene.key)), [genes]);
@@ -141,6 +143,14 @@ export function Calculator() {
     window.history.replaceState(null, '', nextUrl);
   }, [speciesKey, parentA, parentB, allowedKeys, hydrated]);
 
+  useEffect(() => {
+    if (!shareMessage) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setShareMessage(null), 2800);
+    return () => window.clearTimeout(timeout);
+  }, [shareMessage]);
+
   const handleSpeciesChange = (key: SpeciesKey) => {
     setSpeciesKey(key);
     setParentA({});
@@ -161,30 +171,95 @@ export function Calculator() {
 
   const activeResults = results ?? [];
 
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    try {
+      setSharePending(true);
+      if (navigator.share) {
+        await navigator.share({ title: 'Genetik-Rechner', url });
+        setShareMessage('Link zum Rechner geteilt.');
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareMessage('Link in die Zwischenablage kopiert.');
+        return;
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.setAttribute('aria-hidden', 'true');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        const copied = document.execCommand('copy');
+        setShareMessage(
+          copied ? 'Link in die Zwischenablage kopiert.' : 'Teilen wird in diesem Browser nicht unterstützt.'
+        );
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    } catch (error) {
+      console.error('Share failed', error);
+      setShareMessage('Teilen wurde abgebrochen.');
+    } finally {
+      setSharePending(false);
+    }
+  }, []);
+
   return (
     <div className="genetics-calculator">
       <header className="nui-hero">
-        <div className="nui-hero__glow" aria-hidden="true" />
+        <div className="nui-hero__shapes" aria-hidden="true" />
         <div className="nui-hero__content">
-          <span className="nui-hero__eyebrow">MorphMarket Toolkit</span>
-          <h1 className="nui-hero__title">Genetik-Rechner</h1>
-          <p className="nui-hero__subtitle">
-            {messages.calculate} · {messages.speciesHint}
-          </p>
-          <div className="nui-hero__tag" role="status">
-            <span>{activeSpecies.label}</span>
-            <span>{activeSpecies.subtitle}</span>
+          <div className="nui-hero__meta">
+            <div>
+              <span className="nui-hero__eyebrow">MorphMarket Toolkit</span>
+              <h1 className="nui-hero__title">Genetik-Rechner</h1>
+              <p className="nui-hero__subtitle">
+                {messages.calculate} · {messages.speciesHint}
+              </p>
+            </div>
+            <div className="nui-hero__actions">
+              <button
+                type="button"
+                className="nui-button nui-button--ghost"
+                onClick={handleShare}
+                disabled={sharePending}
+              >
+                <span className="nui-button__icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" focusable="false" role="presentation">
+                    <path
+                      d="M15 2a3 3 0 0 0-2.995 2.824L12 5a2.98 2.98 0 0 0 .053.552l-5.3 2.35a3 3 0 1 0-.453 4.095l5.4 2.394A2.99 2.99 0 0 0 12 15a3 3 0 1 0-.053-.552l-5.4-2.394a3 3 0 0 0 0-1.11l5.3-2.35A3 3 0 1 0 15 2Zm0 2a1 1 0 1 1-.001 1.999A1 1 0 0 1 15 4ZM5 9a1 1 0 1 1-.002 1.999A1 1 0 0 1 5 9Zm10 5a1 1 0 1 1-.001 1.999A1 1 0 0 1 15 14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span>{sharePending ? 'Wird geteilt…' : 'Teilen'}</span>
+              </button>
+            </div>
           </div>
+          <dl className="nui-hero__badge" role="status">
+            <div>
+              <dt>Aktive Art</dt>
+              <dd>{activeSpecies.label}</dd>
+            </div>
+            <div>
+              <dt>Beschreibung</dt>
+              <dd>{activeSpecies.subtitle}</dd>
+            </div>
+          </dl>
         </div>
       </header>
-      <section className="genetics-calculator__species nui-card nui-card--glass">
+      <section className="genetics-calculator__species nui-card">
         <div className="nui-card__header">
           <div>
             <h2>{messages.speciesHeading}</h2>
             <p>{messages.speciesHint}</p>
           </div>
         </div>
-        <div className="genetics-calculator__species-list">
+        <div className="genetics-calculator__species-list" role="list">
           {SPECIES.map((entry) => (
             <button
               type="button"
@@ -192,6 +267,7 @@ export function Calculator() {
               className={clsx('chip-button', { 'is-active': entry.key === speciesKey })}
               onClick={() => handleSpeciesChange(entry.key)}
               aria-pressed={entry.key === speciesKey}
+              role="listitem"
             >
               <span className="chip-button__label">{entry.label}</span>
               <span className="chip-button__subtitle">{entry.subtitle}</span>
@@ -200,14 +276,14 @@ export function Calculator() {
         </div>
       </section>
       <section className="genetics-calculator__inputs">
-        <div className="search-panel nui-card nui-card--glass">
+        <div className="search-panel nui-card">
           <div className="panel-label-group">
             <div className="panel-label">{messages.parentA}</div>
             <div className="panel-subtitle">{activeSpecies.label}</div>
           </div>
           <GenotypeSearch species={speciesKey} value={parentA} onChange={setParentA} />
         </div>
-        <div className="search-panel nui-card nui-card--glass">
+        <div className="search-panel nui-card">
           <div className="panel-label-group">
             <div className="panel-label">{messages.parentB}</div>
             <div className="panel-subtitle">{activeSpecies.label}</div>
@@ -215,7 +291,7 @@ export function Calculator() {
           <GenotypeSearch species={speciesKey} value={parentB} onChange={setParentB} />
         </div>
       </section>
-      <section className="genetics-calculator__actions nui-card nui-card--glass nui-toolbar">
+      <section className="genetics-calculator__actions nui-card nui-toolbar">
         <div className="nui-toolbar__info">
           <span className="nui-toolbar__eyebrow">Aktive Art</span>
           <span className="nui-toolbar__title">{activeSpecies.label}</span>
@@ -238,6 +314,11 @@ export function Calculator() {
           aliases={morphAliases as typeof morphAliases}
         />
       </section>
+      {shareMessage && (
+        <div className="nui-toast" role="status" aria-live="polite">
+          {shareMessage}
+        </div>
+      )}
     </div>
   );
 }
