@@ -8251,6 +8251,7 @@
   function GenotypeSearch({ species, value, onChange, presets }) {
     const containerRef = (0, import_react.useRef)(null);
     const inputRef = (0, import_react.useRef)(null);
+    const searchInputId = (0, import_react.useId)();
     const genes = (0, import_react.useMemo)(() => getGenesForSpecies(species), [species]);
     const geneOptions = (0, import_react.useMemo)(() => buildOptions(genes), [genes]);
     const presetList = (0, import_react.useMemo)(() => presets != null ? presets : getSearchPresets(species), [presets, species]);
@@ -8451,7 +8452,12 @@
       }
       const next = { ...value };
       const state = optionStateToZygosity(option, gene);
-      next[option.geneKey] = state;
+      const current = normalizeState(next[option.geneKey]);
+      if (current === state) {
+        delete next[option.geneKey];
+      } else {
+        next[option.geneKey] = state;
+      }
       const conflict = checkConflicts(next);
       if (conflict) {
         setError(conflict);
@@ -8459,7 +8465,7 @@
       }
       setError(null);
       setQuery("");
-      setOpen(false);
+      setOpen(true);
       onChange(next);
       window.requestAnimationFrame(() => {
         var _a;
@@ -8508,66 +8514,144 @@
       }
     }, [flattened, highlightIndex]);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "genotype-search", ref: containerRef, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mm-chips", children: selectedChips.map((chip) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "button",
-        {
-          type: "button",
-          className: "mm-chip",
-          onClick: () => handleRemove(chip.gene.key),
-          children: [
-            chip.option.label,
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "chip-remove", "aria-hidden": "true", children: "\xD7" })
-          ]
-        },
-        chip.gene.key
-      )) }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "search-field", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-        "input",
-        {
-          ref: inputRef,
-          className: "mm-input",
-          type: "text",
-          value: query,
-          onChange: (event) => {
-            setQuery(event.target.value);
-            if (!open) {
-              setOpen(true);
-            }
-            if (error) {
-              setError(null);
-            }
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "nui-chip-tray", "aria-live": "polite", children: [
+        selectedChips.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-chip-placeholder", children: "Keine Traits ausgew\xE4hlt" }),
+        selectedChips.map((chip) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+          "button",
+          {
+            type: "button",
+            className: "nui-chip",
+            "aria-label": `Trait ${chip.option.label} entfernen`,
+            onClick: () => handleRemove(chip.gene.key),
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-chip__label", "aria-hidden": "true", children: chip.option.label }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-chip__remove", "aria-hidden": "true", children: "\xD7" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "sr-only", children: [
+                "Trait ",
+                chip.option.label,
+                " entfernen"
+              ] })
+            ]
           },
-          onFocus: handleInputFocus,
-          onKeyDown: handleKeyDown,
-          placeholder: "Suche nach Traits",
-          "aria-expanded": open
+          chip.gene.key
+        ))
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "nui-field", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { className: "nui-field__label", htmlFor: searchInputId, children: "Traits durchsuchen" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: query ? "nui-input-wrap has-value" : "nui-input-wrap", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-input-icon", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", { viewBox: "0 0 20 20", focusable: "false", role: "presentation", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "path",
+            {
+              d: "M8.5 2a6.5 6.5 0 0 1 5.195 10.406l3.449 3.45a1 1 0 0 1-1.414 1.414l-3.45-3.449A6.5 6.5 0 1 1 8.5 2Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Z",
+              fill: "currentColor"
+            }
+          ) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "input",
+            {
+              id: searchInputId,
+              ref: inputRef,
+              className: "nui-input",
+              type: "text",
+              value: query,
+              onChange: (event) => {
+                setQuery(event.target.value);
+                if (!open) {
+                  setOpen(true);
+                }
+                if (error) {
+                  setError(null);
+                }
+              },
+              onFocus: handleInputFocus,
+              onKeyDown: handleKeyDown,
+              placeholder: "Suche nach Traits",
+              "aria-expanded": open,
+              "aria-controls": `${searchInputId}-dropdown`,
+              role: "combobox",
+              "aria-autocomplete": "list"
+            }
+          ),
+          query && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              type: "button",
+              className: "nui-input-clear",
+              onClick: () => {
+                var _a;
+                setQuery("");
+                (_a = inputRef.current) == null ? void 0 : _a.focus();
+              },
+              "aria-label": "Suche leeren",
+              children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", { viewBox: "0 0 20 20", focusable: "false", role: "presentation", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "path",
+                {
+                  d: "m5.707 5.707 9 9a1 1 0 0 1-1.414 1.414l-9-9A1 1 0 0 1 5.707 5.707Zm9 0a1 1 0 0 1 0 1.414l-9 9A1 1 0 0 1 4.293 14.293l9-9a1 1 0 0 1 1.414 0Z",
+                  fill: "currentColor"
+                }
+              ) })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "nui-field__hint", children: "Mehrfachauswahl m\xF6glich \u2013 ausgew\xE4hlte Traits bleiben markiert." })
+      ] }),
+      error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-alert", role: "alert", children: error }),
+      open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        "div",
+        {
+          className: "nui-dropdown",
+          id: `${searchInputId}-dropdown`,
+          role: "listbox",
+          "aria-multiselectable": "true",
+          children: [
+            grouped.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-dropdown__empty", children: "Keine Treffer" }),
+            grouped.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "nui-dropdown__group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-dropdown__group-label", children: GROUP_LABELS[entry.group] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: entry.options.map((option) => {
+                var _a;
+                const index = (_a = indexMap.get(option)) != null ? _a : 0;
+                const isActive = index === highlightIndex;
+                const key = option.kind === "gene" ? `${option.option.geneKey}-${option.option.state}` : `preset-${option.label}`;
+                const label = option.kind === "gene" ? option.option.label : option.label;
+                const accessibleLabel = label;
+                const gene = option.kind === "gene" ? geneMap.get(option.option.geneKey) : null;
+                const expectedState = option.kind === "gene" && gene ? optionStateToZygosity(option.option, gene) : null;
+                const currentState = option.kind === "gene" ? normalizeState(value[option.option.geneKey]) : null;
+                const isSelected = option.kind === "gene" && expectedState === currentState;
+                const metaLabel = option.kind === "gene" && gene ? gene.type === "dominant" ? "Dominant" : gene.type === "recessive" ? "Rezessiv" : gene.type === "incomplete_dominant" ? "Inkomplett dominant" : gene.type === "polygenic" ? "Polygen" : null : option.kind === "preset" ? "Kombination" : null;
+                const ariaSelected = option.kind === "gene" ? isSelected : isActive;
+                return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                  "button",
+                  {
+                    type: "button",
+                    className: clsx_default("nui-option", {
+                      "is-active": isActive,
+                      "is-selected": isSelected
+                    }),
+                    "aria-label": accessibleLabel,
+                    onMouseEnter: () => setHighlightIndex(index),
+                    onMouseDown: (event) => event.preventDefault(),
+                    onClick: () => handleSelect(option),
+                    role: "option",
+                    "aria-selected": ariaSelected,
+                    children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-option__label", children: label }),
+                      metaLabel && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-option__meta", "aria-hidden": "true", children: metaLabel }),
+                      isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-option__check", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", { viewBox: "0 0 20 20", focusable: "false", role: "presentation", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                        "path",
+                        {
+                          d: "M16.707 6.293a1 1 0 0 1 0 1.414l-6.364 6.364a1 1 0 0 1-1.414 0l-3.536-3.536a1 1 0 0 1 1.414-1.414L9.64 11.64l5.657-5.647a1 1 0 0 1 1.414 0Z",
+                          fill: "currentColor"
+                        }
+                      ) }) })
+                    ]
+                  }
+                ) }, key);
+              }) })
+            ] }, entry.group))
+          ]
         }
-      ) }),
-      error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "search-error", role: "alert", children: error }),
-      open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "options-dropdown", role: "listbox", children: [
-        grouped.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dropdown-empty", children: "Keine Treffer" }),
-        grouped.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "options-group", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "options-group__label", children: GROUP_LABELS[entry.group] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: entry.options.map((option) => {
-            var _a;
-            const index = (_a = indexMap.get(option)) != null ? _a : 0;
-            const isActive = index === highlightIndex;
-            const key = option.kind === "gene" ? `${option.option.geneKey}-${option.option.state}` : `preset-${option.label}`;
-            const label = option.kind === "gene" ? option.option.label : option.label;
-            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "button",
-              {
-                type: "button",
-                className: isActive ? "dropdown-option is-active" : "dropdown-option",
-                onMouseEnter: () => setHighlightIndex(index),
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: () => handleSelect(option),
-                children: label
-              }
-            ) }, key);
-          }) })
-        ] }, entry.group))
-      ] })
+      )
     ] });
   }
 
@@ -8847,9 +8931,9 @@
       [aliases, species, genes]
     );
     if (!results.length) {
-      return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-empty", children: "Starte eine Berechnung, um Ergebnisse zu sehen." });
+      return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-table-wrapper nui-card nui-card--glass", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-empty", children: "Starte eine Berechnung, um Ergebnisse zu sehen." }) });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-table-wrapper", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("table", { className: "tbl", children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "results-table-wrapper nui-card nui-card--glass", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("table", { className: "tbl", children: [
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("tr", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("th", { className: "prob", children: "Prob" }),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("th", { children: "Traits" }),
@@ -9287,6 +9371,13 @@
     const [hydrated, setHydrated] = (0, import_react3.useState)(false);
     const genes = (0, import_react3.useMemo)(() => getGenesForSpecies(speciesKey), [speciesKey]);
     const allowedKeys = (0, import_react3.useMemo)(() => new Set(genes.map((gene) => gene.key)), [genes]);
+    const activeSpecies = (0, import_react3.useMemo)(
+      () => {
+        var _a;
+        return (_a = SPECIES.find((entry) => entry.key === speciesKey)) != null ? _a : SPECIES[0];
+      },
+      [speciesKey]
+    );
     (0, import_react3.useEffect)(() => {
       const params = new URLSearchParams(window.location.search);
       const speciesParam = params.get("s");
@@ -9342,17 +9433,34 @@
     };
     const activeResults = results != null ? results : [];
     return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "genetics-calculator", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__species", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("header", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("header", { className: "nui-hero", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "nui-hero__glow", "aria-hidden": "true" }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-hero__content", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-hero__eyebrow", children: "MorphMarket Toolkit" }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h1", { className: "nui-hero__title", children: "Genetik-Rechner" }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("p", { className: "nui-hero__subtitle", children: [
+            messages.calculate,
+            " \xB7 ",
+            messages.speciesHint
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-hero__tag", role: "status", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: activeSpecies.label }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: activeSpecies.subtitle })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__species nui-card nui-card--glass", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "nui-card__header", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { children: messages.speciesHeading }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { children: messages.speciesHint })
-        ] }),
+        ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "genetics-calculator__species-list", children: SPECIES.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
           "button",
           {
             type: "button",
             className: clsx_default("chip-button", { "is-active": entry.key === speciesKey }),
             onClick: () => handleSpeciesChange(entry.key),
+            "aria-pressed": entry.key === speciesKey,
             children: [
               /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "chip-button__label", children: entry.label }),
               /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "chip-button__subtitle", children: entry.subtitle })
@@ -9362,18 +9470,31 @@
         )) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__inputs", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentA }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel nui-card nui-card--glass", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "panel-label-group", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentA }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-subtitle", children: activeSpecies.label })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(GenotypeSearch, { species: speciesKey, value: parentA, onChange: setParentA })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentB }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "search-panel nui-card nui-card--glass", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "panel-label-group", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-label", children: messages.parentB }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "panel-subtitle", children: activeSpecies.label })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(GenotypeSearch, { species: speciesKey, value: parentB, onChange: setParentB })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__actions", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-secondary", onClick: handleReset, children: messages.reset }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-primary", onClick: handleCalculate, children: messages.calculate })
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("section", { className: "genetics-calculator__actions nui-card nui-card--glass nui-toolbar", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__info", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__eyebrow", children: "Aktive Art" }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__title", children: activeSpecies.label }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__subtitle", children: activeSpecies.subtitle })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__buttons", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-secondary", onClick: handleReset, children: messages.reset }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-primary", onClick: handleCalculate, children: messages.calculate })
+        ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("section", { className: "genetics-calculator__results", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
         ResultTable,
