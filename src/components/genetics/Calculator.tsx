@@ -96,6 +96,10 @@ export function Calculator() {
 
   const genes = useMemo(() => getGenesForSpecies(speciesKey), [speciesKey]);
   const allowedKeys = useMemo(() => new Set(genes.map((gene) => gene.key)), [genes]);
+  const activeSpecies = useMemo(
+    () => SPECIES.find((entry) => entry.key === speciesKey) ?? SPECIES[0],
+    [speciesKey]
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -159,11 +163,27 @@ export function Calculator() {
 
   return (
     <div className="genetics-calculator">
-      <section className="genetics-calculator__species">
-        <header>
-          <h2>{messages.speciesHeading}</h2>
-          <p>{messages.speciesHint}</p>
-        </header>
+      <header className="nui-hero">
+        <div className="nui-hero__glow" aria-hidden="true" />
+        <div className="nui-hero__content">
+          <span className="nui-hero__eyebrow">MorphMarket Toolkit</span>
+          <h1 className="nui-hero__title">Genetik-Rechner</h1>
+          <p className="nui-hero__subtitle">
+            {messages.calculate} · {messages.speciesHint}
+          </p>
+          <div className="nui-hero__tag" role="status">
+            <span>{activeSpecies.label}</span>
+            <span>{activeSpecies.subtitle}</span>
+          </div>
+        </div>
+      </header>
+      <section className="genetics-calculator__species nui-card nui-card--glass">
+        <div className="nui-card__header">
+          <div>
+            <h2>{messages.speciesHeading}</h2>
+            <p>{messages.speciesHint}</p>
+          </div>
+        </div>
         <div className="genetics-calculator__species-list">
           {SPECIES.map((entry) => (
             <button
@@ -171,6 +191,7 @@ export function Calculator() {
               key={entry.key}
               className={clsx('chip-button', { 'is-active': entry.key === speciesKey })}
               onClick={() => handleSpeciesChange(entry.key)}
+              aria-pressed={entry.key === speciesKey}
             >
               <span className="chip-button__label">{entry.label}</span>
               <span className="chip-button__subtitle">{entry.subtitle}</span>
@@ -179,22 +200,35 @@ export function Calculator() {
         </div>
       </section>
       <section className="genetics-calculator__inputs">
-        <div className="search-panel">
-          <div className="panel-label">{messages.parentA}</div>
+        <div className="search-panel nui-card nui-card--glass">
+          <div className="panel-label-group">
+            <div className="panel-label">{messages.parentA}</div>
+            <div className="panel-subtitle">{activeSpecies.label}</div>
+          </div>
           <GenotypeSearch species={speciesKey} value={parentA} onChange={setParentA} />
         </div>
-        <div className="search-panel">
-          <div className="panel-label">{messages.parentB}</div>
+        <div className="search-panel nui-card nui-card--glass">
+          <div className="panel-label-group">
+            <div className="panel-label">{messages.parentB}</div>
+            <div className="panel-subtitle">{activeSpecies.label}</div>
+          </div>
           <GenotypeSearch species={speciesKey} value={parentB} onChange={setParentB} />
         </div>
       </section>
-      <section className="genetics-calculator__actions">
-        <button type="button" className="action-secondary" onClick={handleReset}>
-          {messages.reset}
-        </button>
-        <button type="button" className="action-primary" onClick={handleCalculate}>
-          {messages.calculate}
-        </button>
+      <section className="genetics-calculator__actions nui-card nui-card--glass nui-toolbar">
+        <div className="nui-toolbar__info">
+          <span className="nui-toolbar__eyebrow">Aktive Art</span>
+          <span className="nui-toolbar__title">{activeSpecies.label}</span>
+          <span className="nui-toolbar__subtitle">{activeSpecies.subtitle}</span>
+        </div>
+        <div className="nui-toolbar__buttons">
+          <button type="button" className="action-secondary" onClick={handleReset}>
+            {messages.reset}
+          </button>
+          <button type="button" className="action-primary" onClick={handleCalculate}>
+            {messages.calculate}
+          </button>
+        </div>
       </section>
       <section className="genetics-calculator__results">
         <ResultTable

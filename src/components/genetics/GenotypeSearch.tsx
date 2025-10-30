@@ -390,7 +390,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
   }, [flattened, highlightIndex]);
 
   return (
-    <div className="genotype-search nui-surface" ref={containerRef}>
+    <div className="genotype-search" ref={containerRef}>
       <div className="nui-chip-tray" aria-live="polite">
         {selectedChips.length === 0 && (
           <div className="nui-chip-placeholder">Keine Traits ausgewählt</div>

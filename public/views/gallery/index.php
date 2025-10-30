@@ -1,48 +1,126 @@
 <?php include __DIR__ . '/../partials/header.php'; ?>
-<section class="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="text-3xl font-semibold text-white sm:text-4xl">Galerie</h1>
-            <p class="text-sm text-slate-400">Einblicke in die Welt von Dragon Reptiles – besondere Momente aus Haltung, Pflege und Events.</p>
+<?php
+    $allTags = [];
+    foreach ($items as $galleryItem) {
+        if (!empty($galleryItem['tags'])) {
+            foreach (array_filter(array_map('trim', explode(',', $galleryItem['tags']))) as $tag) {
+                if ($tag !== '') {
+                    $allTags[] = $tag;
+                }
+            }
+        }
+    }
+    $allTags = array_values(array_unique($allTags));
+    sort($allTags, SORT_STRING | SORT_FLAG_CASE);
+?>
+<section class="gallery-shell">
+    <div class="gallery-hero">
+        <div class="gallery-hero__text">
+            <p class="gallery-hero__eyebrow">Behind the scenes</p>
+            <h1 class="gallery-hero__title">Galerie</h1>
+            <p class="gallery-hero__lead">Einblicke in die Welt von Dragon Reptiles – besondere Momente aus Haltung, Pflege, Events und seltenen Morphen.</p>
         </div>
         <?php if (current_user() && is_authorized('can_manage_settings')): ?>
-            <a href="<?= BASE_URL ?>/index.php?route=admin/gallery" class="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-brand-400 hover:text-brand-100">
-                Admin bearbeiten
+            <a href="<?= BASE_URL ?>/index.php?route=admin/gallery" class="gallery-admin-link">
+                <span>Admin bearbeiten</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="gallery-admin-link__icon"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </a>
         <?php endif; ?>
     </div>
-    <div class="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        <?php if (!empty($items)): ?>
+
+    <?php if (!empty($allTags)): ?>
+        <div class="gallery-filter">
+            <div class="gallery-filter__chips" role="tablist" aria-label="Galerie-Filter">
+                <button type="button" class="gallery-filter__chip is-active" data-gallery-filter="" role="tab" aria-selected="true">Alle</button>
+                <?php foreach ($allTags as $tag): ?>
+                    <button type="button" class="gallery-filter__chip" data-gallery-filter="<?= htmlspecialchars($tag) ?>" role="tab" aria-selected="false">#<?= htmlspecialchars($tag) ?></button>
+                <?php endforeach; ?>
+            </div>
+            <p class="gallery-filter__hint">Tippe auf eine Kategorie, um die Bildauswahl zu filtern.</p>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($items)): ?>
+        <div class="gallery-masonry" data-gallery-grid>
             <?php foreach ($items as $item): ?>
-                <article class="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-night-900/70 shadow-xl shadow-black/40 transition hover:border-brand-400/60 hover:shadow-glow">
-                    <?php if ($src = media_url($item['image_path'] ?? null)): ?>
-                        <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="h-56 w-full object-cover" loading="lazy">
-                    <?php endif; ?>
-                    <div class="flex flex-1 flex-col gap-3 p-6">
-                        <h2 class="text-xl font-semibold text-white"><?= htmlspecialchars($item['title']) ?></h2>
-                        <?php if (!empty($item['description'])): ?>
-                            <div class="rich-text-content prose prose-invert max-w-none text-sm text-slate-200">
-                                <?= render_rich_text($item['description']) ?>
-                            </div>
+                <?php
+                    $tags = array_filter(array_map('trim', explode(',', $item['tags'] ?? '')));
+                    $tagAttribute = htmlspecialchars(implode('|', $tags));
+                ?>
+                <article class="gallery-card" data-gallery-item data-gallery-tags="<?= $tagAttribute ?>">
+                    <div class="gallery-card__media">
+                        <?php if ($src = media_url($item['image_path'] ?? null)): ?>
+                            <img src="<?= htmlspecialchars($src) ?>" alt="<?= htmlspecialchars($item['title']) ?>" loading="lazy">
                         <?php endif; ?>
-                        <?php if (!empty($item['tags'])): ?>
-                            <div class="flex flex-wrap gap-2 text-xs text-brand-100">
-                                <?php foreach (array_filter(array_map('trim', explode(',', $item['tags']))) as $tag): ?>
-                                    <span class="rounded-full border border-brand-400/40 bg-brand-500/10 px-3 py-1 uppercase tracking-wide">#<?= htmlspecialchars($tag) ?></span>
+                    </div>
+                    <div class="gallery-card__overlay">
+                        <div class="gallery-card__meta">
+                            <span class="gallery-card__date">
+                                <?= date('d.m.Y', strtotime($item['created_at'])) ?>
+                                <?php if (!empty($item['is_featured'])): ?>
+                                    <span class="gallery-card__badge">Highlight</span>
+                                <?php endif; ?>
+                            </span>
+                            <h2 class="gallery-card__title"><?= htmlspecialchars($item['title']) ?></h2>
+                            <?php if (!empty($item['description'])): ?>
+                                <div class="gallery-card__description">
+                                    <?= render_rich_text($item['description']) ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($tags)): ?>
+                            <ul class="gallery-card__tags" aria-label="Tags">
+                                <?php foreach ($tags as $tag): ?>
+                                    <li>#<?= htmlspecialchars($tag) ?></li>
                                 <?php endforeach; ?>
-                            </div>
+                            </ul>
                         <?php endif; ?>
-                        <span class="mt-auto text-xs text-slate-500">
-                            <?= date('d.m.Y', strtotime($item['created_at'])) ?><?php if (!empty($item['is_featured'])): ?> · <span class="text-brand-200">Highlight</span><?php endif; ?>
-                        </span>
                     </div>
                 </article>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="col-span-full rounded-3xl border border-dashed border-white/10 bg-night-900/50 p-12 text-center text-sm text-slate-400">
-                Noch keine Galerie-Einträge vorhanden. Melde dich als Admin an, um neue Fotos hochzuladen.
+        </div>
+    <?php else: ?>
+        <div class="gallery-empty">
+            <p>Noch keine Galerie-Einträge vorhanden. Melde dich als Admin an, um neue Fotos hochzuladen.</p>
+        </div>
+    <?php endif; ?>
+
+    <div class="gallery-bottom-card">
+        <div class="gallery-bottom-card__inner">
+            <div class="gallery-bottom-card__copy">
+                <span class="gallery-bottom-card__eyebrow">Dragon Reptiles</span>
+                <p class="gallery-bottom-card__text">Lust auf mehr Insights? Unsere Galerie wächst mit jeder Expedition und jedem erfolgreichen Zuchtprojekt.</p>
             </div>
-        <?php endif; ?>
+            <a href="<?= BASE_URL ?>/index.php?route=adoption" class="gallery-bottom-card__cta">Kontakt aufnehmen</a>
+        </div>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const filterButtons = document.querySelectorAll('[data-gallery-filter]');
+        const cards = document.querySelectorAll('[data-gallery-item]');
+
+        if (!filterButtons.length || !cards.length) {
+            return;
+        }
+
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const filterValue = button.getAttribute('data-gallery-filter');
+
+                filterButtons.forEach((chip) => {
+                    const isActive = chip === button;
+                    chip.classList.toggle('is-active', isActive);
+                    chip.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                cards.forEach((card) => {
+                    const tags = (card.getAttribute('data-gallery-tags') || '').split('|').filter(Boolean);
+                    const shouldShow = !filterValue || tags.includes(filterValue);
+                    card.classList.toggle('is-hidden', !shouldShow);
+                });
+            });
+        });
+    });
+</script>
 <?php include __DIR__ . '/../partials/footer.php'; ?>

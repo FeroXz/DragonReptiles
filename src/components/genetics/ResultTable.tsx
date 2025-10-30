@@ -332,11 +332,15 @@ export function ResultTable({ results, genes, species, aliases }: ResultTablePro
   );
 
   if (!results.length) {
-    return <div className="results-empty">Starte eine Berechnung, um Ergebnisse zu sehen.</div>;
+    return (
+      <div className="results-table-wrapper nui-card nui-card--glass">
+        <div className="results-empty">Starte eine Berechnung, um Ergebnisse zu sehen.</div>
+      </div>
+    );
   }
 
   return (
-    <div className="results-table-wrapper">
+    <div className="results-table-wrapper nui-card nui-card--glass">
       <table className="tbl">
         <thead>
           <tr>
