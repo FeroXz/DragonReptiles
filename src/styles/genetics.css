@@ -1,29 +1,110 @@
 .genetics-calculator {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  display: grid;
+  gap: 32px;
   color: var(--mm-text, #f1f5f9);
 }
 
-.genetics-calculator__species {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 20px;
+.nui-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 36px 32px;
+  border: 1px solid rgba(94, 234, 212, 0.25);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(45, 212, 191, 0.24), transparent 60%),
+    radial-gradient(80% 140% at 100% 0%, rgba(124, 58, 237, 0.28), transparent 55%),
+    rgba(15, 23, 42, 0.82);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(22px);
+}
+
+.nui-hero__glow {
+  position: absolute;
+  inset: -40% -40% auto;
+  height: 260px;
+  background: radial-gradient(closest-side, rgba(45, 212, 191, 0.35), transparent 70%);
+  filter: blur(40px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.nui-hero__content {
+  position: relative;
   display: grid;
+  gap: 12px;
+  max-width: 680px;
+}
+
+.nui-hero__eyebrow {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.nui-hero__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.6vw + 1rem, 2.75rem);
+  font-weight: 700;
+  color: #ecfeff;
+}
+
+.nui-hero__subtitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.nui-hero__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  color: rgba(226, 232, 240, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  margin-top: 8px;
+}
+
+.nui-card {
+  border-radius: 22px;
+  padding: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(20px);
+  display: grid;
+  gap: 18px;
+}
+
+.nui-card--glass {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.68));
+}
+
+.nui-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
 }
 
-.genetics-calculator__species h2 {
+.nui-card__header h2 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-.genetics-calculator__species p {
-  margin: 0;
-  color: rgba(226, 232, 240, 0.7);
+.nui-card__header p {
+  margin: 6px 0 0;
+  color: rgba(226, 232, 240, 0.72);
   font-size: 0.95rem;
+}
+
+.genetics-calculator__species {
+  display: grid;
+  gap: 16px;
 }
 
 .genetics-calculator__species-list {
@@ -35,70 +116,77 @@
 .chip-button {
   display: inline-flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 150px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(94, 234, 212, 0.25);
-  background: rgba(15, 23, 42, 0.65);
-  color: inherit;
+  gap: 6px;
+  min-width: 170px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.68));
+  color: rgba(226, 232, 240, 0.95);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 28px rgba(15, 23, 42, 0.35);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chip-button:hover,
 .chip-button:focus-visible {
-  border-color: rgba(94, 234, 212, 0.6);
-  transform: translateY(-1px);
+  border-color: rgba(94, 234, 212, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 22px 40px rgba(45, 212, 191, 0.25);
+  transform: translateY(-2px);
 }
 
 .chip-button.is-active {
-  border-color: rgba(94, 234, 212, 0.8);
-  background: rgba(45, 212, 191, 0.2);
+  border-color: rgba(94, 234, 212, 0.85);
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.24), rgba(124, 58, 237, 0.22));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 24px 44px rgba(124, 58, 237, 0.32);
 }
 
 .chip-button__label {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .chip-button__subtitle {
   font-size: 0.75rem;
-  color: rgba(226, 232, 240, 0.75);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
 }
 
 .genetics-calculator__inputs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
 }
 
 .search-panel {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 18px;
   display: grid;
-  gap: 12px;
+  gap: 16px;
+}
+
+.panel-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .panel-label {
   font-weight: 600;
-  font-size: 0.95rem;
-  color: rgba(226, 232, 240, 0.9);
+  font-size: 1rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.panel-subtitle {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.85);
 }
 
 .genotype-search {
   position: relative;
   display: grid;
   gap: 16px;
-}
-
-.nui-surface {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 18px;
 }
 
 .nui-chip-tray {
@@ -323,48 +411,82 @@
   border: 0;
 }
 
-.genetics-calculator__actions {
+.nui-toolbar {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
+  gap: 24px;
+}
+
+.nui-toolbar__info {
+  display: grid;
+  gap: 4px;
+  min-width: 200px;
+}
+
+.nui-toolbar__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.nui-toolbar__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgba(236, 252, 255, 0.95);
+}
+
+.nui-toolbar__subtitle {
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.nui-toolbar__buttons {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  justify-content: flex-end;
 }
 
 .action-primary,
 .action-secondary {
-  border-radius: 12px;
-  padding: 12px 18px;
+  border-radius: 14px;
+  padding: 12px 20px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .action-secondary {
-  background: rgba(51, 65, 85, 0.6);
+  background: rgba(15, 23, 42, 0.6);
   color: rgba(226, 232, 240, 0.9);
+  border-color: rgba(148, 163, 184, 0.35);
 }
 
 .action-secondary:hover,
 .action-secondary:focus-visible {
-  background: rgba(71, 85, 105, 0.8);
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(94, 234, 212, 0.4);
+  transform: translateY(-1px);
 }
 
 .action-primary {
-  background: rgba(124, 58, 237, 0.8);
-  color: #fff;
-  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.35);
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.88), rgba(124, 58, 237, 0.9));
+  color: #0f172a;
+  box-shadow: 0 18px 36px rgba(124, 58, 237, 0.4);
 }
 
 .action-primary:hover,
 .action-primary:focus-visible {
-  background: rgba(124, 58, 237, 0.95);
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.95), rgba(124, 58, 237, 1));
+  transform: translateY(-1px);
 }
 
 .results-table-wrapper {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 18px;
   overflow-x: auto;
 }
 
@@ -484,10 +606,7 @@
 }
 
 .results-empty {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  padding: 24px;
+  padding: 12px 0;
   color: rgba(148, 163, 184, 0.9);
   text-align: center;
 }
@@ -502,9 +621,19 @@
 }
 
 @media (max-width: 640px) {
-  .genetics-calculator__actions {
+  .nui-toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .nui-toolbar__buttons {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  .nui-toolbar__buttons button {
+    flex: 1 1 100%;
   }
 
   .options-dropdown {
