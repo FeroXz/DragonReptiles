@@ -3,132 +3,286 @@
     "name": "UButton",
     "category": "Button",
     "description": "Primärer Button mit gläserner Horizon-Oberfläche.",
-    "snippet": "<button class=\"nui-button nui-button--primary\">Aktion</button>"
+    "snippet": "<button class=\"nui-button nui-button--primary\" data-nui-component=\"UButton\" data-variant=\"primary\">Aktion</button>",
+    "editable": true,
+    "params": {
+      "text": "Aktion",
+      "variant": ["primary", "secondary", "ghost"]
+    }
   },
   {
     "name": "UButton Ghost",
     "category": "Button",
     "description": "Sekundärer Ghost-Button für dezente Aktionen.",
-    "snippet": "<button class=\"nui-button nui-button--ghost\">Mehr erfahren</button>"
+    "snippet": "<button class=\"nui-button nui-button--ghost\" data-nui-component=\"UButton\" data-variant=\"ghost\">Mehr erfahren</button>",
+    "editable": true,
+    "params": {
+      "text": "Mehr erfahren",
+      "variant": ["ghost", "primary", "secondary"]
+    }
   },
   {
     "name": "UCard",
     "category": "Card",
     "description": "Panel mit Titel, Text und Fußbereich.",
-    "snippet": "<section class=\"nui-card space-y-3\">\n  <header class=\"flex items-center justify-between gap-2\">\n    <h3 class=\"nui-heading text-xl\">Bereichstitel</h3>\n    <span class=\"badge badge-pattern\">Nuxt UI</span>\n  </header>\n  <p class=\"nui-muted text-sm\">Kurzer Beschreibungstext, der den Inhalt zusammenfasst.</p>\n  <footer class=\"flex items-center justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n    <button class=\"nui-button nui-button--primary\">Speichern</button>\n  </footer>\n</section>"
+    "snippet": "<section class=\"nui-card space-y-3\" data-nui-component=\"UCard\">\n  <header class=\"flex items-center justify-between gap-2\">\n    <h3 class=\"nui-heading text-xl\" data-editable=\"title\">Bereichstitel</h3>\n    <span class=\"badge badge-pattern\" data-editable=\"badge\">Nuxt UI</span>\n  </header>\n  <p class=\"nui-muted text-sm\" data-editable=\"description\">Kurzer Beschreibungstext, der den Inhalt zusammenfasst.</p>\n  <footer class=\"flex items-center justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n    <button class=\"nui-button nui-button--primary\">Speichern</button>\n  </footer>\n</section>",
+    "editable": true,
+    "params": {
+      "title": "Bereichstitel",
+      "badge": "Nuxt UI",
+      "description": "Kurzer Beschreibungstext, der den Inhalt zusammenfasst."
+    }
   },
   {
     "name": "UPanel",
     "category": "Layout",
     "description": "Schwebendes Panel mit Kopfzeile und Grid-Inhalt.",
-    "snippet": "<section class=\"nui-panel nui-panel--floating space-y-4\">\n  <header class=\"flex items-center justify-between gap-3\">\n    <div>\n      <h3 class=\"nui-heading text-lg\">Panelüberschrift</h3>\n      <p class=\"nui-muted text-sm\">Kurzer erklärender Untertitel.</p>\n    </div>\n    <span class=\"badge badge-pattern\">Aktiv</span>\n  </header>\n  <div class=\"nui-grid gap-3 md:grid-cols-2\">\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Inhalt oder Statistik.</p>\n    </div>\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Weiterer Panelbereich.</p>\n    </div>\n  </div>\n</section>"
+    "snippet": "<section class=\"nui-panel nui-panel--floating space-y-4\" data-nui-component=\"UPanel\">\n  <header class=\"flex items-center justify-between gap-3\">\n    <div>\n      <h3 class=\"nui-heading text-lg\" data-editable=\"title\">Panelüberschrift</h3>\n      <p class=\"nui-muted text-sm\" data-editable=\"subtitle\">Kurzer erklärender Untertitel.</p>\n    </div>\n    <span class=\"badge badge-pattern\" data-editable=\"badge\">Aktiv</span>\n  </header>\n  <div class=\"nui-grid gap-3 md:grid-cols-2\">\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Inhalt oder Statistik.</p>\n    </div>\n    <div class=\"nui-card p-4\">\n      <p class=\"nui-muted text-sm\">Weiterer Panelbereich.</p>\n    </div>\n  </div>\n</section>",
+    "editable": true,
+    "params": {
+      "title": "Panelüberschrift",
+      "subtitle": "Kurzer erklärender Untertitel.",
+      "badge": "Aktiv"
+    }
   },
   {
     "name": "UAlert",
     "category": "Feedback",
     "description": "Hinweisbox mit Icon und Call-to-Action.",
-    "snippet": "<div class=\"nui-alert nui-alert--info\">\n  <div class=\"nui-alert__content\">\n    <strong class=\"nui-alert__title\">Info</strong>\n    <p class=\"nui-muted text-sm\">Dieser Abschnitt enthält wichtige Hinweise für Besucher.</p>\n  </div>\n  <button class=\"nui-button nui-button--ghost\">Details</button>\n</div>"
+    "snippet": "<div class=\"nui-alert nui-alert--info\" data-nui-component=\"UAlert\" data-variant=\"info\">\n  <div class=\"nui-alert__content\">\n    <strong class=\"nui-alert__title\" data-editable=\"title\">Info</strong>\n    <p class=\"nui-muted text-sm\" data-editable=\"message\">Dieser Abschnitt enthält wichtige Hinweise für Besucher.</p>\n  </div>\n  <button class=\"nui-button nui-button--ghost\">Details</button>\n</div>",
+    "editable": true,
+    "params": {
+      "title": "Info",
+      "message": "Dieser Abschnitt enthält wichtige Hinweise für Besucher.",
+      "variant": ["info", "success", "warning", "error"]
+    }
   },
   {
     "name": "UBadge",
     "category": "Label",
     "description": "Akzentuierte Pill-Badge für Status.",
-    "snippet": "<span class=\"badge badge-pattern\">Neu</span>"
+    "snippet": "<span class=\"badge badge-pattern\" data-nui-component=\"UBadge\" data-editable=\"text\">Neu</span>",
+    "editable": true,
+    "params": {
+      "text": "Neu"
+    }
   },
   {
     "name": "UPill",
     "category": "Navigation",
     "description": "Interaktives Pill-Element für Links oder Aktionen.",
-    "snippet": "<a class=\"nui-pill justify-between text-sm font-semibold text-brand-100\" href=\"#\">\n  <span>Mehr erfahren</span>\n  <span aria-hidden=\"true\">→</span>\n</a>"
+    "snippet": "<a class=\"nui-pill justify-between text-sm font-semibold text-brand-100\" href=\"#\" data-nui-component=\"UPill\">\n  <span data-editable=\"text\">Mehr erfahren</span>\n  <span aria-hidden=\"true\">→</span>\n</a>",
+    "editable": true,
+    "params": {
+      "text": "Mehr erfahren",
+      "href": "#"
+    }
   },
   {
     "name": "UAccordion",
     "category": "Disclosures",
     "description": "Akordeon mit zwei aufklappbaren Sektionen.",
-    "snippet": "<div class=\"nui-accordion\">\n  <details open>\n    <summary>Bereich 1</summary>\n    <div class=\"nui-muted text-sm\">Ausführliche Beschreibung zum ersten Themenblock.</div>\n  </details>\n  <details>\n    <summary>Bereich 2</summary>\n    <div class=\"nui-muted text-sm\">Weitere Informationen, die bei Bedarf eingeblendet werden.</div>\n  </details>\n</div>"
+    "snippet": "<div class=\"nui-accordion\" data-nui-component=\"UAccordion\">\n  <details open>\n    <summary data-editable=\"title1\">Bereich 1</summary>\n    <div class=\"nui-muted text-sm\" data-editable=\"content1\">Ausführliche Beschreibung zum ersten Themenblock.</div>\n  </details>\n  <details>\n    <summary data-editable=\"title2\">Bereich 2</summary>\n    <div class=\"nui-muted text-sm\" data-editable=\"content2\">Weitere Informationen, die bei Bedarf eingeblendet werden.</div>\n  </details>\n</div>",
+    "editable": true,
+    "params": {
+      "title1": "Bereich 1",
+      "content1": "Ausführliche Beschreibung zum ersten Themenblock.",
+      "title2": "Bereich 2",
+      "content2": "Weitere Informationen, die bei Bedarf eingeblendet werden."
+    }
   },
   {
     "name": "UTable",
     "category": "Daten",
     "description": "Responsive Tabelle mit schwebendem Rahmen.",
-    "snippet": "<div class=\"nui-table-wrapper\">\n  <table class=\"nui-table\">\n    <thead>\n      <tr><th>Art</th><th>Status</th><th>Aktualisiert</th></tr>\n    </thead>\n    <tbody>\n      <tr><td>Königspython</td><td><span class=\"badge\">aktiv</span></td><td>02.04.2024</td></tr>\n      <tr><td>Kornnatter</td><td><span class=\"badge badge-muted\">in Pflege</span></td><td>28.03.2024</td></tr>\n    </tbody>\n  </table>\n</div>"
+    "snippet": "<div class=\"nui-table-wrapper\" data-nui-component=\"UTable\">\n  <table class=\"nui-table\">\n    <thead>\n      <tr><th>Art</th><th>Status</th><th>Aktualisiert</th></tr>\n    </thead>\n    <tbody>\n      <tr><td>Königspython</td><td><span class=\"badge\">aktiv</span></td><td>02.04.2024</td></tr>\n      <tr><td>Kornnatter</td><td><span class=\"badge badge-muted\">in Pflege</span></td><td>28.03.2024</td></tr>\n    </tbody>\n  </table>\n</div>"
   },
   {
     "name": "UForm",
     "category": "Formulare",
     "description": "Zweispaltiges Formular mit Nuxt UI Inputs.",
-    "snippet": "<form class=\"nui-grid gap-4 md:grid-cols-2\">\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">Name</span>\n    <input class=\"nui-input\" type=\"text\" placeholder=\"Dein Name\">\n  </label>\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">E-Mail</span>\n    <input class=\"nui-input\" type=\"email\" placeholder=\"mail@example.com\">\n  </label>\n  <label class=\"nui-field md:col-span-2\">\n    <span class=\"nui-field__label\">Nachricht</span>\n    <textarea class=\"nui-textarea\" rows=\"4\"></textarea>\n  </label>\n  <div class=\"md:col-span-2 flex justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Zurücksetzen</button>\n    <button class=\"nui-button nui-button--primary\">Senden</button>\n  </div>\n</form>"
+    "snippet": "<form class=\"nui-grid gap-4 md:grid-cols-2\" data-nui-component=\"UForm\">\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">Name</span>\n    <input class=\"nui-input\" type=\"text\" placeholder=\"Dein Name\">\n  </label>\n  <label class=\"nui-field\">\n    <span class=\"nui-field__label\">E-Mail</span>\n    <input class=\"nui-input\" type=\"email\" placeholder=\"mail@example.com\">\n  </label>\n  <label class=\"nui-field md:col-span-2\">\n    <span class=\"nui-field__label\">Nachricht</span>\n    <textarea class=\"nui-textarea\" rows=\"4\"></textarea>\n  </label>\n  <div class=\"md:col-span-2 flex justify-end gap-2\">\n    <button class=\"nui-button nui-button--ghost\">Zurücksetzen</button>\n    <button class=\"nui-button nui-button--primary\">Senden</button>\n  </div>\n</form>"
   },
   {
     "name": "UInput",
     "category": "Formulare",
     "description": "Textfeld mit Label und Hilfehinweis.",
-    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Titel</span>\n  <input class=\"nui-input\" type=\"text\" placeholder=\"Sektionstitel\">\n  <span class=\"nui-field__hint\">Kurzer, prägnanter Titel für den Abschnitt.</span>\n</label>"
+    "snippet": "<label class=\"nui-field\" data-nui-component=\"UInput\">\n  <span class=\"nui-field__label\" data-editable=\"label\">Titel</span>\n  <input class=\"nui-input\" type=\"text\" placeholder=\"Sektionstitel\" data-editable=\"placeholder\">\n  <span class=\"nui-field__hint\" data-editable=\"hint\">Kurzer, prägnanter Titel für den Abschnitt.</span>\n</label>",
+    "editable": true,
+    "params": {
+      "label": "Titel",
+      "placeholder": "Sektionstitel",
+      "hint": "Kurzer, prägnanter Titel für den Abschnitt."
+    }
   },
   {
     "name": "UTextarea",
     "category": "Formulare",
     "description": "Textarea mit Nuxt UI Styling.",
-    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Beschreibung</span>\n  <textarea class=\"nui-textarea\" rows=\"5\" placeholder=\"Freitext\"></textarea>\n</label>"
+    "snippet": "<label class=\"nui-field\" data-nui-component=\"UTextarea\">\n  <span class=\"nui-field__label\" data-editable=\"label\">Beschreibung</span>\n  <textarea class=\"nui-textarea\" rows=\"5\" placeholder=\"Freitext\" data-editable=\"placeholder\"></textarea>\n</label>",
+    "editable": true,
+    "params": {
+      "label": "Beschreibung",
+      "placeholder": "Freitext"
+    }
   },
   {
     "name": "USelect",
     "category": "Formulare",
     "description": "Dropdown-Auswahl mit Badge für Status.",
-    "snippet": "<label class=\"nui-field\">\n  <span class=\"nui-field__label\">Status</span>\n  <select class=\"nui-select\">\n    <option value=\"aktiv\">Aktiv</option>\n    <option value=\"archiv\">Archiviert</option>\n  </select>\n</label>"
+    "snippet": "<label class=\"nui-field\" data-nui-component=\"USelect\">\n  <span class=\"nui-field__label\" data-editable=\"label\">Status</span>\n  <select class=\"nui-select\">\n    <option value=\"aktiv\">Aktiv</option>\n    <option value=\"archiv\">Archiviert</option>\n  </select>\n</label>",
+    "editable": true,
+    "params": {
+      "label": "Status"
+    }
   },
   {
     "name": "UModal",
     "category": "Overlay",
     "description": "Dialog mit Titel, Inhalt und Aktionsleiste.",
-    "snippet": "<div class=\"nui-modal nui-modal--open\">\n  <div class=\"nui-modal__dialog space-y-4\">\n    <header class=\"flex items-center justify-between\">\n      <h3 class=\"nui-heading text-xl\">Modaltitel</h3>\n      <button class=\"nui-button nui-button--ghost\" aria-label=\"Schließen\">×</button>\n    </header>\n    <p class=\"nui-muted text-sm\">Kurzer erklärender Text zur Aktion innerhalb des Modals.</p>\n    <footer class=\"flex justify-end gap-2\">\n      <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n      <button class=\"nui-button nui-button--primary\">Bestätigen</button>\n    </footer>\n  </div>\n</div>"
+    "snippet": "<div class=\"nui-modal nui-modal--open\" data-nui-component=\"UModal\">\n  <div class=\"nui-modal__dialog space-y-4\">\n    <header class=\"flex items-center justify-between\">\n      <h3 class=\"nui-heading text-xl\" data-editable=\"title\">Modaltitel</h3>\n      <button class=\"nui-button nui-button--ghost\" aria-label=\"Schließen\">×</button>\n    </header>\n    <p class=\"nui-muted text-sm\" data-editable=\"content\">Kurzer erklärender Text zur Aktion innerhalb des Modals.</p>\n    <footer class=\"flex justify-end gap-2\">\n      <button class=\"nui-button nui-button--ghost\">Abbrechen</button>\n      <button class=\"nui-button nui-button--primary\">Bestätigen</button>\n    </footer>\n  </div>\n</div>",
+    "editable": true,
+    "params": {
+      "title": "Modaltitel",
+      "content": "Kurzer erklärender Text zur Aktion innerhalb des Modals."
+    }
   },
   {
     "name": "UTabs",
     "category": "Navigation",
     "description": "Registerkarten mit zugehörigen Inhalten.",
-    "snippet": "<div class=\"nui-tabs\">\n  <nav class=\"nui-tabs__list\">\n    <button class=\"nui-tabs__trigger is-active\">Allgemein</button>\n    <button class=\"nui-tabs__trigger\">Details</button>\n    <button class=\"nui-tabs__trigger\">Historie</button>\n  </nav>\n  <div class=\"nui-tabs__content\">\n    <p class=\"nui-muted text-sm\">Hier stehen die Inhalte des aktiven Tabs.</p>\n  </div>\n</div>"
+    "snippet": "<div class=\"nui-tabs\" data-nui-component=\"UTabs\">\n  <nav class=\"nui-tabs__list\">\n    <button class=\"nui-tabs__trigger is-active\" data-editable=\"tab1\">Allgemein</button>\n    <button class=\"nui-tabs__trigger\" data-editable=\"tab2\">Details</button>\n    <button class=\"nui-tabs__trigger\" data-editable=\"tab3\">Historie</button>\n  </nav>\n  <div class=\"nui-tabs__content\">\n    <p class=\"nui-muted text-sm\" data-editable=\"content\">Hier stehen die Inhalte des aktiven Tabs.</p>\n  </div>\n</div>",
+    "editable": true,
+    "params": {
+      "tab1": "Allgemein",
+      "tab2": "Details",
+      "tab3": "Historie",
+      "content": "Hier stehen die Inhalte des aktiven Tabs."
+    }
   },
   {
     "name": "UAvatar",
     "category": "Media",
     "description": "Avatar mit Initialen und Statuspunkt.",
-    "snippet": "<div class=\"nui-avatar\">\n  <span class=\"nui-avatar__circle\">DR</span>\n  <span class=\"nui-avatar__status nui-avatar__status--online\" aria-hidden=\"true\"></span>\n</div>"
+    "snippet": "<div class=\"nui-avatar\" data-nui-component=\"UAvatar\">\n  <span class=\"nui-avatar__circle\" data-editable=\"initials\">DR</span>\n  <span class=\"nui-avatar__status nui-avatar__status--online\" aria-hidden=\"true\"></span>\n</div>",
+    "editable": true,
+    "params": {
+      "initials": "DR"
+    }
   },
   {
     "name": "UProgress",
     "category": "Feedback",
     "description": "Fortschrittsanzeige mit Prozentwert.",
-    "snippet": "<div class=\"nui-progress\">\n  <div class=\"nui-progress__bar\" style=\"width: 66%;\"></div>\n  <span class=\"nui-progress__label\">66 % abgeschlossen</span>\n</div>"
+    "snippet": "<div class=\"nui-progress\" data-nui-component=\"UProgress\">\n  <div class=\"nui-progress__bar\" style=\"width: 66%;\" data-editable=\"percentage\"></div>\n  <span class=\"nui-progress__label\" data-editable=\"label\">66 % abgeschlossen</span>\n</div>",
+    "editable": true,
+    "params": {
+      "percentage": "66",
+      "label": "66 % abgeschlossen"
+    }
   },
   {
     "name": "UTooltip",
     "category": "Overlay",
     "description": "Tooltip mit Icon-Trigger.",
-    "snippet": "<span class=\"nui-tooltip\">\n  <button class=\"nui-button nui-button--icon\" aria-describedby=\"tip-1\">?</button>\n  <span id=\"tip-1\" role=\"tooltip\">Weitere Hinweise zu diesem Feld.</span>\n</span>"
+    "snippet": "<span class=\"nui-tooltip\" data-nui-component=\"UTooltip\">\n  <button class=\"nui-button nui-button--icon\" aria-describedby=\"tip-1\">?</button>\n  <span id=\"tip-1\" role=\"tooltip\" data-editable=\"text\">Weitere Hinweise zu diesem Feld.</span>\n</span>",
+    "editable": true,
+    "params": {
+      "text": "Weitere Hinweise zu diesem Feld."
+    }
   },
   {
     "name": "UDropdown",
     "category": "Navigation",
     "description": "Kontextmenü mit Aktionen.",
-    "snippet": "<div class=\"nui-dropdown\">\n  <button class=\"nui-button nui-button--ghost\">Aktion</button>\n  <div class=\"nui-dropdown__menu\">\n    <button type=\"button\">Bearbeiten</button>\n    <button type=\"button\">Duplizieren</button>\n    <button type=\"button\" class=\"danger\">Löschen</button>\n  </div>\n</div>"
+    "snippet": "<div class=\"nui-dropdown\" data-nui-component=\"UDropdown\">\n  <button class=\"nui-button nui-button--ghost\">Aktion</button>\n  <div class=\"nui-dropdown__menu\">\n    <button type=\"button\">Bearbeiten</button>\n    <button type=\"button\">Duplizieren</button>\n    <button type=\"button\" class=\"danger\">Löschen</button>\n  </div>\n</div>"
   },
   {
     "name": "UTimeline",
     "category": "Daten",
     "description": "Timeline mit drei Stationen.",
-    "snippet": "<ul class=\"nui-timeline\">\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Check-in</strong>\n      <p class=\"nui-muted text-xs\">01.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Pflegeupdate</strong>\n      <p class=\"nui-muted text-xs\">05.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong>Release</strong>\n      <p class=\"nui-muted text-xs\">12.04.2024</p>\n    </div>\n  </li>\n</ul>"
+    "snippet": "<ul class=\"nui-timeline\" data-nui-component=\"UTimeline\">\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong data-editable=\"event1\">Check-in</strong>\n      <p class=\"nui-muted text-xs\" data-editable=\"date1\">01.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong data-editable=\"event2\">Pflegeupdate</strong>\n      <p class=\"nui-muted text-xs\" data-editable=\"date2\">05.04.2024</p>\n    </div>\n  </li>\n  <li>\n    <span class=\"nui-timeline__dot\"></span>\n    <div>\n      <strong data-editable=\"event3\">Release</strong>\n      <p class=\"nui-muted text-xs\" data-editable=\"date3\">12.04.2024</p>\n    </div>\n  </li>\n</ul>",
+    "editable": true,
+    "params": {
+      "event1": "Check-in",
+      "date1": "01.04.2024",
+      "event2": "Pflegeupdate",
+      "date2": "05.04.2024",
+      "event3": "Release",
+      "date3": "12.04.2024"
+    }
   },
   {
     "name": "UCarousel",
     "category": "Media",
     "description": "Slider mit drei Bilderkarten.",
-    "snippet": "<div class=\"nui-carousel\">\n  <div class=\"nui-carousel__track\">\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?1\" alt=\"Bild 1\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?2\" alt=\"Bild 2\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?3\" alt=\"Bild 3\"></figure>\n  </div>\n</div>"
+    "snippet": "<div class=\"nui-carousel\" data-nui-component=\"UCarousel\">\n  <div class=\"nui-carousel__track\">\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?1\" alt=\"Bild 1\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?2\" alt=\"Bild 2\"></figure>\n    <figure class=\"nui-card nui-card--media\"><img src=\"https://picsum.photos/320/180?3\" alt=\"Bild 3\"></figure>\n  </div>\n</div>"
   },
   {
     "name": "UToast",
     "category": "Feedback",
     "description": "Toast-Platzhalter für Statusmeldungen.",
-    "snippet": "<div class=\"nui-toast nui-toast--success\">\n  <strong>Erfolgreich gespeichert</strong>\n  <p class=\"nui-muted text-xs\">Alle Angaben wurden aktualisiert.</p>\n</div>"
+    "snippet": "<div class=\"nui-toast nui-toast--success\" data-nui-component=\"UToast\" data-variant=\"success\">\n  <strong data-editable=\"title\">Erfolgreich gespeichert</strong>\n  <p class=\"nui-muted text-xs\" data-editable=\"message\">Alle Angaben wurden aktualisiert.</p>\n</div>",
+    "editable": true,
+    "params": {
+      "title": "Erfolgreich gespeichert",
+      "message": "Alle Angaben wurden aktualisiert.",
+      "variant": ["success", "info", "warning", "error"]
+    }
+  },
+  {
+    "name": "UHero",
+    "category": "Layout",
+    "description": "Hero-Sektion mit Titel, Untertitel und CTAs.",
+    "snippet": "<section class=\"nui-hero\" data-nui-component=\"UHero\">\n  <div class=\"nui-hero__content\">\n    <span class=\"badge badge-pattern\" data-editable=\"badge\">Neu</span>\n    <h1 class=\"nui-heading text-4xl md:text-5xl\" data-editable=\"title\">Willkommen bei Dragon Reptiles</h1>\n    <p class=\"nui-muted text-lg\" data-editable=\"subtitle\">Entdecken Sie unsere faszinierende Welt der Reptilien</p>\n    <div class=\"flex gap-3\">\n      <button class=\"nui-button nui-button--primary\">Tiere ansehen</button>\n      <button class=\"nui-button nui-button--ghost\">Mehr erfahren</button>\n    </div>\n  </div>\n</section>",
+    "editable": true,
+    "params": {
+      "badge": "Neu",
+      "title": "Willkommen bei Dragon Reptiles",
+      "subtitle": "Entdecken Sie unsere faszinierende Welt der Reptilien"
+    }
+  },
+  {
+    "name": "UCallout",
+    "category": "Feedback",
+    "description": "Hervorgehobene Infobox mit Icon.",
+    "snippet": "<div class=\"nui-callout\" data-nui-component=\"UCallout\">\n  <div class=\"nui-callout__icon\">💡</div>\n  <div>\n    <h4 class=\"nui-heading text-sm\" data-editable=\"title\">Tipp</h4>\n    <p class=\"nui-muted text-sm\" data-editable=\"content\">Dies ist ein hilfreicher Hinweis für Benutzer.</p>\n  </div>\n</div>",
+    "editable": true,
+    "params": {
+      "title": "Tipp",
+      "content": "Dies ist ein hilfreicher Hinweis für Benutzer.",
+      "icon": "💡"
+    }
+  },
+  {
+    "name": "UDivider",
+    "category": "Layout",
+    "description": "Trennlinie mit optionalem Label.",
+    "snippet": "<div class=\"nui-divider\" data-nui-component=\"UDivider\">\n  <span data-editable=\"text\">oder</span>\n</div>",
+    "editable": true,
+    "params": {
+      "text": "oder"
+    }
+  },
+  {
+    "name": "USkeleton",
+    "category": "Feedback",
+    "description": "Ladeplatzhalt-Element.",
+    "snippet": "<div class=\"nui-skeleton\" data-nui-component=\"USkeleton\" style=\"height: 100px;\"></div>"
+  },
+  {
+    "name": "UStats",
+    "category": "Daten",
+    "description": "Statistik-Card mit Wert und Änderung.",
+    "snippet": "<div class=\"nui-stats\" data-nui-component=\"UStats\">\n  <div class=\"nui-stats__item\">\n    <span class=\"nui-stats__label\" data-editable=\"label1\">Tiere</span>\n    <span class=\"nui-stats__value\" data-editable=\"value1\">42</span>\n    <span class=\"nui-stats__change nui-stats__change--positive\" data-editable=\"change1\">+12%</span>\n  </div>\n  <div class=\"nui-stats__item\">\n    <span class=\"nui-stats__label\" data-editable=\"label2\">Anfragen</span>\n    <span class=\"nui-stats__value\" data-editable=\"value2\">18</span>\n    <span class=\"nui-stats__change nui-stats__change--negative\" data-editable=\"change2\">-3%</span>\n  </div>\n</div>",
+    "editable": true,
+    "params": {
+      "label1": "Tiere",
+      "value1": "42",
+      "change1": "+12%",
+      "label2": "Anfragen",
+      "value2": "18",
+      "change2": "-3%"
+    }
   }
 ]

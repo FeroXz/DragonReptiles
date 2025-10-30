@@ -1281,6 +1281,285 @@
         refreshEmptyState('admin');
     }
 
+    // ==========================================
+    // Component Editor Enhancement
+    // ==========================================
+
+    function createComponentEditModal() {
+        const existingModal = document.getElementById('component-edit-modal');
+        if (existingModal) {
+            return existingModal;
+        }
+
+        const modal = document.createElement('div');
+        modal.id = 'component-edit-modal';
+        modal.className = 'nui-modal';
+        modal.hidden = true;
+        modal.innerHTML = `
+            <div class="nui-modal__dialog space-y-4" style="max-width: 600px;">
+                <header class="flex items-center justify-between">
+                    <h3 class="nui-heading text-xl">Komponente bearbeiten</h3>
+                    <button type="button" class="nui-button nui-button--ghost" data-close-edit-modal aria-label="Schließen">×</button>
+                </header>
+                <div id="component-edit-content" class="space-y-3">
+                    <!-- Dynamic content -->
+                </div>
+                <footer class="flex justify-end gap-2">
+                    <button type="button" class="nui-button nui-button--ghost" data-close-edit-modal>Abbrechen</button>
+                    <button type="button" class="nui-button nui-button--primary" data-save-component>Speichern</button>
+                </footer>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close handlers
+        modal.querySelectorAll('[data-close-edit-modal]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                modal.hidden = true;
+                document.body.classList.remove('component-editor--modal-open');
+            });
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.hidden = true;
+                document.body.classList.remove('component-editor--modal-open');
+            }
+        });
+
+        return modal;
+    }
+
+    function findComponentDefinition(componentName) {
+        return componentCatalogState.items.find((item) => item.name === componentName);
+    }
+
+    function openComponentEditor(element, editor, sync) {
+        const componentName = element.getAttribute('data-nui-component');
+        if (!componentName) {
+            return;
+        }
+
+        const definition = findComponentDefinition(componentName);
+        if (!definition || !definition.editable || !definition.params) {
+            window.alert('Diese Komponente kann nicht bearbeitet werden.');
+            return;
+        }
+
+        const modal = createComponentEditModal();
+        const content = modal.querySelector('#component-edit-content');
+        const saveButton = modal.querySelector('[data-save-component]');
+
+        // Build form
+        content.innerHTML = '';
+        const form = document.createElement('form');
+        form.className = 'space-y-3';
+
+        Object.entries(definition.params).forEach(([key, value]) => {
+            const fieldWrapper = document.createElement('label');
+            fieldWrapper.className = 'nui-field';
+
+            const label = document.createElement('span');
+            label.className = 'nui-field__label';
+            label.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+
+            fieldWrapper.appendChild(label);
+
+            if (Array.isArray(value)) {
+                // Dropdown for array options
+                const select = document.createElement('select');
+                select.className = 'nui-select';
+                select.name = key;
+                value.forEach((option) => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    select.appendChild(opt);
+                });
+
+                // Try to find current value
+                const currentAttr = element.getAttribute(`data-${key}`);
+                if (currentAttr) {
+                    select.value = currentAttr;
+                } else {
+                    const editableEl = element.querySelector(`[data-editable="${key}"]`);
+                    if (editableEl) {
+                        select.value = editableEl.textContent.trim();
+                    }
+                }
+
+                fieldWrapper.appendChild(select);
+            } else {
+                // Text input for string values
+                const input = document.createElement('input');
+                input.className = 'nui-input';
+                input.type = 'text';
+                input.name = key;
+
+                // Try to find current value
+                const editableEl = element.querySelector(`[data-editable="${key}"]`);
+                if (editableEl) {
+                    input.value = editableEl.textContent.trim();
+                } else {
+                    input.value = value || '';
+                }
+
+                fieldWrapper.appendChild(input);
+            }
+
+            form.appendChild(fieldWrapper);
+        });
+
+        content.appendChild(form);
+
+        // Save handler
+        saveButton.onclick = () => {
+            const formData = new FormData(form);
+            const updates = {};
+            formData.forEach((val, key) => {
+                updates[key] = val;
+            });
+
+            // Update element
+            Object.entries(updates).forEach(([key, value]) => {
+                const editableEl = element.querySelector(`[data-editable="${key}"]`);
+                if (editableEl) {
+                    editableEl.textContent = value;
+                }
+
+                // Update data attributes for variants
+                if (key === 'variant') {
+                    element.setAttribute(`data-${key}`, value);
+                    // Update class for alerts/toasts
+                    if (componentName === 'UAlert' || componentName === 'UToast') {
+                        element.className = element.className.replace(/nui-(alert|toast)--(info|success|warning|error)/, `nui-$1--${value}`);
+                    }
+                }
+
+                // Special handling for progress bar
+                if (key === 'percentage' && componentName === 'UProgress') {
+                    const bar = element.querySelector('.nui-progress__bar');
+                    if (bar) {
+                        bar.style.width = value + '%';
+                    }
+                }
+            });
+
+            sync();
+            modal.hidden = true;
+            document.body.classList.remove('component-editor--modal-open');
+        };
+
+        modal.hidden = false;
+        document.body.classList.add('component-editor--modal-open');
+    }
+
+    function enhanceEditorWithComponentHighlighting(editor, sync) {
+        if (editor.dataset.componentEnhanced) {
+            return;
+        }
+        editor.dataset.componentEnhanced = 'true';
+
+        // Add hover effect for editable components
+        editor.addEventListener('mouseover', (e) => {
+            const component = e.target.closest('[data-nui-component]');
+            if (component && component.getAttribute('data-editable') !== 'false') {
+                const definition = findComponentDefinition(component.getAttribute('data-nui-component'));
+                if (definition && definition.editable) {
+                    component.classList.add('component-editable-hover');
+                }
+            }
+        });
+
+        editor.addEventListener('mouseout', (e) => {
+            const component = e.target.closest('[data-nui-component]');
+            if (component) {
+                component.classList.remove('component-editable-hover');
+            }
+        });
+
+        // Add click handler for editing
+        editor.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const component = e.target.closest('[data-nui-component]');
+            if (component) {
+                const definition = findComponentDefinition(component.getAttribute('data-nui-component'));
+                if (definition && definition.editable) {
+                    openComponentEditor(component, editor, sync);
+                }
+            }
+        });
+
+        // Add edit button overlay
+        let editButton = null;
+
+        editor.addEventListener('click', (e) => {
+            const component = e.target.closest('[data-nui-component]');
+
+            // Remove old button
+            if (editButton && editButton.parentNode) {
+                editButton.remove();
+                editButton = null;
+            }
+
+            if (component && component.getAttribute('data-editable') !== 'false') {
+                const definition = findComponentDefinition(component.getAttribute('data-nui-component'));
+                if (definition && definition.editable) {
+                    e.stopPropagation();
+
+                    editButton = document.createElement('button');
+                    editButton.type = 'button';
+                    editButton.className = 'component-edit-button';
+                    editButton.textContent = '✎ Bearbeiten';
+                    editButton.title = 'Doppelklick auf die Komponente zum Bearbeiten';
+
+                    editButton.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        openComponentEditor(component, editor, sync);
+                        editButton.remove();
+                        editButton = null;
+                    });
+
+                    component.style.position = 'relative';
+                    component.appendChild(editButton);
+
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        if (editButton && editButton.parentNode) {
+                            editButton.remove();
+                            editButton = null;
+                        }
+                    }, 5000);
+                }
+            }
+        });
+    }
+
+    function updateWrapTextarea() {
+        const originalWrap = wrapTextarea;
+        wrapTextarea = function(textarea) {
+            originalWrap(textarea);
+
+            // Find the editor element
+            const shell = textarea.parentNode;
+            if (shell && shell.classList.contains('rich-text-shell')) {
+                const editor = shell.querySelector('.rich-text-editor');
+                if (editor) {
+                    const sync = () => {
+                        textarea.value = editor.innerHTML.trim();
+                    };
+                    enhanceEditorWithComponentHighlighting(editor, sync);
+                }
+            }
+        };
+    }
+
+    updateWrapTextarea();
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('textarea.rich-text').forEach(wrapTextarea);
         document.querySelectorAll('[data-animal-gene-picker]').forEach(initAnimalGenePicker);
