@@ -1,4 +1,48 @@
-<?php
+<?php declare(strict_types=1);
+
+/**
+ * Initializes a secure session.
+ *
+ * @return void
+ */
+function init_secure_session(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    // Set secure session parameters
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.cookie_samesite', 'Lax');
+
+    // Only set secure flag if HTTPS is enabled
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', '1');
+    }
+
+    // Set session lifetime
+    ini_set('session.gc_maxlifetime', (string)SESSION_LIFETIME);
+    ini_set('session.cookie_lifetime', (string)SESSION_LIFETIME);
+
+    session_start();
+
+    // Regenerate session ID periodically to prevent session fixation
+    if (!isset($_SESSION['last_regeneration'])) {
+        $_SESSION['last_regeneration'] = time();
+    } elseif (time() - $_SESSION['last_regeneration'] > 1800) { // 30 minutes
+        session_regenerate_id(true);
+        $_SESSION['last_regeneration'] = time();
+    }
+}
+
+/**
+ * Renders a view template with the provided data.
+ *
+ * @param string $template Template name (without .php extension)
+ * @param array $data Data to pass to the template
+ * @return void
+ */
 function view(string $template, array $data = []): void
 {
     if (!isset($data['currentRoute']) && isset($GLOBALS['currentRoute'])) {
@@ -119,6 +163,11 @@ function flash(string $key, ?string $message = null): ?string
     return null;
 }
 
+/**
+ * Generates a new CSRF token.
+ *
+ * @return string The generated token
+ */
 function csrf_token(): string
 {
     $now = time();
@@ -132,12 +181,12 @@ function csrf_token(): string
         }
     }
 
-    if (count($_SESSION['csrf_tokens']) > 50) {
-        $_SESSION['csrf_tokens'] = array_slice($_SESSION['csrf_tokens'], -50, null, true);
+    if (count($_SESSION['csrf_tokens']) > CSRF_TOKEN_LIMIT) {
+        $_SESSION['csrf_tokens'] = array_slice($_SESSION['csrf_tokens'], -CSRF_TOKEN_LIMIT, null, true);
     }
 
     $token = bin2hex(random_bytes(32));
-    $_SESSION['csrf_tokens'][$token] = $now + 1800;
+    $_SESSION['csrf_tokens'][$token] = $now + CSRF_TOKEN_LIFETIME;
 
     return $token;
 }
@@ -188,6 +237,13 @@ function ensure_directory(string $dir): void
     }
 }
 
+/**
+ * Securely handles file uploads with validation.
+ *
+ * @param array $file The uploaded file from $_FILES
+ * @param bool $withDetails Whether to return detailed information
+ * @return string|array|null The file path or detailed info, or null on failure
+ */
 function handle_upload(array $file, bool $withDetails = false)
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
@@ -198,36 +254,55 @@ function handle_upload(array $file, bool $withDetails = false)
         return null;
     }
 
+    // Check file size
+    $fileSize = $file['size'] ?? 0;
+    if ($fileSize > MAX_UPLOAD_SIZE || $fileSize === 0) {
+        return null;
+    }
+
     ensure_directory(UPLOAD_PATH);
 
+    // MIME type validation
     $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : false;
     $mimeType = $finfo ? finfo_file($finfo, $file['tmp_name']) : null;
     if ($finfo) {
         finfo_close($finfo);
     }
-    if ($mimeType && strpos($mimeType, 'image/') !== 0) {
+
+    if (!$mimeType || !in_array($mimeType, ALLOWED_MIME_TYPES, true)) {
         return null;
     }
 
+    // Extension validation
     $originalName = $file['name'] ?? 'upload';
-    $sanitizedName = preg_replace('/[^a-zA-Z0-9\.\-]/', '_', $originalName);
-    $filename = bin2hex(random_bytes(8)) . '-' . $sanitizedName;
-    $destination = UPLOAD_PATH . '/' . $filename;
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+    if (!in_array($ext, ALLOWED_FILE_EXTENSIONS, true)) {
+        return null;
+    }
+
+    // Check for double extensions (e.g., shell.php.jpg)
+    $basename = pathinfo($originalName, PATHINFO_FILENAME);
+    if (strpos($basename, '.') !== false) {
+        return null;
+    }
+
+    // Generate safe filename with whitelisted extension
+    $safeFilename = bin2hex(random_bytes(16)) . '.' . $ext;
+    $destination = UPLOAD_PATH . '/' . $safeFilename;
+
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return null;
     }
 
-    $relativePath = 'uploads/' . $filename;
+    $relativePath = 'uploads/' . $safeFilename;
 
     if (!$withDetails) {
         return $relativePath;
     }
 
     $size = @filesize($destination);
-    $dimensions = null;
-    if ($mimeType && strpos($mimeType, 'image/') === 0) {
-        $dimensions = @getimagesize($destination) ?: null;
-    }
+    $dimensions = @getimagesize($destination) ?: null;
 
     return [
         'path' => $relativePath,
@@ -284,6 +359,12 @@ function parse_partial_date(?string $value): array
     ];
 }
 
+/**
+ * Normalizes partial date input (year, month, day).
+ *
+ * @param array $input Input array with 'year', 'month', 'day' keys
+ * @return array [normalized_date|null, error_message|null]
+ */
 function normalize_partial_date_input(array $input): array
 {
     $year = trim((string)($input['year'] ?? ''));
@@ -303,7 +384,8 @@ function normalize_partial_date_input(array $input): array
     }
 
     $yearInt = (int)$year;
-    if ($yearInt < 1900 || $yearInt > (int)date('Y') + 1) {
+    $maxYear = (int)date('Y') + MAX_YEAR_OFFSET;
+    if ($yearInt < MIN_YEAR || $yearInt > $maxYear) {
         return [null, 'Das ausgewählte Jahr liegt außerhalb des zulässigen Bereichs.'];
     }
 
@@ -412,8 +494,23 @@ function slugify(string $value): string
     return $value ?: bin2hex(random_bytes(4));
 }
 
+/**
+ * Ensures a unique slug for a given table.
+ *
+ * @param PDO $pdo Database connection
+ * @param string $table Table name (must be in ALLOWED_SLUG_TABLES)
+ * @param string $slug The desired slug
+ * @param int|null $ignoreId Optional ID to ignore (for updates)
+ * @return string The unique slug
+ * @throws InvalidArgumentException If table is not allowed
+ */
 function ensure_unique_slug(PDO $pdo, string $table, string $slug, ?int $ignoreId = null): string
 {
+    // SQL Injection prevention: Whitelist allowed tables
+    if (!in_array($table, ALLOWED_SLUG_TABLES, true)) {
+        throw new InvalidArgumentException("Invalid table for slug generation: {$table}");
+    }
+
     $base = $slug ?: bin2hex(random_bytes(4));
     $candidate = $base;
     $counter = 1;
@@ -434,6 +531,13 @@ function ensure_unique_slug(PDO $pdo, string $table, string $slug, ?int $ignoreI
     }
 }
 
+/**
+ * Renders rich text content with XSS protection.
+ * Strips all tags except those in ALLOWED_HTML_TAGS.
+ *
+ * @param string|null $value The text to render
+ * @return string The sanitized HTML
+ */
 function render_rich_text(?string $value): string
 {
     if ($value === null || $value === '') {
@@ -444,7 +548,17 @@ function render_rich_text(?string $value): string
         return nl2br(htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     }
 
-    return $value;
+    // XSS Protection: Strip all tags except allowed ones
+    $sanitized = strip_tags($value, ALLOWED_HTML_TAGS);
+
+    // Additional protection: Remove potentially dangerous attributes
+    // This is a simple implementation; for production, consider using HTML Purifier
+    $sanitized = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $sanitized);
+    $sanitized = preg_replace('/on\w+\s*=\s*["\'][^"\']*["\']/i', '', $sanitized);
+    $sanitized = preg_replace('/javascript:/i', '', $sanitized);
+    $sanitized = preg_replace('/data:/i', '', $sanitized);
+
+    return $sanitized;
 }
 
 function format_bytes(int $bytes, int $precision = 1): string
