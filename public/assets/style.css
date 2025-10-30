@@ -2981,3 +2981,190 @@ body.menu-manager--modal-open {
     height: auto;
     display: block;
 }
+
+/* ==============================================
+   Component Editor Enhancement Styles
+   ============================================== */
+
+/* Hover effect for editable components */
+.component-editable-hover {
+    outline: 2px dashed rgba(139, 92, 246, 0.5) !important;
+    outline-offset: 4px;
+    transition: outline 0.2s ease;
+    cursor: pointer;
+}
+
+/* Edit button overlay */
+.component-edit-button {
+    position: absolute !important;
+    top: -8px;
+    right: -8px;
+    z-index: 100;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: white !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: all 0.2s ease !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.component-edit-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    background: linear-gradient(135deg, #9d6fff, #8b5cf6) !important;
+}
+
+.component-edit-button:active {
+    transform: translateY(0) !important;
+}
+
+/* Component editor modal styling enhancement */
+#component-edit-modal .nui-modal__dialog {
+    animation: slideInFromTop 0.3s ease;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal backdrop */
+.component-editor--modal-open #component-edit-modal {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+}
+
+/* Form fields in component editor */
+#component-edit-content .nui-field {
+    margin-bottom: 0 !important;
+}
+
+#component-edit-content .nui-field__label {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 6px;
+    display: block;
+}
+
+#component-edit-content .nui-input,
+#component-edit-content .nui-select {
+    width: 100%;
+}
+
+/* Highlight inserted components in editor */
+.rich-text-editor [data-nui-component] {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.rich-text-editor [data-nui-component]:hover {
+    background: rgba(139, 92, 246, 0.05);
+}
+
+/* Component badge in gallery */
+.component-card__badge {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+/* Enhance component preview cards */
+.component-card__preview {
+    border: 2px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.3);
+    margin: 12px 0;
+    transition: all 0.3s ease;
+}
+
+.component-card:hover .component-card__preview {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(15, 23, 42, 0.4);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+}
+
+/* Editable indicator */
+.component-card__header::after {
+    content: '';
+    display: none;
+}
+
+.component-card[data-editable="true"] .component-card__header::after {
+    content: '✎';
+    display: inline-block;
+    margin-left: 8px;
+    color: rgba(139, 92, 246, 0.6);
+    font-size: 14px;
+}
+
+/* Component gallery search enhancement */
+.component-gallery__search input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.component-gallery__search input:focus {
+    border-color: rgba(139, 92, 246, 0.6);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+/* Category chips enhancement */
+.component-chip {
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.component-chip.is-active {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.component-chip:not(.is-active):hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+/* Note text enhancement */
+.rich-text-note {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.1));
+    border-left: 4px solid #8b5cf6;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+/* Component sidebar title */
+.rich-text-components__title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+}
