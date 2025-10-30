@@ -1,5 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
+/**
+ * Normalizes adoption listing status.
+ *
+ * @param string|null $status The status to normalize
+ * @return string Normalized status
+ */
 function normalize_listing_status(?string $status): string
 {
     $allowed = ['available', 'reserved', 'adopted'];
@@ -77,6 +83,14 @@ function get_public_listings(PDO $pdo, ?int $limit = null): array
     return $stmt->fetchAll();
 }
 
+/**
+ * Creates an adoption inquiry with validation.
+ *
+ * @param PDO $pdo Database connection
+ * @param array $data Inquiry data
+ * @return void
+ * @throws InvalidArgumentException If validation fails
+ */
 function create_inquiry(PDO $pdo, array $data): void
 {
     $listingId = normalize_nullable_id($data['listing_id'] ?? null);
@@ -94,8 +108,23 @@ function create_inquiry(PDO $pdo, array $data): void
     }
 
     $name = trim($data['sender_name'] ?? '');
+    if ($name === '') {
+        throw new InvalidArgumentException('Bitte geben Sie Ihren Namen ein.');
+    }
+
+    if (strlen($name) > 255) {
+        throw new InvalidArgumentException('Der Name ist zu lang (maximal 255 Zeichen).');
+    }
+
     $email = trim($data['sender_email'] ?? '');
+    if (!validate_email($email)) {
+        throw new InvalidArgumentException('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+    }
+
     $message = trim($data['message'] ?? '');
+    if ($message === '') {
+        throw new InvalidArgumentException('Bitte geben Sie eine Nachricht ein.');
+    }
 
     $stmt = $pdo->prepare('INSERT INTO adoption_inquiries(listing_id, interested_in, sender_name, sender_email, message) VALUES (:listing_id, :interested_in, :sender_name, :sender_email, :message)');
     $stmt->execute([

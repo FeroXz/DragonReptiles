@@ -1,4 +1,10 @@
-<?php
+<?php declare(strict_types=1);
+
+/**
+ * Gets or creates a database connection.
+ *
+ * @return PDO Database connection
+ */
 function get_database_connection(): PDO
 {
     static $pdo;
@@ -274,4 +280,78 @@ function initialize_database(PDO $pdo): void
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )');
+
+    // Create database indexes for performance
+    create_database_indexes($pdo);
+}
+
+/**
+ * Creates database indexes for improved query performance.
+ *
+ * @param PDO $pdo Database connection
+ * @return void
+ */
+function create_database_indexes(PDO $pdo): void
+{
+    // Check if indexes exist before creating them
+    $indexes = [
+        // Animals table indexes
+        'CREATE INDEX IF NOT EXISTS idx_animals_species_slug ON animals(species_slug)',
+        'CREATE INDEX IF NOT EXISTS idx_animals_owner_id ON animals(owner_id)',
+        'CREATE INDEX IF NOT EXISTS idx_animals_showcased ON animals(is_showcased)',
+        'CREATE INDEX IF NOT EXISTS idx_animals_private ON animals(is_private)',
+
+        // Adoption listings indexes
+        'CREATE INDEX IF NOT EXISTS idx_adoption_status ON adoption_listings(status)',
+        'CREATE INDEX IF NOT EXISTS idx_adoption_animal_id ON adoption_listings(animal_id)',
+
+        // Adoption inquiries indexes
+        'CREATE INDEX IF NOT EXISTS idx_inquiries_listing_id ON adoption_inquiries(listing_id)',
+
+        // Pages indexes
+        'CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug)',
+        'CREATE INDEX IF NOT EXISTS idx_pages_published ON pages(is_published)',
+        'CREATE INDEX IF NOT EXISTS idx_pages_parent_id ON pages(parent_id)',
+
+        // News posts indexes
+        'CREATE INDEX IF NOT EXISTS idx_news_slug ON news_posts(slug)',
+        'CREATE INDEX IF NOT EXISTS idx_news_published ON news_posts(is_published)',
+        'CREATE INDEX IF NOT EXISTS idx_news_published_at ON news_posts(published_at)',
+
+        // Care articles indexes
+        'CREATE INDEX IF NOT EXISTS idx_care_slug ON care_articles(slug)',
+        'CREATE INDEX IF NOT EXISTS idx_care_published ON care_articles(is_published)',
+
+        // Care topics indexes
+        'CREATE INDEX IF NOT EXISTS idx_care_topics_slug ON care_topics(slug)',
+        'CREATE INDEX IF NOT EXISTS idx_care_topics_parent_id ON care_topics(parent_id)',
+
+        // Genetic species indexes
+        'CREATE INDEX IF NOT EXISTS idx_genetic_species_slug ON genetic_species(slug)',
+
+        // Genetic genes indexes
+        'CREATE INDEX IF NOT EXISTS idx_genetic_genes_species_id ON genetic_genes(species_id)',
+        'CREATE INDEX IF NOT EXISTS idx_genetic_genes_slug ON genetic_genes(slug)',
+
+        // Breeding plan parents indexes
+        'CREATE INDEX IF NOT EXISTS idx_breeding_parents_plan_id ON breeding_plan_parents(plan_id)',
+        'CREATE INDEX IF NOT EXISTS idx_breeding_parents_animal_id ON breeding_plan_parents(animal_id)',
+
+        // Media assets indexes
+        'CREATE INDEX IF NOT EXISTS idx_media_file_path ON media_assets(file_path)',
+
+        // Menu items indexes
+        'CREATE INDEX IF NOT EXISTS idx_menu_location ON menu_items(location)',
+        'CREATE INDEX IF NOT EXISTS idx_menu_visible ON menu_items(visible)',
+        'CREATE INDEX IF NOT EXISTS idx_menu_position ON menu_items(position)'
+    ];
+
+    foreach ($indexes as $indexSql) {
+        try {
+            $pdo->exec($indexSql);
+        } catch (PDOException $e) {
+            // Log error but continue with other indexes
+            error_log("Failed to create index: " . $e->getMessage());
+        }
+    }
 }
