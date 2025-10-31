@@ -16,6 +16,8 @@ interface Messages {
   parentB: string;
   speciesHeading: string;
   speciesHint: string;
+  liveStatus: string;
+  liveSubtitle: string;
   species: Record<SpeciesKey, { label: string; subtitle: string }>;
 }
 
@@ -87,11 +89,29 @@ function encodeParent(parent: ParentGenotype, allowed: Set<string>): string {
   return parts.join(';');
 }
 
+function countActiveGenes(parent: ParentGenotype): number {
+  return Object.values(parent).reduce((count, entry) => {
+    if (!entry) {
+      return count;
+    }
+    if (typeof entry === 'string') {
+      return entry === 'normal' ? count : count + 1;
+    }
+    if (entry.state === 'normal' && entry.posHet === undefined) {
+      return count;
+    }
+    return count + 1;
+  }, 0);
+}
+
+function formatGeneCount(count: number): string {
+  return `${count} ${count === 1 ? 'Gen' : 'Gene'}`;
+}
+
 export function Calculator() {
   const [speciesKey, setSpeciesKey] = useState<SpeciesKey>('hognose');
   const [parentA, setParentA] = useState<ParentGenotype>({});
   const [parentB, setParentB] = useState<ParentGenotype>({});
-  const [results, setResults] = useState<PairingResult[] | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   const genes = useMemo(() => getGenesForSpecies(speciesKey), [speciesKey]);
@@ -145,21 +165,25 @@ export function Calculator() {
     setSpeciesKey(key);
     setParentA({});
     setParentB({});
-    setResults(null);
-  };
-
-  const handleCalculate = () => {
-    const prediction = predictPairing(parentA, parentB, genes).slice(0, 50);
-    setResults(prediction);
   };
 
   const handleReset = () => {
     setParentA({});
     setParentB({});
-    setResults(null);
   };
 
-  const activeResults = results ?? [];
+  const liveResults = useMemo<PairingResult[]>(() => {
+    if (!hydrated) {
+      return [];
+    }
+    return predictPairing(parentA, parentB, genes).slice(0, 50);
+  }, [genes, hydrated, parentA, parentB]);
+
+  const parentAGenes = useMemo(() => countActiveGenes(parentA), [parentA]);
+  const parentBGenes = useMemo(() => countActiveGenes(parentB), [parentB]);
+
+  const parentACountLabel = `${messages.parentA}: ${formatGeneCount(parentAGenes)}`;
+  const parentBCountLabel = `${messages.parentB}: ${formatGeneCount(parentBGenes)}`;
 
   return (
     <div className="genetics-calculator">
@@ -169,7 +193,7 @@ export function Calculator() {
           <span className="nui-hero__eyebrow">MorphMarket Toolkit</span>
           <h1 className="nui-hero__title">Genetik-Rechner</h1>
           <p className="nui-hero__subtitle">
-            {messages.calculate} · {messages.speciesHint}
+            {messages.liveSubtitle} · {messages.speciesHint}
           </p>
           <div className="nui-hero__tag" role="status">
             <span>{activeSpecies.label}</span>
@@ -220,19 +244,23 @@ export function Calculator() {
           <span className="nui-toolbar__eyebrow">Aktive Art</span>
           <span className="nui-toolbar__title">{activeSpecies.label}</span>
           <span className="nui-toolbar__subtitle">{activeSpecies.subtitle}</span>
+          <div className="nui-toolbar__meta">
+            <span className="nui-toolbar__status">{messages.liveStatus}</span>
+            <div className="nui-toolbar__counts">
+              <span>{parentACountLabel}</span>
+              <span>{parentBCountLabel}</span>
+            </div>
+          </div>
         </div>
         <div className="nui-toolbar__buttons">
           <button type="button" className="action-secondary" onClick={handleReset}>
             {messages.reset}
           </button>
-          <button type="button" className="action-primary" onClick={handleCalculate}>
-            {messages.calculate}
-          </button>
         </div>
       </section>
       <section className="genetics-calculator__results">
         <ResultTable
-          results={activeResults}
+          results={liveResults}
           genes={genes}
           species={speciesKey}
           aliases={morphAliases as typeof morphAliases}
