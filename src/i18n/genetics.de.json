@@ -21,6 +21,8 @@
   "normalForm": "Normalform",
   "speciesHeading": "Art wählen",
   "speciesHint": "Auswahl legt verfügbare Gene fest.",
+  "liveStatus": "Live-Berechnung aktiv",
+  "liveSubtitle": "Wahrscheinlichkeiten aktualisieren sich automatisch bei jeder Auswahl.",
   "sectionTitles": {
     "incomplete_dominant": "Inkomplett dominant",
     "dominant": "Dominant",

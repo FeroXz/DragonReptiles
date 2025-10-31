@@ -101,6 +101,90 @@ function hasActiveState(entry: ParentGenotype[string]): boolean {
   return entry.state !== 'normal' || entry.posHet !== undefined;
 }
 
+function normalizePercent(value: number | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const canonical = [33, 50, 66];
+  const rounded = Math.round(value);
+  for (const target of canonical) {
+    if (Math.abs(rounded - target) <= 3) {
+      return target;
+    }
+  }
+  return rounded;
+}
+
+const TYPE_LABELS: Record<GeneDef['type'], string> = {
+  recessive: 'Rezessiv',
+  incomplete_dominant: 'Inkomplett dominant',
+  dominant: 'Dominant',
+  polygenic: 'Polygen'
+};
+
+type TraitAccent = 'rec' | 'id' | 'dom' | 'poly';
+
+function geneTypeLabel(gene: GeneDef): string {
+  return TYPE_LABELS[gene.type] ?? 'Gen';
+}
+
+function accentForGene(gene: GeneDef): TraitAccent {
+  switch (gene.type) {
+    case 'recessive':
+      return 'rec';
+    case 'dominant':
+      return 'dom';
+    case 'polygenic':
+      return 'poly';
+    case 'incomplete_dominant':
+    default:
+      return 'id';
+  }
+}
+
+function selectionStateLabel(gene: GeneDef, state: Zygosity, posHet?: number): string {
+  if (gene.type === 'recessive') {
+    if (state === 'het') {
+      const percent = normalizePercent(posHet);
+      return percent !== undefined ? `Träger · ${percent}%` : 'Träger (het)';
+    }
+    if (state === 'expressed') {
+      return 'Visuell';
+    }
+  }
+  if (gene.type === 'incomplete_dominant') {
+    if (state === 'super') {
+      return 'Superform';
+    }
+    if (state === 'expressed') {
+      return 'Ausgeprägt';
+    }
+  }
+  if (gene.type === 'dominant') {
+    return 'Dominant';
+  }
+  if (gene.type === 'polygenic') {
+    return 'Linie aktiv';
+  }
+  if (state === 'super') {
+    return 'Superform';
+  }
+  if (state === 'het') {
+    return 'Träger (het)';
+  }
+  return 'Aktiv';
+}
+
+interface SelectedChip {
+  gene: GeneDef;
+  option: Option;
+  label: string;
+  typeLabel: string;
+  stateLabel: string;
+  accent: TraitAccent;
+  initial: string;
+}
+
 export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -266,10 +350,11 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const selectedChips = useMemo(() => {
+  const selectedChips = useMemo<SelectedChip[]>(() => {
     return genes
       .map((gene) => {
-        const state = normalizeState(value[gene.key]);
+        const rawEntry = value[gene.key];
+        const state = normalizeState(rawEntry);
         if (state === 'normal') {
           return null;
         }
@@ -281,12 +366,18 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
         if (!option) {
           return null;
         }
+        const posHet = typeof rawEntry === 'object' ? rawEntry.posHet : undefined;
         return {
           gene,
-          option
-        };
+          option,
+          label: option.label,
+          typeLabel: geneTypeLabel(gene),
+          stateLabel: selectionStateLabel(gene, state, posHet),
+          accent: accentForGene(gene),
+          initial: option.label.charAt(0).toUpperCase()
+        } satisfies SelectedChip;
       })
-      .filter((entry): entry is { gene: GeneDef; option: Option } => Boolean(entry));
+      .filter((entry): entry is SelectedChip => Boolean(entry));
   }, [genes, optionMap, value]);
 
   const handleSelect = (entry: SearchOption) => {
@@ -310,7 +401,8 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
       }
       setError(null);
       setQuery('');
-      setOpen(false);
+      setOpen(true);
+      setHighlightIndex(0);
       onChange(next);
       window.requestAnimationFrame(() => {
         inputRef.current?.focus();
@@ -338,6 +430,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     setError(null);
     setQuery('');
     setOpen(true);
+    setHighlightIndex(0);
     onChange(next);
     window.requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -349,6 +442,10 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     delete next[geneKey];
     onChange(next);
     setError(null);
+    setOpen(true);
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   };
 
   const handleInputFocus = () => {
@@ -392,24 +489,39 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
   return (
     <div className="genotype-search" ref={containerRef}>
       <div className="nui-chip-tray" aria-live="polite">
-        {selectedChips.length === 0 && (
+        {selectedChips.length === 0 ? (
           <div className="nui-chip-placeholder">Keine Traits ausgewählt</div>
+        ) : (
+          <ul className="trait-pill-grid" role="list">
+            {selectedChips.map((chip) => (
+              <li key={`${chip.gene.key}-${chip.option.state}`}>
+                <button
+                  type="button"
+                  className={clsx('trait-pill', `trait-pill--${chip.accent}`)}
+                  onClick={() => handleRemove(chip.gene.key)}
+                  aria-label={`Trait ${chip.label} entfernen`}
+                >
+                  <span className="trait-pill__icon" aria-hidden="true">
+                    {chip.initial}
+                  </span>
+                  <span className="trait-pill__body">
+                    <span className="trait-pill__name" aria-hidden="true">
+                      {chip.label}
+                    </span>
+                    <span className="trait-pill__meta" aria-hidden="true">
+                      {chip.typeLabel}
+                    </span>
+                    <span className="trait-pill__state" aria-hidden="true">
+                      {chip.stateLabel}
+                    </span>
+                  </span>
+                  <span className="trait-pill__remove" aria-hidden="true">×</span>
+                  <span className="sr-only">Trait {chip.label} entfernen</span>
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-        {selectedChips.map((chip) => (
-          <button
-            key={chip.gene.key}
-            type="button"
-            className="nui-chip"
-            aria-label={`Trait ${chip.option.label} entfernen`}
-            onClick={() => handleRemove(chip.gene.key)}
-          >
-            <span className="nui-chip__label" aria-hidden="true">
-              {chip.option.label}
-            </span>
-            <span className="nui-chip__remove" aria-hidden="true">×</span>
-            <span className="sr-only">Trait {chip.option.label} entfernen</span>
-          </button>
-        ))}
       </div>
       <div className="nui-field">
         <label className="nui-field__label" htmlFor={searchInputId}>
