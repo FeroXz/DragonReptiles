@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 const APP_NAME = 'Dragon Reptiles CMS';
-const APP_VERSION = '5.5.2';
+const APP_VERSION = '5.6.3';
 const DATA_PATH = __DIR__ . '/../storage/database.sqlite';
 const UPLOAD_PATH = __DIR__ . '/../public/uploads';
 const BASE_URL = '';

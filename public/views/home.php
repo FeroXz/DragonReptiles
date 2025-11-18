@@ -1,28 +1,63 @@
 <?php include __DIR__ . '/partials/header.php'; ?>
-<?php $customSectionsMap = $customSectionsMap ?? []; ?>
+<?php
+$customSectionsMap = $customSectionsMap ?? [];
+$totalAnimals = count($animals ?? []);
+$activeListings = count($listings ?? []);
+$careArticleCount = count($careHighlights ?? []);
+$heroStats = [
+    [
+        'label' => 'Tiere im Bestand',
+        'value' => $totalAnimals,
+        'hint' => 'Showcase & Pflege',
+    ],
+    [
+        'label' => 'Adoptionen',
+        'value' => $activeListings,
+        'hint' => 'Sofort verfügbar',
+    ],
+    [
+        'label' => 'Pflege-Guides',
+        'value' => $careArticleCount,
+        'hint' => 'mit Praxiswissen',
+    ],
+];
+?>
 <section class="nui-container nui-section">
-    <div class="nui-panel nui-panel--floating grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div class="nui-grid">
-            <h1 class="nui-heading text-white sm:text-4xl lg:text-5xl"><?= htmlspecialchars($settings['site_title'] ?? APP_NAME) ?></h1>
-            <div class="rich-text-content prose prose-invert max-w-none">
-                <?= render_rich_text($settings['hero_intro'] ?? '') ?>
-            </div>
-        </div>
-        <div class="nui-grid">
-            <span class="inline-flex items-center gap-2 self-start rounded-full border border-brand-400/60 bg-brand-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-100">
+    <div class="nui-panel nui-panel--floating home-hero">
+        <div class="home-hero__primary">
+            <span class="hero-eyebrow">
                 <?= htmlspecialchars(content_value($settings, 'home_hero_badge')) ?>
             </span>
-            <div class="rich-text-content prose prose-invert max-w-none text-base leading-relaxed text-slate-300">
-                <?= render_rich_text(content_value($settings, 'home_hero_secondary_intro')) ?>
+            <h1 class="nui-heading home-hero__title"><?= htmlspecialchars($settings['site_title'] ?? APP_NAME) ?></h1>
+            <div class="rich-text-content prose prose-invert max-w-none hero-copy">
+                <?= render_rich_text($settings['hero_intro'] ?? '') ?>
             </div>
             <div class="hero-cta">
-                <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="nui-pill justify-between text-sm font-semibold text-brand-100">
-                    <?= htmlspecialchars(content_value($settings, 'home_care_primary_cta')) ?> <span aria-hidden="true">→</span>
+                <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="hero-cta__link hero-cta__link--primary">
+                    <span class="hero-cta__label"><?= htmlspecialchars(content_value($settings, 'home_care_primary_cta')) ?></span>
+                    <span class="hero-cta__icon" aria-hidden="true">→</span>
                 </a>
-                <a href="<?= BASE_URL ?>/index.php?route=genetics" class="nui-pill justify-between text-sm font-semibold text-slate-100">
-                    <?= htmlspecialchars(content_value($settings, 'home_care_secondary_cta')) ?> <span aria-hidden="true">→</span>
+                <a href="<?= BASE_URL ?>/index.php?route=genetics" class="hero-cta__link hero-cta__link--ghost">
+                    <span class="hero-cta__label"><?= htmlspecialchars(content_value($settings, 'home_care_secondary_cta')) ?></span>
+                    <span class="hero-cta__icon" aria-hidden="true">→</span>
                 </a>
             </div>
+        </div>
+        <div class="home-hero__secondary">
+            <div class="rich-text-content prose prose-invert max-w-none hero-copy hero-copy--muted">
+                <?= render_rich_text(content_value($settings, 'home_hero_secondary_intro')) ?>
+            </div>
+            <ul class="hero-stats" role="list">
+                <?php foreach ($heroStats as $stat): ?>
+                    <li class="hero-stats__item">
+                        <span class="hero-stats__value">
+                            <?= number_format((int)$stat['value'], 0, ',', '.') ?>
+                        </span>
+                        <span class="hero-stats__label"><?= htmlspecialchars($stat['label']) ?></span>
+                        <span class="hero-stats__hint"><?= htmlspecialchars($stat['hint']) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     </div>
 </section>

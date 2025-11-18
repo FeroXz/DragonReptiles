@@ -14,97 +14,73 @@
 </footer>
 <script>
     (function () {
-        const mobileToggle = document.querySelector('[data-mobile-nav-toggle]');
-        const mobilePanel = document.querySelector('[data-mobile-nav-panel]');
-        if (mobileToggle && mobilePanel) {
-            mobileToggle.addEventListener('click', () => {
-                mobilePanel.classList.toggle('hidden');
-                const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
-                mobileToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-            });
+        const overlay = document.querySelector('[data-menu-overlay]');
+        if (!overlay) {
+            return;
         }
+        const overlayPanel = overlay.querySelector('.app-menu-overlay__panel');
+        const toggles = document.querySelectorAll('[data-menu-toggle]');
+        const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        let lastFocused = null;
 
-        const navEntries = [];
-
-        function setExpanded(entry, expanded) {
-            if (!entry) {
+        function handleFocusTrap(event) {
+            if (!overlay.classList.contains('is-visible') || !overlayPanel) {
                 return;
             }
-            if (expanded) {
-                entry.dropdown.classList.add('open');
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setMenuState(false);
+                return;
+            }
+            if (event.key !== 'Tab') {
+                return;
+            }
+            const focusable = overlayPanel.querySelectorAll(focusableSelector);
+            if (focusable.length === 0) {
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey) {
+                if (document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                }
+            } else if (document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
+        function setMenuState(open) {
+            overlay.classList.toggle('is-visible', open);
+            overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+            document.body.classList.toggle('menu-open', open);
+            toggles.forEach((btn) => btn.setAttribute('aria-expanded', open ? 'true' : 'false'));
+            if (open) {
+                lastFocused = document.activeElement;
+                requestAnimationFrame(() => {
+                    overlayPanel?.focus();
+                });
+                document.addEventListener('keydown', handleFocusTrap);
             } else {
-                entry.dropdown.classList.remove('open');
-            }
-            entry.trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            if (entry.chevron) {
-                entry.chevron.classList.toggle('rotate-180', expanded);
+                document.removeEventListener('keydown', handleFocusTrap);
+                if (lastFocused && typeof lastFocused.focus === 'function') {
+                    lastFocused.focus();
+                }
             }
         }
 
-        function closeAll(exceptEntry) {
-            navEntries.forEach((entry) => {
-                if (!exceptEntry || entry !== exceptEntry) {
-                    setExpanded(entry, false);
-                }
-            });
-        }
-
-        document.querySelectorAll('[data-nav-group]').forEach((group) => {
-            const trigger = group.querySelector('[data-nav-trigger]');
-            const dropdown = group.querySelector('.app-nav__dropdown');
-            if (!trigger || !dropdown) {
-                return;
-            }
-            const chevron = trigger.querySelector('[data-chevron]');
-            const entry = { group, trigger, dropdown, chevron };
-            navEntries.push(entry);
-
-            trigger.setAttribute('aria-haspopup', 'true');
-            trigger.setAttribute('aria-expanded', dropdown.classList.contains('open') ? 'true' : 'false');
-
-            trigger.addEventListener('click', (event) => {
-                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
-                    return;
-                }
-
-                if (!dropdown.classList.contains('open')) {
-                    event.preventDefault();
-                    closeAll(entry);
-                    setExpanded(entry, true);
-                } else {
-                    closeAll();
-                }
-            });
-
-            trigger.addEventListener('keydown', (event) => {
-                if ((event.key === ' ' || event.key === 'Enter') && !dropdown.classList.contains('open')) {
-                    event.preventDefault();
-                    closeAll(entry);
-                    setExpanded(entry, true);
-                }
-            });
-
-            group.addEventListener('mouseleave', () => {
-                setExpanded(entry, false);
-            });
-
-            group.addEventListener('focusout', (event) => {
-                if (!group.contains(event.relatedTarget)) {
-                    setExpanded(entry, false);
-                }
-            });
-
-            group.addEventListener('keyup', (event) => {
-                if (event.key === 'Escape') {
-                    setExpanded(entry, false);
-                    trigger.focus();
-                }
+        toggles.forEach((button) => {
+            button.addEventListener('click', () => {
+                const nextState = !overlay.classList.contains('is-visible');
+                setMenuState(nextState);
             });
         });
 
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('[data-nav-group]')) {
-                closeAll();
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay || event.target.hasAttribute('data-menu-dismiss')) {
+                setMenuState(false);
             }
         });
     })();

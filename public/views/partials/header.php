@@ -65,7 +65,7 @@
                 <span class="app-brand__subtitle"><?= htmlspecialchars($settings['site_tagline'] ?? '') ?></span>
             </span>
         </a>
-        <nav class="app-nav" data-desktop-nav>
+        <div class="app-menu-status">
             <?php
                 $menuItems = array_values($menuItems ?? []);
                 $iconLibrary = function_exists('menu_icon_library') ? menu_icon_library() : [];
@@ -143,103 +143,76 @@
                     }
                     return $currentRoute === $route;
                 };
+                $activeMenuLabel = $settings['site_title'] ?? 'Landing';
+                foreach ($menuItems as $menuItem) {
+                    if ($isMenuItemActive($menuItem)) {
+                        $activeMenuLabel = $menuItem['label'];
+                        break;
+                    }
+                }
             ?>
-            <?php foreach ($menuItems as $menuItem): ?>
-                <?php
-                    $url = $buildMenuUrl($menuItem);
-                    $target = ($menuItem['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
-                    $isActive = $isMenuItemActive($menuItem);
-                    $normalizedPath = $normalizeMenuPath($menuItem['path'] ?? '');
-                    $renderDropdown = $normalizedPath === '/index.php?route=care-guide' && !empty($navCareArticles);
-                ?>
-                <?php if ($renderDropdown): ?>
-                    <div class="app-nav__group" data-nav-group>
-                        <a href="<?= htmlspecialchars($url) ?>" class="app-nav__link <?= $isActive ? 'is-active' : '' ?>" data-nav-trigger target="<?= htmlspecialchars($target) ?>">
-                            <?php if (!empty($menuItem['icon'])): ?>
-                                <span class="app-nav__icon"><?= htmlspecialchars($menuItem['icon']) ?></span>
-                            <?php endif; ?>
-                            <?= htmlspecialchars($menuItem['label']) ?>
-                            <svg class="h-4 w-4" data-chevron fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                            </svg>
-                        </a>
-                        <div class="app-nav__dropdown" role="menu">
-                            <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'is-active' : '' ?>">Übersicht</a>
-                            <?php foreach (($navCareArticles ?? []) as $careNav): ?>
-                                <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="<?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <a href="<?= htmlspecialchars($url) ?>" class="app-nav__link <?= $isActive ? 'is-active' : '' ?>" target="<?= htmlspecialchars($target) ?>">
-                        <?php
-                            $iconKey = trim((string)($menuItem['icon'] ?? ''));
-                            if ($iconKey !== '') {
-                                if (isset($iconLibrary[$iconKey])) {
-                                    echo '<span class="app-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' . $iconLibrary[$iconKey] . '</svg></span>';
-                                } else {
-                                    echo '<span class="app-nav__icon" aria-hidden="true">' . htmlspecialchars($iconKey) . '</span>';
-                                }
-                            }
-                        ?>
-                        <?= htmlspecialchars($menuItem['label']) ?>
-                    </a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-            <?php if (current_user()): ?>
-                <a href="<?= BASE_URL ?>/index.php?route=my-animals" class="app-nav__link <?= ($currentRoute === 'my-animals') ? 'is-active' : '' ?>">Meine Tiere</a>
-                <a href="<?= BASE_URL ?>/index.php?route=breeding" class="app-nav__link <?= ($currentRoute === 'breeding') ? 'is-active' : '' ?>">Zuchtplanung</a>
-                <a href="<?= BASE_URL ?>/index.php?route=admin/dashboard" class="app-nav__link <?= str_starts_with($currentRoute, 'admin/') ? 'is-active' : '' ?>">Admin</a>
-                <a href="<?= BASE_URL ?>/index.php?route=logout" class="app-nav__cta">Logout</a>
-            <?php else: ?>
-                <a href="<?= BASE_URL ?>/index.php?route=login" class="app-nav__link <?= ($currentRoute === 'login') ? 'is-active' : '' ?>">Login</a>
-            <?php endif; ?>
-        </nav>
-        <button type="button" class="app-nav__toggle lg:hidden" data-mobile-nav-toggle aria-expanded="false">
-            <span class="sr-only">Navigation umschalten</span>
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            <p class="app-menu-status__eyebrow">Aktueller Bereich</p>
+            <p class="app-menu-status__title"><?= htmlspecialchars($activeMenuLabel) ?></p>
+        </div>
+        <button type="button" class="app-menu-trigger" data-menu-toggle aria-expanded="false" aria-controls="app-menu-overlay">
+            <span>Menü</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M7 12h13M10 17h10" />
             </svg>
         </button>
     </div>
-    <div class="app-nav-mobile hidden" data-mobile-nav-panel>
-        <nav>
-            <?php foreach ($menuItems as $menuItem): ?>
-                <?php
-                    $url = $buildMenuUrl($menuItem);
-                    $target = ($menuItem['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
-                    $normalizedPath = $normalizeMenuPath($menuItem['path'] ?? '');
-                    $isActive = $isMenuItemActive($menuItem);
-                    $renderDropdown = $normalizedPath === '/index.php?route=care-guide' && !empty($navCareArticles);
-                ?>
-                <?php if ($renderDropdown): ?>
-                    <details class="group" <?= $isCareActive ? 'open' : '' ?>>
-                        <summary class="app-nav__link">
-                            <?= htmlspecialchars($menuItem['label']) ?>
-                            <svg class="h-4 w-4 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg>
-                        </summary>
-                        <div class="mt-2 space-y-1 pl-3 text-sm">
-                            <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Übersicht</a>
-                            <?php foreach (($navCareArticles ?? []) as $careNav): ?>
-                                <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="app-nav__link <?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
-                            <?php endforeach; ?>
-                        </div>
-                    </details>
-                <?php else: ?>
-                    <a href="<?= htmlspecialchars($url) ?>" class="<?= $isActive ? 'app-nav__link is-active' : 'app-nav__link' ?>" target="<?= htmlspecialchars($target) ?>">
+</header>
+<div class="app-menu-overlay" id="app-menu-overlay" data-menu-overlay aria-hidden="true">
+    <div class="app-menu-overlay__backdrop" data-menu-dismiss></div>
+    <div class="app-menu-overlay__panel" role="dialog" aria-modal="true" aria-label="Navigation" tabindex="-1">
+        <div class="app-menu-overlay__heading">
+            <p class="app-menu-overlay__eyebrow">Dragon Reptiles</p>
+            <h2><?= htmlspecialchars($settings['site_title'] ?? APP_NAME) ?></h2>
+            <p class="app-menu-overlay__subline"><?= htmlspecialchars($settings['site_tagline'] ?? 'Landing Page inspiriert von HTML5UP') ?></p>
+        </div>
+        <nav class="app-menu-overlay__nav" aria-label="Hauptnavigation">
+        <?php foreach ($menuItems as $menuItem): ?>
+            <?php
+                $url = $buildMenuUrl($menuItem);
+                $target = ($menuItem['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
+                $isActive = $isMenuItemActive($menuItem);
+                $normalizedPath = $normalizeMenuPath($menuItem['path'] ?? '');
+                $renderDropdown = $normalizedPath === '/index.php?route=care-guide' && !empty($navCareArticles);
+            ?>
+            <?php if ($renderDropdown): ?>
+                <div class="app-menu-overlay__group">
+                    <a href="<?= htmlspecialchars($url) ?>" class="app-menu-overlay__link <?= $isActive ? 'is-active' : '' ?>" target="<?= htmlspecialchars($target) ?>">
                         <?= htmlspecialchars($menuItem['label']) ?>
                     </a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-            <?php if (current_user()): ?>
-                <a href="<?= BASE_URL ?>/index.php?route=my-animals" class="<?= ($currentRoute === 'my-animals') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Meine Tiere</a>
-                <a href="<?= BASE_URL ?>/index.php?route=breeding" class="<?= ($currentRoute === 'breeding') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Zuchtplanung</a>
-                <a href="<?= BASE_URL ?>/index.php?route=admin/dashboard" class="<?= str_starts_with($currentRoute, 'admin/') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Admin</a>
-                <a href="<?= BASE_URL ?>/index.php?route=logout" class="app-nav__link">Logout</a>
+                    <div class="app-menu-overlay__subnav">
+                        <a href="<?= BASE_URL ?>/index.php?route=care-guide" class="<?= ($currentRoute === 'care-guide') ? 'is-active' : '' ?>">Übersicht</a>
+                        <?php foreach (($navCareArticles ?? []) as $careNav): ?>
+                            <a href="<?= BASE_URL ?>/index.php?route=care-article&amp;slug=<?= urlencode($careNav['slug']) ?>" class="<?= ($currentRoute === 'care-article' && ($activeCareSlug ?? '') === $careNav['slug']) ? 'is-active' : '' ?>"><?= htmlspecialchars($careNav['title']) ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             <?php else: ?>
-                <a href="<?= BASE_URL ?>/index.php?route=login" class="<?= ($currentRoute === 'login') ? 'app-nav__link is-active' : 'app-nav__link' ?>">Login</a>
+                <a href="<?= htmlspecialchars($url) ?>" class="app-menu-overlay__link <?= $isActive ? 'is-active' : '' ?>" target="<?= htmlspecialchars($target) ?>">
+                    <?= htmlspecialchars($menuItem['label']) ?>
+                </a>
             <?php endif; ?>
+        <?php endforeach; ?>
         </nav>
+        <div class="app-menu-overlay__ctas">
+        <?php if (current_user()): ?>
+            <a href="<?= BASE_URL ?>/index.php?route=my-animals" class="app-menu-overlay__cta <?= ($currentRoute === 'my-animals') ? 'is-active' : '' ?>">Meine Tiere</a>
+            <a href="<?= BASE_URL ?>/index.php?route=breeding" class="app-menu-overlay__cta <?= ($currentRoute === 'breeding') ? 'is-active' : '' ?>">Zuchtplanung</a>
+            <a href="<?= BASE_URL ?>/index.php?route=admin/dashboard" class="app-menu-overlay__cta <?= str_starts_with($currentRoute, 'admin/') ? 'is-active' : '' ?>">Admin</a>
+            <a href="<?= BASE_URL ?>/index.php?route=logout" class="app-menu-overlay__cta app-menu-overlay__cta--primary">Logout</a>
+        <?php else: ?>
+            <a href="<?= BASE_URL ?>/index.php?route=login" class="app-menu-overlay__cta app-menu-overlay__cta--primary <?= ($currentRoute === 'login') ? 'is-active' : '' ?>">Login</a>
+        <?php endif; ?>
+        </div>
+        <button type="button" class="app-menu-overlay__close" data-menu-toggle aria-label="Menü schließen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6l-12 12" />
+            </svg>
+        </button>
     </div>
-</header>
+</div>
 <main class="app-main">
