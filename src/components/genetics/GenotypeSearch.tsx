@@ -486,6 +486,30 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     }
   }, [flattened, highlightIndex]);
 
+  const optionAccentClass = useCallback(
+    (entry: SearchOption): string | undefined => {
+      if (entry.kind === 'preset') {
+        return 'nui-option--preset';
+      }
+      const gene = geneMap.get(entry.option.geneKey);
+      if (!gene) {
+        return undefined;
+      }
+      switch (gene.type) {
+        case 'recessive':
+          return 'nui-option--recessive';
+        case 'dominant':
+          return 'nui-option--dominant';
+        case 'polygenic':
+          return 'nui-option--poly';
+        case 'incomplete_dominant':
+        default:
+          return 'nui-option--id';
+      }
+    },
+    [geneMap]
+  );
+
   return (
     <div className="genotype-search" ref={containerRef}>
       <div className="nui-chip-tray" aria-live="polite">
@@ -528,14 +552,6 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
           Traits durchsuchen
         </label>
         <div className={query ? 'nui-input-wrap has-value' : 'nui-input-wrap'}>
-          <span className="nui-input-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" focusable="false" role="presentation">
-              <path
-                d="M8.5 2a6.5 6.5 0 0 1 5.195 10.406l3.449 3.45a1 1 0 0 1-1.414 1.414l-3.45-3.449A6.5 6.5 0 1 1 8.5 2Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Z"
-                fill="currentColor"
-              />
-            </svg>
-          </span>
           <input
             id={searchInputId}
             ref={inputRef}
@@ -627,7 +643,7 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
                     <li key={key}>
                       <button
                         type="button"
-                        className={clsx('nui-option', {
+                        className={clsx('nui-option', optionAccentClass(option), {
                           'is-active': isActive,
                           'is-selected': isSelected
                         })}
@@ -638,7 +654,10 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
                         role="option"
                         aria-selected={ariaSelected}
                       >
-                        <span className="nui-option__label">{label}</span>
+                        <span className="nui-option__pill">
+                          <span className="nui-option__dot" aria-hidden="true" />
+                          <span className="nui-option__label">{label}</span>
+                        </span>
                         {metaLabel && (
                           <span className="nui-option__meta" aria-hidden="true">
                             {metaLabel}
