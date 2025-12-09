@@ -224,19 +224,31 @@ export function Calculator() {
         </div>
       </section>
       <section className="genetics-calculator__inputs">
-        <div className="search-panel nui-card nui-card--glass">
-          <div className="panel-label-group">
-            <div className="panel-label">{messages.parentA}</div>
-            <div className="panel-subtitle">{activeSpecies.label}</div>
+        <div className="search-panel nui-card nui-card--glass search-panel--a">
+          <div className="search-panel__header">
+            <span className="search-panel__badge search-panel__badge--parent" aria-label={messages.parentA}>
+              {messages.parentA}
+            </span>
+            <span className="search-panel__badge search-panel__badge--species" aria-label={activeSpecies.label}>
+              {activeSpecies.label}
+            </span>
           </div>
-          <GenotypeSearch species={speciesKey} value={parentA} onChange={setParentA} />
+          <div className="search-panel__field" aria-label={`${messages.parentA} · ${activeSpecies.label}`}>
+            <GenotypeSearch species={speciesKey} value={parentA} onChange={setParentA} />
+          </div>
         </div>
-        <div className="search-panel nui-card nui-card--glass">
-          <div className="panel-label-group">
-            <div className="panel-label">{messages.parentB}</div>
-            <div className="panel-subtitle">{activeSpecies.label}</div>
+        <div className="search-panel nui-card nui-card--glass search-panel--b">
+          <div className="search-panel__header">
+            <span className="search-panel__badge search-panel__badge--parent" aria-label={messages.parentB}>
+              {messages.parentB}
+            </span>
+            <span className="search-panel__badge search-panel__badge--species" aria-label={activeSpecies.label}>
+              {activeSpecies.label}
+            </span>
           </div>
-          <GenotypeSearch species={speciesKey} value={parentB} onChange={setParentB} />
+          <div className="search-panel__field" aria-label={`${messages.parentB} · ${activeSpecies.label}`}>
+            <GenotypeSearch species={speciesKey} value={parentB} onChange={setParentB} />
+          </div>
         </div>
       </section>
       <section className="genetics-calculator__actions nui-card nui-card--glass nui-toolbar">
