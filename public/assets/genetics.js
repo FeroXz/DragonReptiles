@@ -8248,6 +8248,74 @@
     }
     return entry.state !== "normal" || entry.posHet !== void 0;
   }
+  function normalizePercent(value) {
+    if (value === void 0) {
+      return void 0;
+    }
+    const canonical = [33, 50, 66];
+    const rounded = Math.round(value);
+    for (const target of canonical) {
+      if (Math.abs(rounded - target) <= 3) {
+        return target;
+      }
+    }
+    return rounded;
+  }
+  var TYPE_LABELS = {
+    recessive: "Rezessiv",
+    incomplete_dominant: "Inkomplett dominant",
+    dominant: "Dominant",
+    polygenic: "Polygen"
+  };
+  function geneTypeLabel(gene) {
+    var _a;
+    return (_a = TYPE_LABELS[gene.type]) != null ? _a : "Gen";
+  }
+  function accentForGene(gene) {
+    switch (gene.type) {
+      case "recessive":
+        return "rec";
+      case "dominant":
+        return "dom";
+      case "polygenic":
+        return "poly";
+      case "incomplete_dominant":
+      default:
+        return "id";
+    }
+  }
+  function selectionStateLabel(gene, state, posHet) {
+    if (gene.type === "recessive") {
+      if (state === "het") {
+        const percent = normalizePercent(posHet);
+        return percent !== void 0 ? `Tr\xE4ger \xB7 ${percent}%` : "Tr\xE4ger (het)";
+      }
+      if (state === "expressed") {
+        return "Visuell";
+      }
+    }
+    if (gene.type === "incomplete_dominant") {
+      if (state === "super") {
+        return "Superform";
+      }
+      if (state === "expressed") {
+        return "Ausgepr\xE4gt";
+      }
+    }
+    if (gene.type === "dominant") {
+      return "Dominant";
+    }
+    if (gene.type === "polygenic") {
+      return "Linie aktiv";
+    }
+    if (state === "super") {
+      return "Superform";
+    }
+    if (state === "het") {
+      return "Tr\xE4ger (het)";
+    }
+    return "Aktiv";
+  }
   function GenotypeSearch({ species, value, onChange, presets }) {
     const containerRef = (0, import_react.useRef)(null);
     const inputRef = (0, import_react.useRef)(null);
@@ -8398,7 +8466,8 @@
     const selectedChips = (0, import_react.useMemo)(() => {
       return genes.map((gene) => {
         var _a;
-        const state = normalizeState(value[gene.key]);
+        const rawEntry = value[gene.key];
+        const state = normalizeState(rawEntry);
         if (state === "normal") {
           return null;
         }
@@ -8410,9 +8479,15 @@
         if (!option) {
           return null;
         }
+        const posHet = typeof rawEntry === "object" ? rawEntry.posHet : void 0;
         return {
           gene,
-          option
+          option,
+          label: option.label,
+          typeLabel: geneTypeLabel(gene),
+          stateLabel: selectionStateLabel(gene, state, posHet),
+          accent: accentForGene(gene),
+          initial: option.label.charAt(0).toUpperCase()
         };
       }).filter((entry) => Boolean(entry));
     }, [genes, optionMap, value]);
@@ -8437,7 +8512,8 @@
         }
         setError(null);
         setQuery("");
-        setOpen(false);
+        setOpen(true);
+        setHighlightIndex(0);
         onChange(next2);
         window.requestAnimationFrame(() => {
           var _a;
@@ -8466,6 +8542,7 @@
       setError(null);
       setQuery("");
       setOpen(true);
+      setHighlightIndex(0);
       onChange(next);
       window.requestAnimationFrame(() => {
         var _a;
@@ -8477,6 +8554,24 @@
       delete next[geneKey];
       onChange(next);
       setError(null);
+      setOpen(true);
+      window.requestAnimationFrame(() => {
+        var _a;
+        (_a = inputRef.current) == null ? void 0 : _a.focus();
+      });
+    };
+    const handleClearAll = () => {
+      if (selectedChips.length === 0) {
+        return;
+      }
+      onChange({});
+      setError(null);
+      setQuery("");
+      setOpen(true);
+      window.requestAnimationFrame(() => {
+        var _a;
+        (_a = inputRef.current) == null ? void 0 : _a.focus();
+      });
     };
     const handleInputFocus = () => {
       setOpen(true);
@@ -8515,26 +8610,30 @@
     }, [flattened, highlightIndex]);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "genotype-search", ref: containerRef, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "nui-chip-tray", "aria-live": "polite", children: [
-        selectedChips.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-chip-placeholder", children: "Keine Traits ausgew\xE4hlt" }),
-        selectedChips.map((chip) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-chip-tray__content", children: selectedChips.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-chip-placeholder", children: "Keine Traits ausgew\xE4hlt" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { className: "trait-pill-grid", role: "list", children: selectedChips.map((chip) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "button",
           {
             type: "button",
-            className: "nui-chip",
-            "aria-label": `Trait ${chip.option.label} entfernen`,
+            className: clsx_default("trait-pill", `trait-pill--${chip.accent}`),
             onClick: () => handleRemove(chip.gene.key),
+            "aria-label": `Trait ${chip.label} entfernen`,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-chip__label", "aria-hidden": "true", children: chip.option.label }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "nui-chip__remove", "aria-hidden": "true", children: "\xD7" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "trait-pill__icon", "aria-hidden": "true", children: chip.initial }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "trait-pill__body", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "trait-pill__name", "aria-hidden": "true", children: chip.label }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "trait-pill__meta", "aria-hidden": "true", children: chip.typeLabel }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "trait-pill__state", "aria-hidden": "true", children: chip.stateLabel })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "trait-pill__remove", "aria-hidden": "true", children: "\xD7" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "sr-only", children: [
                 "Trait ",
-                chip.option.label,
+                chip.label,
                 " entfernen"
               ] })
             ]
-          },
-          chip.gene.key
-        ))
+          }
+        ) }, `${chip.gene.key}-${chip.option.state}`)) }) }),
+        selectedChips.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nui-chip-tray__actions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "nui-chip-tray__clear", onClick: handleClearAll, children: "Alle Traits entfernen" }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "nui-field", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { className: "nui-field__label", htmlFor: searchInputId, children: "Traits durchsuchen" }),
@@ -8680,7 +8779,7 @@
     var _a;
     return (_a = gene.superLabel) != null ? _a : `Super ${gene.name}`;
   }
-  function normalizePercent(value) {
+  function normalizePercent2(value) {
     if (value === void 0) {
       return void 0;
     }
@@ -8780,7 +8879,7 @@
           });
           aliasEligible.set(gene.key, "expressed");
         } else if (state === "het") {
-          const percent = normalizePercent(posHet);
+          const percent = normalizePercent2(posHet);
           if (percent !== void 0) {
             badges.push({
               key: `${gene.key}-hetpct`,
@@ -8803,7 +8902,7 @@
             });
           }
         } else if (state === "normal" && posHet !== void 0) {
-          const percent = normalizePercent(posHet);
+          const percent = normalizePercent2(posHet);
           if (percent !== void 0) {
             badges.push({
               key: `${gene.key}-poshet`,
@@ -8972,7 +9071,7 @@
     var _a;
     return (_a = gene.superLabel) != null ? _a : `Super ${gene.name}`;
   }
-  function normalizePercent2(value) {
+  function normalizePercent3(value) {
     if (value === void 0) {
       return void 0;
     }
@@ -8993,14 +9092,14 @@
           return gene.name;
         }
         if (state === "het") {
-          const percent = normalizePercent2(posHet);
+          const percent = normalizePercent3(posHet);
           if (percent !== void 0) {
             return `${percent}% Het ${gene.name}`;
           }
           return `Het ${gene.name}`;
         }
         if (state === "normal" && posHet !== void 0) {
-          const percent = normalizePercent2(posHet);
+          const percent = normalizePercent3(posHet);
           if (percent !== void 0) {
             return `${percent}% Het ${gene.name}`;
           }
@@ -9264,6 +9363,8 @@
     normalForm: "Normalform",
     speciesHeading: "Art w\xE4hlen",
     speciesHint: "Auswahl legt verf\xFCgbare Gene fest.",
+    liveStatus: "Live-Berechnung aktiv",
+    liveSubtitle: "Wahrscheinlichkeiten aktualisieren sich automatisch bei jeder Auswahl.",
     sectionTitles: {
       incomplete_dominant: "Inkomplett dominant",
       dominant: "Dominant",
@@ -9363,11 +9464,27 @@
     });
     return parts.join(";");
   }
+  function countActiveGenes(parent) {
+    return Object.values(parent).reduce((count, entry) => {
+      if (!entry) {
+        return count;
+      }
+      if (typeof entry === "string") {
+        return entry === "normal" ? count : count + 1;
+      }
+      if (entry.state === "normal" && entry.posHet === void 0) {
+        return count;
+      }
+      return count + 1;
+    }, 0);
+  }
+  function formatGeneCount(count) {
+    return `${count} ${count === 1 ? "Gen" : "Gene"}`;
+  }
   function Calculator() {
     const [speciesKey, setSpeciesKey] = (0, import_react3.useState)("hognose");
     const [parentA, setParentA] = (0, import_react3.useState)({});
     const [parentB, setParentB] = (0, import_react3.useState)({});
-    const [results, setResults] = (0, import_react3.useState)(null);
     const [hydrated, setHydrated] = (0, import_react3.useState)(false);
     const genes = (0, import_react3.useMemo)(() => getGenesForSpecies(speciesKey), [speciesKey]);
     const allowedKeys = (0, import_react3.useMemo)(() => new Set(genes.map((gene) => gene.key)), [genes]);
@@ -9420,18 +9537,21 @@
       setSpeciesKey(key);
       setParentA({});
       setParentB({});
-      setResults(null);
-    };
-    const handleCalculate = () => {
-      const prediction = predictPairing(parentA, parentB, genes).slice(0, 50);
-      setResults(prediction);
     };
     const handleReset = () => {
       setParentA({});
       setParentB({});
-      setResults(null);
     };
-    const activeResults = results != null ? results : [];
+    const liveResults = (0, import_react3.useMemo)(() => {
+      if (!hydrated) {
+        return [];
+      }
+      return predictPairing(parentA, parentB, genes).slice(0, 50);
+    }, [genes, hydrated, parentA, parentB]);
+    const parentAGenes = (0, import_react3.useMemo)(() => countActiveGenes(parentA), [parentA]);
+    const parentBGenes = (0, import_react3.useMemo)(() => countActiveGenes(parentB), [parentB]);
+    const parentACountLabel = `${messages.parentA}: ${formatGeneCount(parentAGenes)}`;
+    const parentBCountLabel = `${messages.parentB}: ${formatGeneCount(parentBGenes)}`;
     return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "genetics-calculator", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("header", { className: "nui-hero", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "nui-hero__glow", "aria-hidden": "true" }),
@@ -9439,7 +9559,7 @@
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-hero__eyebrow", children: "MorphMarket Toolkit" }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h1", { className: "nui-hero__title", children: "Genetik-Rechner" }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("p", { className: "nui-hero__subtitle", children: [
-            messages.calculate,
+            messages.liveSubtitle,
             " \xB7 ",
             messages.speciesHint
           ] }),
@@ -9489,17 +9609,21 @@
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__info", children: [
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__eyebrow", children: "Aktive Art" }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__title", children: activeSpecies.label }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__subtitle", children: activeSpecies.subtitle })
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__subtitle", children: activeSpecies.subtitle }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__meta", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "nui-toolbar__status", children: messages.liveStatus }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__counts", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: parentACountLabel }),
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { children: parentBCountLabel })
+            ] })
+          ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "nui-toolbar__buttons", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-secondary", onClick: handleReset, children: messages.reset }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-primary", onClick: handleCalculate, children: messages.calculate })
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "nui-toolbar__buttons", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("button", { type: "button", className: "action-secondary", onClick: handleReset, children: messages.reset }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("section", { className: "genetics-calculator__results", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
         ResultTable,
         {
-          results: activeResults,
+          results: liveResults,
           genes,
           species: speciesKey,
           aliases: morph_aliases_default

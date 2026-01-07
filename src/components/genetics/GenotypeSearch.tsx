@@ -448,6 +448,19 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
     });
   };
 
+  const handleClearAll = () => {
+    if (selectedChips.length === 0) {
+      return;
+    }
+    onChange({});
+    setError(null);
+    setQuery('');
+    setOpen(true);
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  };
+
   const handleInputFocus = () => {
     setOpen(true);
   };
@@ -489,38 +502,47 @@ export function GenotypeSearch({ species, value, onChange, presets }: GenotypeSe
   return (
     <div className="genotype-search" ref={containerRef}>
       <div className="nui-chip-tray" aria-live="polite">
-        {selectedChips.length === 0 ? (
-          <div className="nui-chip-placeholder">Keine Traits ausgewählt</div>
-        ) : (
-          <ul className="trait-pill-grid" role="list">
-            {selectedChips.map((chip) => (
-              <li key={`${chip.gene.key}-${chip.option.state}`}>
-                <button
-                  type="button"
-                  className={clsx('trait-pill', `trait-pill--${chip.accent}`)}
-                  onClick={() => handleRemove(chip.gene.key)}
-                  aria-label={`Trait ${chip.label} entfernen`}
-                >
-                  <span className="trait-pill__icon" aria-hidden="true">
-                    {chip.initial}
-                  </span>
-                  <span className="trait-pill__body">
-                    <span className="trait-pill__name" aria-hidden="true">
-                      {chip.label}
+        <div className="nui-chip-tray__content">
+          {selectedChips.length === 0 ? (
+            <div className="nui-chip-placeholder">Keine Traits ausgewählt</div>
+          ) : (
+            <ul className="trait-pill-grid" role="list">
+              {selectedChips.map((chip) => (
+                <li key={`${chip.gene.key}-${chip.option.state}`}>
+                  <button
+                    type="button"
+                    className={clsx('trait-pill', `trait-pill--${chip.accent}`)}
+                    onClick={() => handleRemove(chip.gene.key)}
+                    aria-label={`Trait ${chip.label} entfernen`}
+                  >
+                    <span className="trait-pill__icon" aria-hidden="true">
+                      {chip.initial}
                     </span>
-                    <span className="trait-pill__meta" aria-hidden="true">
-                      {chip.typeLabel}
+                    <span className="trait-pill__body">
+                      <span className="trait-pill__name" aria-hidden="true">
+                        {chip.label}
+                      </span>
+                      <span className="trait-pill__meta" aria-hidden="true">
+                        {chip.typeLabel}
+                      </span>
+                      <span className="trait-pill__state" aria-hidden="true">
+                        {chip.stateLabel}
+                      </span>
                     </span>
-                    <span className="trait-pill__state" aria-hidden="true">
-                      {chip.stateLabel}
-                    </span>
-                  </span>
-                  <span className="trait-pill__remove" aria-hidden="true">×</span>
-                  <span className="sr-only">Trait {chip.label} entfernen</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                    <span className="trait-pill__remove" aria-hidden="true">×</span>
+                    <span className="sr-only">Trait {chip.label} entfernen</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {selectedChips.length > 0 && (
+          <div className="nui-chip-tray__actions">
+            <button type="button" className="nui-chip-tray__clear" onClick={handleClearAll}>
+              Alle Traits entfernen
+            </button>
+          </div>
         )}
       </div>
       <div className="nui-field">
