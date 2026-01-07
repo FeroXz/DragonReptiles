@@ -190,8 +190,36 @@
 }
 
 .nui-chip-tray {
-  display: block;
+  display: grid;
+  gap: 12px;
   min-height: 38px;
+}
+
+.nui-chip-tray__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nui-chip-tray__clear {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(226, 232, 240, 0.85);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.nui-chip-tray__clear:hover,
+.nui-chip-tray__clear:focus-visible {
+  border-color: rgba(94, 234, 212, 0.7);
+  color: rgba(236, 252, 255, 0.95);
+  box-shadow: 0 10px 22px rgba(45, 212, 191, 0.2);
+  transform: translateY(-1px);
 }
 
 .nui-chip-placeholder {
@@ -372,6 +400,16 @@
 
 .trait-pill--poly .trait-pill__state {
   color: rgba(203, 213, 225, 0.95);
+}
+
+@media (max-width: 540px) {
+  .nui-chip-tray__actions {
+    justify-content: stretch;
+  }
+
+  .nui-chip-tray__clear {
+    width: 100%;
+  }
 }
 
 .nui-field {
